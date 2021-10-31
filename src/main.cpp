@@ -1,0 +1,496 @@
+#include <Arduino.h>
+
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
+#include <Update.h>
+
+#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
+#include <WebServer.h>
+//#include <ElegantOTA.h>
+#include <RemoteDebug.h>
+#include <PubSubClient.h>
+#include <LITTLEFS.h>
+#include <FS.h>
+#include <ArduinoJson.h>
+#include "../lib/Blinker/Blinker.h"
+
+  //See file .../hardware/espressif/esp32/variants/(esp32|doitESP32devkitV1)/pins_arduino.h
+  #define LED_BUILTIN       2         // Pin D2 mapped to pin GPIO2/ADC12 of ESP32, control on-board LED
+  
+  #define PIN_D0            0         // Pin D0 mapped to pin GPIO0/BOOT/ADC11/TOUCH1 of ESP32
+  #define PIN_D1            1         // Pin D1 mapped to pin GPIO1/TX0 of ESP32
+  #define PIN_D2            2         // Pin D2 mapped to pin GPIO2/ADC12/TOUCH2 of ESP32
+  #define PIN_D3            3         // Pin D3 mapped to pin GPIO3/RX0 of ESP32
+  #define PIN_D4            4         // Pin D4 mapped to pin GPIO4/ADC10/TOUCH0 of ESP32
+  #define PIN_D5            5         // Pin D5 mapped to pin GPIO5/SPISS/VSPI_SS of ESP32
+  #define PIN_D6            6         // Pin D6 mapped to pin GPIO6/FLASH_SCK of ESP32
+  #define PIN_D7            7         // Pin D7 mapped to pin GPIO7/FLASH_D0 of ESP32
+  #define PIN_D8            8         // Pin D8 mapped to pin GPIO8/FLASH_D1 of ESP32
+  #define PIN_D9            9         // Pin D9 mapped to pin GPIO9/FLASH_D2 of ESP32
+  
+  #define PIN_D10           10        // Pin D10 mapped to pin GPIO10/FLASH_D3 of ESP32
+  #define PIN_D11           11        // Pin D11 mapped to pin GPIO11/FLASH_CMD of ESP32
+  #define PIN_D12           12        // Pin D12 mapped to pin GPIO12/HSPI_MISO/ADC15/TOUCH5/TDI of ESP32
+  #define PIN_D13           13        // Pin D13 mapped to pin GPIO13/HSPI_MOSI/ADC14/TOUCH4/TCK of ESP32
+  #define PIN_D14           14        // Pin D14 mapped to pin GPIO14/HSPI_SCK/ADC16/TOUCH6/TMS of ESP32
+  #define PIN_D15           15        // Pin D15 mapped to pin GPIO15/HSPI_SS/ADC13/TOUCH3/TDO of ESP32
+  #define PIN_D16           16        // Pin D16 mapped to pin GPIO16/TX2 of ESP32
+  #define PIN_D17           17        // Pin D17 mapped to pin GPIO17/RX2 of ESP32     
+  #define PIN_D18           18        // Pin D18 mapped to pin GPIO18/VSPI_SCK of ESP32
+  #define PIN_D19           19        // Pin D19 mapped to pin GPIO19/VSPI_MISO of ESP32
+  
+  #define PIN_D21           21        // Pin D21 mapped to pin GPIO21/SDA of ESP32
+  #define PIN_D22           22        // Pin D22 mapped to pin GPIO22/SCL of ESP32
+  #define PIN_D23           23        // Pin D23 mapped to pin GPIO23/VSPI_MOSI of ESP32
+  #define PIN_D24           24        // Pin D24 mapped to pin GPIO24 of ESP32
+  #define PIN_D25           25        // Pin D25 mapped to pin GPIO25/ADC18/DAC1 of ESP32
+  #define PIN_D26           26        // Pin D26 mapped to pin GPIO26/ADC19/DAC2 of ESP32
+  #define PIN_D27           27        // Pin D27 mapped to pin GPIO27/ADC17/TOUCH7 of ESP32     
+  
+  #define PIN_D32           32        // Pin D32 mapped to pin GPIO32/ADC4/TOUCH9 of ESP32
+  #define PIN_D33           33        // Pin D33 mapped to pin GPIO33/ADC5/TOUCH8 of ESP32
+  #define PIN_D34           34        // Pin D34 mapped to pin GPIO34/ADC6 of ESP32
+  
+  //Only GPIO pin < 34 can be used as output. Pins >= 34 can be only inputs
+  //See .../cores/esp32/esp32-hal-gpio.h/c
+  //#define digitalPinIsValid(pin)          ((pin) < 40 && esp32_gpioMux[(pin)].reg)
+  //#define digitalPinCanOutput(pin)        ((pin) < 34 && esp32_gpioMux[(pin)].reg)
+  //#define digitalPinToRtcPin(pin)         (((pin) < 40)?esp32_gpioMux[(pin)].rtc:-1)
+  //#define digitalPinToAnalogChannel(pin)  (((pin) < 40)?esp32_gpioMux[(pin)].adc:-1)
+  //#define digitalPinToTouchChannel(pin)   (((pin) < 40)?esp32_gpioMux[(pin)].touch:-1)
+  //#define digitalPinToDacChannel(pin)     (((pin) == 25)?0:((pin) == 26)?1:-1)
+  
+  #define PIN_D35           35        // Pin D35 mapped to pin GPIO35/ADC7 of ESP32
+  #define PIN_D36           36        // Pin D36 mapped to pin GPIO36/ADC0/SVP of ESP32
+  #define PIN_D39           39        // Pin D39 mapped to pin GPIO39/ADC3/SVN of ESP32
+  
+  #define PIN_RX0            3        // Pin RX0 mapped to pin GPIO3/RX0 of ESP32
+  #define PIN_TX0            1        // Pin TX0 mapped to pin GPIO1/TX0 of ESP32
+  
+  #define PIN_SCL           22        // Pin SCL mapped to pin GPIO22/SCL of ESP32
+  #define PIN_SDA           21        // Pin SDA mapped to pin GPIO21/SDA of ESP32   
+
+const int TRIGGER_PIN = PIN_D0;   // Pin D0 mapped to pin GPIO0/BOOT/ADC11/TOUCH1 of ESP32
+const int TRIGGER_PIN2 = PIN_D25; // Pin D25 mapped to pin GPIO25/ADC18/DAC1 of ESP32
+
+#define LED_BUILTIN       2 // Pin D2 mapped to pin GPIO2/ADC12 of ESP32, control on-board LED
+
+WebServer server(80);
+RemoteDebug Debug;
+Blinker led(LED_BUILTIN);
+
+
+
+#define UPDATEFREQUENCY 60000
+
+
+const char* serverIndex =
+"<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>"
+"<form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>"
+   "<input type='file' name='update'>"
+        "<input type='submit' value='Update'>"
+    "</form>"
+ "<div id='prg'>progress: 0%</div>"
+ "<script>"
+  "$('form').submit(function(e){"
+  "e.preventDefault();"
+  "var form = $('#upload_form')[0];"
+  "var data = new FormData(form);"
+  " $.ajax({"
+  "url: '/update',"
+  "type: 'POST',"
+  "data: data,"
+  "contentType: false,"
+  "processData:false,"
+  "xhr: function() {"
+  "var xhr = new window.XMLHttpRequest();"
+  "xhr.upload.addEventListener('progress', function(evt) {"
+  "if (evt.lengthComputable) {"
+  "var per = evt.loaded / evt.total;"
+  "$('#prg').html('progress: ' + Math.round(per*100) + '%');"
+  "}"
+  "}, false);"
+  "return xhr;"
+  "},"
+  "success:function(d, s) {"
+  "console.log('success!')"
+ "},"
+ "error: function (a, b, c) {"
+ "}"
+ "});"
+ "});"
+ "</script>";
+
+
+// MQTT Interface
+
+WiFiClient wifi;
+PubSubClient mqttClient(wifi);
+
+
+class MQTT {
+  public:
+    String server;
+    String port;
+
+};
+
+
+MQTT mqtt;
+
+
+// End MQTT
+
+
+//  Start of SpaNetController
+
+
+class SpaNetController {
+    private:
+        float amps;
+        int volts;
+        ulong _nextUpdate=millis();
+        void (*update)() = NULL;
+
+        bool parseStatus(String str);
+        String sendCommand(String cmd);
+        bool pollStatus();
+
+
+    public:
+        float getAmps();
+        int getVolts();
+        
+        SpaNetController();
+        ~SpaNetController();
+
+        void tick();
+        void subscribeUpdate(void (*u)());
+};
+
+
+float SpaNetController::getAmps(){
+  return this->amps;
+}
+
+int SpaNetController::getVolts(){
+  return this->volts;
+}
+
+SpaNetController::SpaNetController() {
+    Serial2.begin(38400,SERIAL_8N1, 16, 17);
+    Serial2.setTimeout(1000); 
+}
+
+SpaNetController::~SpaNetController() {}
+
+
+bool SpaNetController::parseStatus(String str) {
+
+  int element=1;
+  int commaIndex=str.indexOf(',');
+  int elementBoundaries[290];
+
+  elementBoundaries[0]=0;
+  
+  debugD("Read...");
+  debugD("%s",str.c_str());
+
+  while (commaIndex>-1){
+    elementBoundaries[element] = commaIndex;
+    element++;
+    commaIndex=str.indexOf(',',commaIndex+1);
+  }
+
+  elementBoundaries[element] = str.length();
+
+  if (element != 290) { 
+    debugW("Wrong number of parameters read, read %d, expecting 289", element-1);
+    return false;
+  }
+  else {
+    debugI("Successful read of SpaNet status");
+    amps = float(str.substring(elementBoundaries[2]+1,elementBoundaries[3]).toInt())/10;
+    volts = str.substring(elementBoundaries[3]+1,elementBoundaries[4]).toInt();
+    return true;
+  }
+}
+
+String SpaNetController::sendCommand(String cmd) {
+  Serial2.printf("\n");
+  delay(100);
+  Serial2.print(cmd+"\n");
+  delay(100);
+  return Serial2.readString();
+}
+
+bool SpaNetController::pollStatus(){
+  if (parseStatus(sendCommand("RF"))) {
+    if (update) {update();}
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void SpaNetController::tick(){
+  if (millis()>_nextUpdate) {
+    if (pollStatus()) {
+      _nextUpdate = millis() + UPDATEFREQUENCY;
+    } else {
+      _nextUpdate = millis() + 1000;
+    }
+  }
+}
+
+void SpaNetController::subscribeUpdate(void (*u)()){
+  this->update=u;
+}
+
+
+// End SpaNetController
+
+SpaNetController snc;
+
+
+bool saveConfig = false;
+
+void saveConfigCallback(){
+  saveConfig = true;
+}
+
+
+void checkButton(){
+  if(digitalRead(TRIGGER_PIN) == LOW) {
+    delay(100);
+    if(digitalRead(TRIGGER_PIN) == LOW) {
+      server.stop();
+      WiFiManager wm;
+
+      WiFiManagerParameter custom_mqtt_server("server", "MQTT server", mqtt.server.c_str(), 40);
+      WiFiManagerParameter custom_mqtt_port("port", "MQTT port", mqtt.port.c_str(), 6);
+      wm.addParameter(&custom_mqtt_server);
+      wm.addParameter(&custom_mqtt_port);
+      wm.setBreakAfterConfig(true);
+      wm.setSaveConfigCallback(saveConfigCallback);
+      
+      debugI("Button Pressed, Starting Portal");
+      wm.startConfigPortal();
+      debugI("Exiting Portal");
+
+
+      if (saveConfig) {
+
+        mqtt.server= String(custom_mqtt_server.getValue());
+        mqtt.port= String(custom_mqtt_port.getValue());
+
+        debugI("Updating config file");
+        DynamicJsonDocument json(1024);
+        json["mqtt_server"] = mqtt.server;
+        json["mqtt_port"] = mqtt.port;
+
+        File configFile = LITTLEFS.open("/config.json","w");
+        if (!configFile) {
+          debugE("Failed to open config file for writing");
+        } else {
+          serializeJson(json, configFile);
+          configFile.close();
+          debugI("Config file updated");
+        }
+      }
+
+      ESP.restart();  // restart, dirty but easier than trying to restart services one by one
+    }
+  }
+}
+
+
+
+
+
+
+void mqttPublishStatus(){
+
+  mqttClient.publish("sn_esp32/voltage/value",String(snc.getVolts()).c_str());
+  mqttClient.publish("sn_esp32/current/value",String(snc.getAmps()).c_str());
+
+}
+
+  
+
+void mqttCallback(char* topic, byte* payload, unsigned int length){
+
+}
+
+
+void mqttSensorADPublish(DynamicJsonDocument base,String id,String name,String deviceClass){
+  String spaName = base["device"]["name"];
+  base["device_class"]=deviceClass;
+  base["state_topic"]="sn_esp32/"+id+"/value";
+  base["name"]=name;
+  base["unique_id"]="spanet_"+spaName+"_"+id;
+  String topic = "homeassistant/sensor/spanet_"+spaName+"/"+id+"/config";
+  String output;
+  serializeJsonPretty(base,output);
+  mqttClient.publish(topic.c_str(),output.c_str());
+}
+
+
+void mqttHaAutoDiscovery()
+{
+
+  String spaName = "MySpa";
+  String spaSerialNumber = "11223344";
+  String output,topic;
+
+  DynamicJsonDocument haTemplate(1024);
+
+  debugI("Publishing Home Assistant auto discovery");
+
+  JsonObject device = haTemplate.createNestedObject("device");
+
+  device["identifiers"]=spaSerialNumber;
+  device["name"]=spaName;
+
+  haTemplate["availability_topic"]="sn_esp32/available";
+
+  mqttSensorADPublish(haTemplate,"voltage","Supply Voltage","voltage");
+  mqttSensorADPublish(haTemplate,"current","Supply Current","current");
+
+}
+
+
+
+void setup() {
+
+  pinMode(TRIGGER_PIN, INPUT_PULLUP);
+  pinMode(TRIGGER_PIN2, INPUT_PULLUP);
+
+  Serial.begin(115200);
+  Serial.setDebugOutput(true);
+
+  delay(200);
+
+  WiFi.mode(WIFI_STA); 
+  WiFi.begin();
+
+
+  Debug.begin(WiFi.getHostname());
+  Debug.setResetCmdEnabled(true);
+  Debug.showProfiler(true);
+  Debug.setSerialEnabled(true);
+
+
+  debugA("Starting...");
+
+
+  debugI("Mounting FS");
+  if (LITTLEFS.begin()){
+    debugI("Mounted FS");
+    debugI("Reading config file");
+    File configFile = LITTLEFS.open("/config.json","r");
+    if (configFile) {
+      debugI("Reading config file");
+      size_t size = configFile.size();
+      // Allocate a buffer to store contents of the file.
+      std::unique_ptr<char[]> buf(new char[size]);
+      configFile.readBytes(buf.get(), size);
+
+      DynamicJsonDocument json(1024);
+      auto deserializeError = deserializeJson(json, buf.get());
+      serializeJson(json, Serial);
+      if ( ! deserializeError ) {
+        debugI("Parsed JSON");
+        mqtt.server = json["mqtt_server"].as<String>();
+        mqtt.port = json["mqtt_port"].as<String>();
+      } else {
+        debugW("Failed to parse config file");
+      }
+      configFile.close();
+    }
+
+  } else {
+    debugW("Failed to mount file system");
+  }
+  
+  if (mqtt.server == "") { mqtt.server = "mqtt"; }
+  if (mqtt.port == "") { mqtt.port = "1883"; }
+
+  mqttClient.setServer(mqtt.server.c_str(),mqtt.port.toInt());
+  mqttClient.setCallback(mqttCallback);
+  mqttClient.setBufferSize(2048);
+  snc.subscribeUpdate(mqttPublishStatus);
+
+  server.on("/", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
+    server.send(200, "text/html", serverIndex);
+  });
+  server.on("/update", HTTP_POST, []() {
+    server.sendHeader("Connection", "close");
+    server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+    ESP.restart();
+  }, []() {
+    HTTPUpload& upload = server.upload();
+    if (upload.status == UPLOAD_FILE_START) {
+      Serial.printf("Update: %s\n", upload.filename.c_str());
+      if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
+        Update.printError(Serial);
+      }
+    } else if (upload.status == UPLOAD_FILE_WRITE) {
+      /* flashing firmware to ESP*/
+      if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+        Update.printError(Serial);
+      }
+    } else if (upload.status == UPLOAD_FILE_END) {
+      if (Update.end(true)) { //true to set the size to the current progress
+        Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+      } else {
+        Update.printError(Serial);
+      }
+    }
+  });
+  server.begin();    
+
+};
+
+long mqttLastConnect = 0;
+
+void loop() {
+  checkButton();
+  led.tick();
+  server.handleClient();
+  snc.tick();
+
+  if (WiFi.status() == WL_CONNECTED) {
+      led.setInterval(2000);
+
+      if (!mqttClient.connected()) {
+        long now=millis();
+        if (now - mqttLastConnect > 5000) {
+          debugW("MQTT not connected, attempting connection to %s:%s",mqtt.server.c_str(),mqtt.port.c_str());
+          mqttLastConnect = now;
+          if (mqttClient.connect("sn_esp32", "sn_esp32/available",2,true,"offline")) {
+            debugI("MQTT connected");
+            mqttClient.subscribe("sn_esp32/+/set");
+            mqttClient.publish("sn_esp32/available","online");
+            mqttHaAutoDiscovery();
+          } else {
+            debugW("MQTT connection failed");
+          }
+        }
+      }
+
+  } else {
+      led.setInterval(100);
+  }
+
+
+  Debug.handle();
+  mqttClient.loop();
+
+
+  delay(1);
+
+};
