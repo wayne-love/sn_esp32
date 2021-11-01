@@ -204,8 +204,8 @@ void mqttPublishStatus(SpaNetController *s){
   // This gets called each time the spa does a successful poll
   // it takes as a pearemeter a pointer to the calling instance.
 
-  mqttClient.publish("sn_esp32/voltage/value",String(s->getVolts()).c_str());
-  mqttClient.publish("sn_esp32/current/value",String(s->getAmps()).c_str());
+  mqttClient.publish("sn_esp32/voltage/value",String(s->getVolts()).c_str(),true);
+  mqttClient.publish("sn_esp32/current/value",String(s->getAmps()).c_str(),true);
 
 }
 
