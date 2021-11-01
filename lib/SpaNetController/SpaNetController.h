@@ -2,21 +2,24 @@
 #define SPANETCONTROLLER_H
 
 #include <Arduino.h>
+#include <RemoteDebug.h>
 
+#define UPDATEFREQUENCY 60000
 
-#define UPDATEFREQUENCY 5000
+extern RemoteDebug Debug;
 
 class SpaNetController {
     private:
         float amps;
         int volts;
-        ulong _lastUpdate=millis()-UPDATEFREQUENCY;
         ulong _nextUpdate=millis();
         void (*update)() = NULL;
 
         bool parseStatus(String str);
         String sendCommand(String cmd);
         bool pollStatus();
+
+
 
 
     public:

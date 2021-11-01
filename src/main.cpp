@@ -8,13 +8,13 @@
 
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <WebServer.h>
-//#include <ElegantOTA.h>
 #include <RemoteDebug.h>
 #include <PubSubClient.h>
 #include <LITTLEFS.h>
 #include <FS.h>
 #include <ArduinoJson.h>
-#include "../lib/Blinker/Blinker.h"
+#include "Blinker.h"
+#include "SpaNetController.h"
 
   //See file .../hardware/espressif/esp32/variants/(esp32|doitESP32devkitV1)/pins_arduino.h
   #define LED_BUILTIN       2         // Pin D2 mapped to pin GPIO2/ADC12 of ESP32, control on-board LED
@@ -80,10 +80,10 @@ const int TRIGGER_PIN2 = PIN_D25; // Pin D25 mapped to pin GPIO25/ADC18/DAC1 of 
 WebServer server(80);
 RemoteDebug Debug;
 Blinker led(LED_BUILTIN);
+WiFiClient wifi;
+PubSubClient mqttClient(wifi);
+SpaNetController snc;
 
-
-
-#define UPDATEFREQUENCY 60000
 
 
 const char* serverIndex =
@@ -126,8 +126,7 @@ const char* serverIndex =
 
 // MQTT Interface
 
-WiFiClient wifi;
-PubSubClient mqttClient(wifi);
+
 
 
 class MQTT {
@@ -143,116 +142,6 @@ MQTT mqtt;
 
 // End MQTT
 
-
-//  Start of SpaNetController
-
-
-class SpaNetController {
-    private:
-        float amps;
-        int volts;
-        ulong _nextUpdate=millis();
-        void (*update)() = NULL;
-
-        bool parseStatus(String str);
-        String sendCommand(String cmd);
-        bool pollStatus();
-
-
-    public:
-        float getAmps();
-        int getVolts();
-        
-        SpaNetController();
-        ~SpaNetController();
-
-        void tick();
-        void subscribeUpdate(void (*u)());
-};
-
-
-float SpaNetController::getAmps(){
-  return this->amps;
-}
-
-int SpaNetController::getVolts(){
-  return this->volts;
-}
-
-SpaNetController::SpaNetController() {
-    Serial2.begin(38400,SERIAL_8N1, 16, 17);
-    Serial2.setTimeout(1000); 
-}
-
-SpaNetController::~SpaNetController() {}
-
-
-bool SpaNetController::parseStatus(String str) {
-
-  int element=1;
-  int commaIndex=str.indexOf(',');
-  int elementBoundaries[290];
-
-  elementBoundaries[0]=0;
-  
-  debugD("Read...");
-  debugD("%s",str.c_str());
-
-  while (commaIndex>-1){
-    elementBoundaries[element] = commaIndex;
-    element++;
-    commaIndex=str.indexOf(',',commaIndex+1);
-  }
-
-  elementBoundaries[element] = str.length();
-
-  if (element != 290) { 
-    debugW("Wrong number of parameters read, read %d, expecting 289", element-1);
-    return false;
-  }
-  else {
-    debugI("Successful read of SpaNet status");
-    amps = float(str.substring(elementBoundaries[2]+1,elementBoundaries[3]).toInt())/10;
-    volts = str.substring(elementBoundaries[3]+1,elementBoundaries[4]).toInt();
-    return true;
-  }
-}
-
-String SpaNetController::sendCommand(String cmd) {
-  Serial2.printf("\n");
-  delay(100);
-  Serial2.print(cmd+"\n");
-  delay(100);
-  return Serial2.readString();
-}
-
-bool SpaNetController::pollStatus(){
-  if (parseStatus(sendCommand("RF"))) {
-    if (update) {update();}
-    return true;
-  } else {
-    return false;
-  }
-}
-
-void SpaNetController::tick(){
-  if (millis()>_nextUpdate) {
-    if (pollStatus()) {
-      _nextUpdate = millis() + UPDATEFREQUENCY;
-    } else {
-      _nextUpdate = millis() + 1000;
-    }
-  }
-}
-
-void SpaNetController::subscribeUpdate(void (*u)()){
-  this->update=u;
-}
-
-
-// End SpaNetController
-
-SpaNetController snc;
 
 
 bool saveConfig = false;
@@ -312,7 +201,7 @@ void checkButton(){
 
 
 void mqttPublishStatus(){
-
+  
   mqttClient.publish("sn_esp32/voltage/value",String(snc.getVolts()).c_str());
   mqttClient.publish("sn_esp32/current/value",String(snc.getAmps()).c_str());
 
@@ -381,7 +270,6 @@ void setup() {
   Debug.setResetCmdEnabled(true);
   Debug.showProfiler(true);
   Debug.setSerialEnabled(true);
-
 
   debugA("Starting...");
 

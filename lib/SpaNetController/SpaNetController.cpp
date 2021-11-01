@@ -1,5 +1,13 @@
 #include "SpaNetController.h"
 
+
+SpaNetController::SpaNetController() {
+    Serial2.begin(38400,SERIAL_8N1, 16, 17);
+    Serial2.setTimeout(1000); 
+}
+
+SpaNetController::~SpaNetController() {}
+
 float SpaNetController::getAmps(){
   return this->amps;
 }
@@ -7,14 +15,6 @@ float SpaNetController::getAmps(){
 int SpaNetController::getVolts(){
   return this->volts;
 }
-
-SpaNetController::SpaNetController() {
-    Serial2.begin(38400,SERIAL_8N1, 16, 17);
-    Serial2.setTimeout(500); 
-}
-
-SpaNetController::~SpaNetController() {}
-
 
 bool SpaNetController::parseStatus(String str) {
 
@@ -24,6 +24,9 @@ bool SpaNetController::parseStatus(String str) {
 
   elementBoundaries[0]=0;
   
+  debugD("Read...");
+  debugD("%s",str.c_str());
+
   while (commaIndex>-1){
     elementBoundaries[element] = commaIndex;
     element++;
@@ -33,7 +36,7 @@ bool SpaNetController::parseStatus(String str) {
   elementBoundaries[element] = str.length();
 
   if (element != 290) { 
-    debugW("Wrong number of parameters read, read %d, expecting 289\r\n", element-1);
+    debugW("Wrong number of parameters read, read %d, expecting 289", element-1);
     return false;
   }
   else {
