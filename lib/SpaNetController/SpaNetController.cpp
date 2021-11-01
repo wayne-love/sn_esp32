@@ -9,11 +9,15 @@ SpaNetController::SpaNetController() {
 SpaNetController::~SpaNetController() {}
 
 float SpaNetController::getAmps(){
-  return this->amps;
+  return amps;
 }
 
 int SpaNetController::getVolts(){
-  return this->volts;
+  return volts;
+}
+
+float SpaNetController::getHpumpAmbTemp(){
+  return hpump_amb_temperature;
 }
 
 bool SpaNetController::parseStatus(String str) {
@@ -43,6 +47,7 @@ bool SpaNetController::parseStatus(String str) {
     debugI("Successful read of SpaNet status");
     amps = float(str.substring(elementBoundaries[2]+1,elementBoundaries[3]).toInt())/10;
     volts = str.substring(elementBoundaries[3]+1,elementBoundaries[4]).toInt();
+    hpump_amb_temperature = float(str.substring(elementBoundaries[251]+1,elementBoundaries[252]).toInt());
     return true;
   }
 }

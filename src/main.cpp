@@ -155,8 +155,8 @@ void checkButton(){
     delay(100);
     if(digitalRead(TRIGGER_PIN) == LOW) {
       server.stop();
+      
       WiFiManager wm;
-
       WiFiManagerParameter custom_mqtt_server("server", "MQTT server", mqtt.server.c_str(), 40);
       WiFiManagerParameter custom_mqtt_port("port", "MQTT port", mqtt.port.c_str(), 6);
       wm.addParameter(&custom_mqtt_server);
@@ -206,6 +206,7 @@ void mqttPublishStatus(SpaNetController *s){
 
   mqttClient.publish("sn_esp32/voltage/value",String(s->getVolts()).c_str());
   mqttClient.publish("sn_esp32/current/value",String(s->getAmps()).c_str());
+  mqttClient.publish("sn_esp32/hpump_amb_temp/value",String(s->getHpumpAmbTemp()).c_str(),false);
 
 }
 
@@ -250,6 +251,7 @@ void mqttHaAutoDiscovery()
 
   mqttSensorADPublish(haTemplate,"voltage","Supply Voltage","voltage","v");
   mqttSensorADPublish(haTemplate,"current","Supply Current","current","A");
+  mqttSensorADPublish(haTemplate,"hpump_amb_temp","Heatpump Ambient Temperature","temperature","℃");
 
 }
 

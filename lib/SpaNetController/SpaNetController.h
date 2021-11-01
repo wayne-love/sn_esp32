@@ -12,6 +12,7 @@ class SpaNetController {
     private:
         float amps;
         int volts;
+        float hpump_amb_temperature;
         ulong _nextUpdate=millis();
         void (*update)(SpaNetController *) = NULL;
 
@@ -25,6 +26,7 @@ class SpaNetController {
     public:
         float getAmps();
         int getVolts();
+        float getHpumpAmbTemp();
         
         SpaNetController();
         ~SpaNetController();
