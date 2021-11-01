@@ -309,7 +309,7 @@ void setup() {
   if (mqtt.server == "") { mqtt.server = "mqtt"; }
   if (mqtt.port == "") { mqtt.port = "1883"; }
 
-  mqtt.baseTopic = mqtt.baseTopic+"MySpa/";
+  mqtt.baseTopic = "sn_esp32/MySpa/";  // TODO - this should be "sn_esp32"+spa.serialNumber
 
   mqttClient.setServer(mqtt.server.c_str(),mqtt.port.toInt());
   mqttClient.setCallback(mqttCallback);
