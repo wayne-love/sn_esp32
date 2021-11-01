@@ -57,7 +57,7 @@ String SpaNetController::sendCommand(String cmd) {
 
 bool SpaNetController::pollStatus(){
   if (parseStatus(sendCommand("RF"))) {
-    if (update) {update();}
+    if (update) {update(this);}
     return true;
   } else {
     return false;
@@ -74,6 +74,6 @@ void SpaNetController::tick(){
   }
 }
 
-void SpaNetController::subscribeUpdate(void (*u)()){
+void SpaNetController::subscribeUpdate(void (*u)(SpaNetController *)){
   this->update=u;
 }

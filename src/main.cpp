@@ -133,7 +133,6 @@ class MQTT {
   public:
     String server;
     String port;
-
 };
 
 
@@ -200,10 +199,13 @@ void checkButton(){
 
 
 
-void mqttPublishStatus(){
-  
-  mqttClient.publish("sn_esp32/voltage/value",String(snc.getVolts()).c_str());
-  mqttClient.publish("sn_esp32/current/value",String(snc.getAmps()).c_str());
+void mqttPublishStatus(SpaNetController *s){
+
+  // This gets called each time the spa does a successful poll
+  // it takes as a pearemeter a pointer to the calling instance.
+
+  mqttClient.publish("sn_esp32/voltage/value",String(s->getVolts()).c_str());
+  mqttClient.publish("sn_esp32/current/value",String(s->getAmps()).c_str());
 
 }
 

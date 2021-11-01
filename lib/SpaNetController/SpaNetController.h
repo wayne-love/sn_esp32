@@ -13,7 +13,7 @@ class SpaNetController {
         float amps;
         int volts;
         ulong _nextUpdate=millis();
-        void (*update)() = NULL;
+        void (*update)(SpaNetController *) = NULL;
 
         bool parseStatus(String str);
         String sendCommand(String cmd);
@@ -30,7 +30,7 @@ class SpaNetController {
         ~SpaNetController();
 
         void tick();
-        void subscribeUpdate(void (*u)());
+        void subscribeUpdate(void (*u)(SpaNetController *));
 };
 
 #endif
