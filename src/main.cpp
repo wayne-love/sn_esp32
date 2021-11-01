@@ -216,12 +216,13 @@ void mqttCallback(char* topic, byte* payload, unsigned int length){
 }
 
 
-void mqttSensorADPublish(DynamicJsonDocument base,String id,String name,String deviceClass){
+void mqttSensorADPublish(DynamicJsonDocument base,String id,String name,String deviceClass, String uom){
   String spaName = base["device"]["name"];
   base["device_class"]=deviceClass;
   base["state_topic"]="sn_esp32/"+id+"/value";
   base["name"]=name;
   base["unique_id"]="spanet_"+spaName+"_"+id;
+  base["unit_of_measure"]=uom;
   String topic = "homeassistant/sensor/spanet_"+spaName+"/"+id+"/config";
   String output;
   serializeJsonPretty(base,output);
@@ -247,8 +248,8 @@ void mqttHaAutoDiscovery()
 
   haTemplate["availability_topic"]="sn_esp32/available";
 
-  mqttSensorADPublish(haTemplate,"voltage","Supply Voltage","voltage");
-  mqttSensorADPublish(haTemplate,"current","Supply Current","current");
+  mqttSensorADPublish(haTemplate,"voltage","Supply Voltage","voltage","v");
+  mqttSensorADPublish(haTemplate,"current","Supply Current","current","A");
 
 }
 
