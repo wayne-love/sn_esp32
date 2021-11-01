@@ -213,7 +213,7 @@ void mqttPublishStatus(SpaNetController *s){
 
   
 
-void mqttSensorADPublish(DynamicJsonDocument base,String dataPointName,String dataPointId,String deviceClass, String uom){
+void mqttSensorADPublish(DynamicJsonDocument base,String dataPointId,String dataPointName,String deviceClass, String uom){
   String spaId = base["device"]["identifiers"];
   base["device_class"]=deviceClass;
   base["state_topic"]=mqtt.baseTopic+dataPointId+"/value";
@@ -224,6 +224,8 @@ void mqttSensorADPublish(DynamicJsonDocument base,String dataPointName,String da
   String output;
   serializeJsonPretty(base,output);
   mqttClient.publish(topic.c_str(),output.c_str(),true);
+  debugI("Publishing HA discovery to %s",topic.c_str());
+  debugI("%s",output.c_str());
 }
 
 
