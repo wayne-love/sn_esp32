@@ -133,6 +133,7 @@ class MQTT {
   public:
     String server;
     String port;
+    String baseTopic;
 };
 
 
@@ -204,27 +205,22 @@ void mqttPublishStatus(SpaNetController *s){
   // This gets called each time the spa does a successful poll
   // it takes as a pearemeter a pointer to the calling instance.
 
-  mqttClient.publish("sn_esp32/voltage/value",String(s->getVolts()).c_str());
-  mqttClient.publish("sn_esp32/current/value",String(s->getAmps()).c_str());
-  mqttClient.publish("sn_esp32/hpump_amb_temp/value",String(s->getHpumpAmbTemp()).c_str(),false);
+  mqttClient.publish((mqtt.baseTopic+"voltage/value").c_str(),String(s->getVolts()).c_str());
+  mqttClient.publish((mqtt.baseTopic+"current/value").c_str(),String(s->getAmps()).c_str());
+  mqttClient.publish((mqtt.baseTopic+"hpump_amb_temp/value").c_str(),String(s->getHpumpAmbTemp()).c_str(),false);
 
 }
 
   
 
-void mqttCallback(char* topic, byte* payload, unsigned int length){
-
-}
-
-
-void mqttSensorADPublish(DynamicJsonDocument base,String id,String name,String deviceClass, String uom){
-  String spaName = base["device"]["name"];
+void mqttSensorADPublish(DynamicJsonDocument base,String dataPointName,String dataPointId,String deviceClass, String uom){
+  String spaId = base["device"]["identifiers"];
   base["device_class"]=deviceClass;
-  base["state_topic"]="sn_esp32/"+id+"/value";
-  base["name"]=name;
-  base["unique_id"]="spanet_"+spaName+"_"+id;
-  base["unit_of_measure"]=uom;
-  String topic = "homeassistant/sensor/spanet_"+spaName+"/"+id+"/config";
+  base["state_topic"]=mqtt.baseTopic+dataPointId+"/value";
+  base["name"]=dataPointName;
+  base["unique_id"]="spanet_"+spaId+"_"+dataPointId;
+  base["unit_of_measurement"]=uom;
+  String topic = "homeassistant/sensor/spanet_"+spaId+"/"+dataPointId+"/config";
   String output;
   serializeJsonPretty(base,output);
   mqttClient.publish(topic.c_str(),output.c_str(),true);
@@ -247,7 +243,7 @@ void mqttHaAutoDiscovery()
   device["identifiers"]=spaSerialNumber;
   device["name"]=spaName;
 
-  haTemplate["availability_topic"]="sn_esp32/available";
+  haTemplate["availability_topic"]=mqtt.baseTopic+"available";
 
   mqttSensorADPublish(haTemplate,"voltage","Supply Voltage","voltage","v");
   mqttSensorADPublish(haTemplate,"current","Supply Current","current","A");
@@ -311,6 +307,8 @@ void setup() {
   if (mqtt.server == "") { mqtt.server = "mqtt"; }
   if (mqtt.port == "") { mqtt.port = "1883"; }
 
+  mqtt.baseTopic = mqtt.baseTopic+"MySpa/";
+
   mqttClient.setServer(mqtt.server.c_str(),mqtt.port.toInt());
   mqttClient.setCallback(mqttCallback);
   mqttClient.setBufferSize(2048);
@@ -364,10 +362,10 @@ void loop() {
         if (now - mqttLastConnect > 5000) {
           debugW("MQTT not connected, attempting connection to %s:%s",mqtt.server.c_str(),mqtt.port.c_str());
           mqttLastConnect = now;
-          if (mqttClient.connect("sn_esp32", "sn_esp32/available",2,true,"offline")) {
+          if (mqttClient.connect("sn_esp32", (mqtt.baseTopic+"available").c_str(),2,true,"offline")) {
             debugI("MQTT connected");
-            mqttClient.subscribe("sn_esp32/+/set");
-            mqttClient.publish("sn_esp32/available","online");
+            mqttClient.subscribe((mqtt.baseTopic+"+/set").c_str());
+            mqttClient.publish((mqtt.baseTopic+"available").c_str(),"online");
             mqttHaAutoDiscovery();
           } else {
             debugW("MQTT connection failed");
