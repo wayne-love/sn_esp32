@@ -1,1 +1,5 @@
-201101/1 - Refactor SpaNetController class into seperate file.
+20211105/1
+- Add capability to issue commands to Spa
+- Implement display/control of lights via MQTT/HA
+
+20211101/1 - Refactor SpaNetController class into seperate file.
