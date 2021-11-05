@@ -224,24 +224,50 @@ void mqttPublishStatus(SpaNetController *s){
   mqttClient.publish((mqtt.baseTopic+"voltage/value").c_str(),String(s->getVolts()).c_str());
   mqttClient.publish((mqtt.baseTopic+"current/value").c_str(),String(s->getAmps()).c_str());
   mqttClient.publish((mqtt.baseTopic+"hpump_amb_temp/value").c_str(),String(s->getHpumpAmbTemp()).c_str(),false);
-
+  mqttClient.publish((mqtt.baseTopic+"lights/value").c_str(),String(s->isLightsOn()).c_str());
 }
 
-  
 
-void mqttSensorADPublish(DynamicJsonDocument base,String dataPointId,String dataPointName,String deviceClass, String uom){
+DynamicJsonDocument mqttSensorJson(DynamicJsonDocument base,String dataPointId,String dataPointName){
   String spaId = base["device"]["identifiers"];
-  base["device_class"]=deviceClass;
   base["state_topic"]=mqtt.baseTopic+dataPointId+"/value";
   base["name"]=dataPointName;
   base["unique_id"]="spanet_"+spaId+"_"+dataPointId;
+  return base;
+
+}
+
+void mqttSensorADPublish(DynamicJsonDocument base,String dataPointId,String dataPointName,String deviceClass, String uom){
+  base = mqttSensorJson(base, dataPointId, dataPointName);
+  String spaId = base["device"]["identifiers"];
+
   base["unit_of_measurement"]=uom;
+  base["device_class"]=deviceClass;
+  
   String topic = "homeassistant/sensor/spanet_"+spaId+"/"+dataPointId+"/config";
   String output;
   serializeJsonPretty(base,output);
   mqttClient.publish(topic.c_str(),output.c_str(),true);
-  debugI("Publishing HA discovery to %s",topic.c_str());
-  debugI("%s",output.c_str());
+}
+
+
+DynamicJsonDocument mqttSwitchJson(DynamicJsonDocument base,String dataPointId,String dataPointName) {
+  base = mqttSensorJson(base, dataPointId, dataPointName);
+  base["command_topic"]=mqtt.baseTopic+dataPointId+"/set";
+  base["payload_on"]="1";
+  base["payload_off"]="0";
+  return base;
+}
+
+void mqttLightsADPublish(DynamicJsonDocument base,String dataPointId,String dataPointName) {
+  String spaId = base["device"]["identifiers"];
+  base = mqttSwitchJson(base, dataPointId, dataPointName);
+
+  String topic = "homeassistant/light/spanet_"+spaId+"/"+dataPointId+"/config";
+  String output;
+  serializeJsonPretty(base,output);
+  mqttClient.publish(topic.c_str(),output.c_str(),true);
+
 }
 
 
@@ -266,6 +292,7 @@ void mqttHaAutoDiscovery()
   mqttSensorADPublish(haTemplate,"voltage","Supply Voltage","voltage","v");
   mqttSensorADPublish(haTemplate,"current","Supply Current","current","A");
   mqttSensorADPublish(haTemplate,"hpump_amb_temp","Heatpump Ambient Temperature","temperature","℃");
+  mqttLightsADPublish(haTemplate,"lights","Lights");
 
 }
 

@@ -31,9 +31,6 @@ bool SpaNetController::parseStatus(String str) {
 
   elementBoundaries[0]=0;
   
-  debugD("Read...");
-  debugD("%s",str.c_str());
-
   while (commaIndex>-1){
     elementBoundaries[element] = commaIndex;
     element++;
@@ -51,6 +48,7 @@ bool SpaNetController::parseStatus(String str) {
     amps = float(str.substring(elementBoundaries[2]+1,elementBoundaries[3]).toInt())/10;
     volts = str.substring(elementBoundaries[3]+1,elementBoundaries[4]).toInt();
     hpump_amb_temperature = float(str.substring(elementBoundaries[251]+1,elementBoundaries[252]).toInt());
+    lightsOn = bool(str.substring(elementBoundaries[106]+1,elementBoundaries[107]).toInt());
     return true;
   }
 }
@@ -127,4 +125,8 @@ void SpaNetController::pushCommand(String t, String p){
   debugD("Pushing %s/%s to command queue",t.c_str(),p.c_str());
   commands.push_back({t,p});
   debugD("%d commands in queue",commands.size());
+}
+
+bool SpaNetController::isLightsOn() {
+  return lightsOn;
 }
