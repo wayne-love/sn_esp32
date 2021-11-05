@@ -65,6 +65,9 @@ float SpaNetController::getHpumpAmbTemp(){
   return hpump_amb_temperature;
 }
 
+float SpaNetController::getHpumpConTemp(){
+  return hpump_con_temperature;
+}
 
 
 
@@ -108,6 +111,7 @@ bool SpaNetController::parseStatus(String str) {
     amps = float(String(registers[1].getField(2)).toInt())/10;
     volts = String(registers[1].getField(3)).toInt();
     hpump_amb_temperature = String(registers[11].getField(11)).toInt();
+    hpump_con_temperature = String(registers[11].getField(12)).toInt();
     lightsOn = String(registers[4].getField(15)).toInt();
     return true;
   } else { return false; }

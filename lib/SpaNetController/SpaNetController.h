@@ -35,7 +35,7 @@ class SpaNetController {
         float amps; 
         int volts;
         float hpump_amb_temperature;
-
+        float hpump_con_temperature;
         bool lightsOn;
 
         Register registers[13]={1,33,30,31,29,31,34,15,15,15,17,33,18};
@@ -64,6 +64,7 @@ class SpaNetController {
         float getAmps();
         int getVolts();
         float getHpumpAmbTemp();
+        float getHpumpConTemp();
 
         bool isLightsOn();
         bool setLightsOn(bool flag);

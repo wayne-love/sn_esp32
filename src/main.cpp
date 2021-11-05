@@ -223,7 +223,8 @@ void mqttPublishStatus(SpaNetController *s){
 
   mqttClient.publish((mqtt.baseTopic+"voltage/value").c_str(),String(s->getVolts()).c_str());
   mqttClient.publish((mqtt.baseTopic+"current/value").c_str(),String(s->getAmps()).c_str());
-  mqttClient.publish((mqtt.baseTopic+"hpump_amb_temp/value").c_str(),String(s->getHpumpAmbTemp()).c_str(),false);
+  mqttClient.publish((mqtt.baseTopic+"hpump_amb_temp/value").c_str(),String(s->getHpumpAmbTemp()).c_str());
+  mqttClient.publish((mqtt.baseTopic+"hpump_con_temp/value").c_str(),String(s->getHpumpConTemp()).c_str());
   mqttClient.publish((mqtt.baseTopic+"lights/value").c_str(),String(s->isLightsOn()).c_str());
 }
 
@@ -292,6 +293,7 @@ void mqttHaAutoDiscovery()
   mqttSensorADPublish(haTemplate,"voltage","Supply Voltage","voltage","v");
   mqttSensorADPublish(haTemplate,"current","Supply Current","current","A");
   mqttSensorADPublish(haTemplate,"hpump_amb_temp","Heatpump Ambient Temperature","temperature","℃");
+  mqttSensorADPublish(haTemplate,"hpump_con_temp","Heatpump Condensor Temperature","temperature","℃");
   mqttLightsADPublish(haTemplate,"lights","Lights");
 
 }
