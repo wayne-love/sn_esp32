@@ -196,7 +196,23 @@ void checkButton(){
 }
 
 
+void mqttCallback(char* topic, byte* payload, unsigned int length){
+  String t = String(topic);
+  
+  int start = t.lastIndexOf("/",t.lastIndexOf("/")-1)+1; //get second last "/"
+  String item = t.substring(start, t.lastIndexOf("/"));
 
+  String p = "";
+  for (int x = 0; x<length; x++ ) {
+    p = p + char(*payload);
+    payload++;
+  }
+
+  debugI("Got update for %s of %s",item.c_str(),p.c_str());
+
+  snc.pushCommand(item, p);
+  
+}
 
 
 
