@@ -383,7 +383,7 @@ void loop() {
           if (mqttClient.connect("sn_esp32", (mqtt.baseTopic+"available").c_str(),2,true,"offline")) {
             debugI("MQTT connected");
             mqttClient.subscribe((mqtt.baseTopic+"+/set").c_str());
-            mqttClient.publish((mqtt.baseTopic+"available").c_str(),"online");
+            mqttClient.publish((mqtt.baseTopic+"available").c_str(),"online",true);
             mqttHaAutoDiscovery();
           } else {
             debugW("MQTT connection failed");
