@@ -1,3 +1,6 @@
+20211106/1
+- Rework serial string parsing to be more tollerant when R4 is truncated
+
 20211105/1
 - Add capability to issue commands to Spa
 - Implement display/control of lights via MQTT/HA
