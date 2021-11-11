@@ -402,11 +402,11 @@ void loop() {
   snc.tick();
 
   if (WiFi.status() == WL_CONNECTED) {
-      led.setInterval(2000);
-
+  
       if (!mqttClient.connected()) {
         long now=millis();
         if (now - mqttLastConnect > 5000) {
+          led.setInterval(500);
           debugW("MQTT not connected, attempting connection to %s:%s",mqtt.server.c_str(),mqtt.port.c_str());
           mqttLastConnect = now;
           if (mqttClient.connect("sn_esp32", (mqtt.baseTopic+"available").c_str(),2,true,"offline")) {
@@ -414,20 +414,28 @@ void loop() {
             mqttClient.subscribe((mqtt.baseTopic+"+/set").c_str());
             mqttClient.publish((mqtt.baseTopic+"available").c_str(),"online",true);
             mqttHaAutoDiscovery();
+            snc.forceUpdate();
           } else {
             debugW("MQTT connection failed");
           }
         }
       }
+      else {
+        led.setInterval(2000);
+      }
 
   } else {
       led.setInterval(100);
+      long now = millis();
+      if (now-wifiLastConnect > 10000) {
+        wifiLastConnect = now;
+        WiFi.disconnect();
+        WiFi.reconnect();
+      }
   }
-
 
   Debug.handle();
   mqttClient.loop();
-
 
   delay(1);
 
