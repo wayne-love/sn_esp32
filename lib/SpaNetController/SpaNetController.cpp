@@ -24,7 +24,6 @@ bool Register::updateRegister(const char update[]) {
 
   if (y==requiredFields) {
     valid = true;
-
   } else {
     debugW("Error parsing register, expected %d fields, got %d",requiredFields,y);
     debugD("Update register request - %s",update);
@@ -53,6 +52,7 @@ SpaNetController::SpaNetController() {
 
 SpaNetController::~SpaNetController() {}
 
+
 float SpaNetController::getAmps(){
   return amps;
 }
@@ -69,13 +69,65 @@ float SpaNetController::getHpumpConTemp(){
   return hpump_con_temperature;
 }
 
+float SpaNetController::getWaterTemp(){
+  return waterTemperature;
+}
 
+float SpaNetController::getWaterTempSetPoint(){
+  return waterTemperatureSetPoint;
+}
+
+
+bool SpaNetController::setWaterTempSetPoint(float temp){
+  // Should do some error checking here to ensure that we arnt tryting to freeze the spa
+  String cmd = "W40:" + String(int(temp * 10));
+  commands.emplace_back(cmd);
+  return true;
+}
+
+
+SpaNetController::heat_pump_modes SpaNetController::getHeatPumpMode(){
+  return heatPumpMode;
+}
+
+bool SpaNetController::setHeatPumpMode(SpaNetController::heat_pump_modes mode){
+  String cmd = "W99:" + String(mode);
+  commands.emplace_back(cmd);
+  return true;
+}
+
+bool SpaNetController::isAuxHeatingEnabled(){
+  return auxHeatElement;
+}
+
+bool SpaNetController::setAuxHeatingEnabled(bool enabled){
+  String cmd;
+  if (enabled) {
+    cmd="W98:1";
+  } else {
+    cmd="W98:0";
+  }
+  commands.emplace_back(cmd);
+  return true;
+}
+
+bool SpaNetController::isLightsOn() {
+  return lightsOn;
+}
+
+bool SpaNetController::toggleLights(){
+  String cmd = "W14";
+  commands.emplace_back(cmd);
+  return true;
+}
 
 bool SpaNetController::parseStatus(String str) {
 
 //R4 is hit and miss as to if it returns all its data.
 //So need to work on a variable number of rows 
 //returned.
+
+  debugD("Parsing status string");
 
   int currentPos = 0;
   int colonIndex = str.indexOf(':');
@@ -104,18 +156,33 @@ bool SpaNetController::parseStatus(String str) {
     }
     currentPos=colonIndex+1;
     colonIndex=str.indexOf(':',currentPos);
+
   }
 
+  bool regValid = registers[1].isValid() && registers[4].isValid() && registers[5].isValid() && registers[6].isValid() && registers[11].isValid();
+
   // First datapoint in registers is at array position 2
-  if (registers[1].isValid() && registers[5].isValid() && registers[11].isValid()) {
+  if (regValid)
+  {
+    
     amps = float(String(registers[1].getField(2)).toInt())/10;
+    
     volts = String(registers[1].getField(3)).toInt();
+
+    lightsOn = String(registers[4].getField(15)).toInt();
+    waterTemperature = float(String(registers[4].getField(16)).toInt())/10;
+
+    waterTemperatureSetPoint = float(String(registers[5].getField(9)).toInt())/10;
+
+    heatPumpMode=heat_pump_modes(String(registers[6].getField(27)).toInt());
+
     hpump_amb_temperature = String(registers[11].getField(11)).toInt();
     hpump_con_temperature = String(registers[11].getField(12)).toInt();
-    lightsOn = String(registers[4].getField(15)).toInt();
-    return true;
-  } else { return false; }
 
+    auxHeatElement = bool(String(registers[6].getField(26)).toInt());
+  }
+
+  return regValid;
 }
 
 String SpaNetController::sendCommand(String cmd) {
@@ -155,18 +222,19 @@ void SpaNetController::processCommands() {
   debugD("Processing %d commands in command queue",commands.size());
 
   while(commands.size()>0){
-    command c = commands.front();
-    debugD("Processing command %s/%s",c.topic.c_str(),c.payload.c_str());
+    String command = commands.front();
+    debugD("Processing command %s",command.c_str());
+    sendCommand(command);
     commands.pop_front();
-    if (c.topic=="lights" && (c.payload=="0" || c.payload=="1")) {
-      sendCommand("W14");
-    }
   }
 
   getRegisters();
 
 }
 
+void SpaNetController::forceUpdate(){
+  _nextUpdate = 0;
+}
 
 void SpaNetController::tick(){
 
@@ -183,15 +251,4 @@ void SpaNetController::tick(){
 
 void SpaNetController::subscribeUpdate(void (*u)(SpaNetController *)){
   this->update=u;
-}
-
-
-void SpaNetController::pushCommand(String t, String p){
-  debugD("Pushing %s/%s to command queue",t.c_str(),p.c_str());
-  commands.push_back({t,p});
-  debugD("%d commands in queue",commands.size());
-}
-
-bool SpaNetController::isLightsOn() {
-  return lightsOn;
 }

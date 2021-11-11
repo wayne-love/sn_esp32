@@ -29,7 +29,39 @@ class Register {
 
 };
 
+
+
 class SpaNetController {
+    public:
+        enum heat_pump_modes {automatic=0, heat=1, cool=2, off=3};
+        
+        float   getAmps();
+        int     getVolts();
+        float   getHpumpAmbTemp();
+        float   getHpumpConTemp();
+        float   getWaterTemp();
+
+
+        float   getWaterTempSetPoint();
+        bool    setWaterTempSetPoint(float temp);
+
+        heat_pump_modes getHeatPumpMode();
+        bool setHeatPumpMode(heat_pump_modes mode);
+        
+        bool isAuxHeatingEnabled();
+        bool setAuxHeatingEnabled(bool enabled);
+
+        bool isLightsOn();
+        bool toggleLights();
+
+        SpaNetController();
+        ~SpaNetController();
+
+        void tick();
+        void subscribeUpdate(void (*u)(SpaNetController *));
+
+        void forceUpdate();
+
     private:
 
         float amps; 
@@ -37,6 +69,10 @@ class SpaNetController {
         float hpump_amb_temperature;
         float hpump_con_temperature;
         bool lightsOn;
+        float waterTemperature;
+        float waterTemperatureSetPoint;
+        heat_pump_modes heatPumpMode;
+        bool auxHeatElement;
 
         Register registers[13]={1,33,30,31,29,31,34,15,15,15,17,33,18};
 
@@ -49,32 +85,14 @@ class SpaNetController {
         String sendCommand(String cmd);
         bool pollStatus();
 
-        struct command {
-            String topic;
-            String payload;
-        };
-
-        std::list<command> commands;
+        std::list<String> commands;
         
         void processCommands();
         void getRegisters();
 
+
       
-    public:
-        float getAmps();
-        int getVolts();
-        float getHpumpAmbTemp();
-        float getHpumpConTemp();
 
-        bool isLightsOn();
-        bool setLightsOn(bool flag);
-        
-        SpaNetController();
-        ~SpaNetController();
-
-        void tick();
-        void subscribeUpdate(void (*u)(SpaNetController *));
-        void pushCommand(String topic, String payload);
 };
 
 #endif

@@ -195,6 +195,15 @@ void checkButton(){
   }
 }
 
+bool parseBool(String val){
+  val.toUpperCase();
+  if (val=="ON" || val=="TRUE" || val=="1") {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 
 void mqttCallback(char* topic, byte* payload, unsigned int length){
   String t = String(topic);
@@ -208,15 +217,41 @@ void mqttCallback(char* topic, byte* payload, unsigned int length){
     payload++;
   }
 
-  debugI("Got update for %s of %s",item.c_str(),p.c_str());
+  debugI("Got update for %s - %s",item.c_str(),p.c_str());
 
-  snc.pushCommand(item, p);
-  
+  if (item=="lights") {
+    snc.toggleLights();
+  } else if (item=="heat_pump_mode") {
+    snc.setHeatPumpMode(SpaNetController::heat_pump_modes(p.toInt()));
+  } else if (item=="water_temp_set_point") {
+    snc.setWaterTempSetPoint(p.toFloat());
+  } else if (item=="aux_heating_enabled") {
+    snc.setAuxHeatingEnabled(parseBool(p));
+  } else if (item=="heat_pump_mode_txt") {
+    if (p=="auto") {
+      snc.setHeatPumpMode(SpaNetController::heat_pump_modes(SpaNetController::automatic));
+    } else if (p == "heat") {
+      snc.setHeatPumpMode(SpaNetController::heat_pump_modes(SpaNetController::heat));
+    } else if (p == "cool") {
+      snc.setHeatPumpMode(SpaNetController::heat_pump_modes(SpaNetController::cool));
+    } else if (p == "off") {
+      snc.setHeatPumpMode(SpaNetController::heat_pump_modes(SpaNetController::off));
+    }
+  }
+
 }
 
 
 
 void mqttPublishStatus(SpaNetController *s){
+
+  char ON[] = "ON";
+  char OFF[] = "OFF";
+  char *resp;
+  
+
+
+  String tmpString;
 
   // This gets called each time the spa does a successful poll
   // it takes as a pearemeter a pointer to the calling instance.
@@ -226,6 +261,34 @@ void mqttPublishStatus(SpaNetController *s){
   mqttClient.publish((mqtt.baseTopic+"hpump_amb_temp/value").c_str(),String(s->getHpumpAmbTemp()).c_str());
   mqttClient.publish((mqtt.baseTopic+"hpump_con_temp/value").c_str(),String(s->getHpumpConTemp()).c_str());
   mqttClient.publish((mqtt.baseTopic+"lights/value").c_str(),String(s->isLightsOn()).c_str());
+  mqttClient.publish((mqtt.baseTopic + "heat_pump_mode/value").c_str(), String(snc.getHeatPumpMode()).c_str());
+
+  String hpModeStr="unknown";
+
+  switch (snc.getHeatPumpMode()) {
+    case SpaNetController::heat_pump_modes(SpaNetController::automatic) :
+      hpModeStr = "auto";
+      break;
+    case SpaNetController::heat_pump_modes(SpaNetController::heat) :
+      hpModeStr = "heat";
+      break;
+    case SpaNetController::heat_pump_modes(SpaNetController::cool) :
+      hpModeStr = "cool";
+      break;
+    case SpaNetController::heat_pump_modes(SpaNetController::off) :
+      hpModeStr = "off";
+      break;
+  }
+  mqttClient.publish((mqtt.baseTopic + "heat_pump_mode_txt/value").c_str(), hpModeStr.c_str());
+  mqttClient.publish((mqtt.baseTopic + "water_temp_set_point/value").c_str(), String(snc.getWaterTempSetPoint()).c_str());
+  
+  if (snc.isAuxHeatingEnabled()) {
+    resp = ON;
+  } else {
+    resp = OFF;
+  }
+  mqttClient.publish((mqtt.baseTopic + "aux_heating_enabled/value").c_str(), resp);
+  mqttClient.publish((mqtt.baseTopic + "water_temp/value").c_str(), String(s->getWaterTemp()).c_str());
 }
 
 
@@ -271,6 +334,33 @@ void mqttLightsADPublish(DynamicJsonDocument base,String dataPointId,String data
 
 }
 
+void mqttClimateADPublish(DynamicJsonDocument base) {
+  
+  String spaId = base["device"]["identifiers"];
+  base["temperature_state_topic"] = mqtt.baseTopic + "water_temp_set_point/value";
+  base["temperature_command_topic"] = mqtt.baseTopic + "water_temp_set_point/set";
+  base["current_temperature_topic"] = mqtt.baseTopic + "water_temp/value";
+  JsonArray modes = base.createNestedArray("modes");
+  modes.add("off");
+  modes.add("cool");
+  modes.add("heat");
+  modes.add("auto");
+  base["mode_state_topic"] = mqtt.baseTopic + "heat_pump_mode_txt/value";
+  base["mode_command_topic"] = mqtt.baseTopic + "heat_pump_mode_txt/set";
+  base["aux_state_topic"] = mqtt.baseTopic + "aux_heating_enabled/value";
+  base["aux_command_topic"] = mqtt.baseTopic + "aux_heating_enabled/set";
+  base["max_temp"] = 41;
+  base["min_temp"] = 5;
+  base["precision"] = 0.1;
+  base["temp_step"] = 0.5;
+  base["name"] = base["device"]["name"];
+
+  String topic = "homeassistant/climate/spanet_" + spaId + "/config";
+  String output;
+  serializeJsonPretty(base,output);
+  mqttClient.publish(topic.c_str(),output.c_str(),true);
+
+}
 
 void mqttHaAutoDiscovery()
 {
@@ -295,7 +385,7 @@ void mqttHaAutoDiscovery()
   mqttSensorADPublish(haTemplate,"hpump_amb_temp","Heatpump Ambient Temperature","temperature","℃");
   mqttSensorADPublish(haTemplate,"hpump_con_temp","Heatpump Condensor Temperature","temperature","℃");
   mqttLightsADPublish(haTemplate,"lights","Lights");
-
+  mqttClimateADPublish(haTemplate);
 }
 
 
@@ -394,6 +484,7 @@ void setup() {
 };
 
 long mqttLastConnect = 0;
+long wifiLastConnect = millis();
 
 void loop() {
   checkButton();
