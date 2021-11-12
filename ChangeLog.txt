@@ -1,3 +1,8 @@
+20211111/1
+- Decouple SpaNetController class from MQTT class
+- Fix Wifi disconect bug
+- Publish heat pump, and heat element controls.
+
 20211106/1
 - Rework serial string parsing to be more tollerant when R4 is truncated
 
