@@ -249,8 +249,6 @@ void mqttPublishStatus(SpaNetController *s){
   char OFF[] = "OFF";
   char *resp;
   
-
-
   String tmpString;
 
   // This gets called each time the spa does a successful poll
@@ -365,8 +363,8 @@ void mqttClimateADPublish(DynamicJsonDocument base) {
 void mqttHaAutoDiscovery()
 {
 
-  String spaName = "MySpa";
-  String spaSerialNumber = "11223344";
+  String spaName = "MySpa";                             //TODO - This needs to be a settable parameter.
+  String spaSerialNumber = String(snc.getSerialNo());
   String output,topic;
 
   DynamicJsonDocument haTemplate(1024);
@@ -441,6 +439,9 @@ void setup() {
     debugW("Failed to mount file system");
   }
 
+
+//Wait for first read from spa controller so that we can initialise
+//the mqtt interface correctly.
   while (!snc.initialised()){
     snc.tick();
     delay(100);
@@ -449,7 +450,9 @@ void setup() {
   if (mqtt.server == "") { mqtt.server = "mqtt"; }
   if (mqtt.port == "") { mqtt.port = "1883"; }
 
-  mqtt.baseTopic = "sn_esp32/MySpa/";  // TODO - this should be "sn_esp32"+spa.serialNumber
+  String snum = String(snc.getSerialNo());
+
+  mqtt.baseTopic = "sn_esp32/"+snum+"/"; 
 
   mqttClient.setServer(mqtt.server.c_str(),mqtt.port.toInt());
   mqttClient.setCallback(mqttCallback);

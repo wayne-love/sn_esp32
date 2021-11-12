@@ -40,6 +40,7 @@ class SpaNetController {
         float   getHpumpAmbTemp();
         float   getHpumpConTemp();
         float   getWaterTemp();
+        int     getSerialNo();
 
         float   getWaterTempSetPoint();
         bool    setWaterTempSetPoint(float temp);
@@ -76,6 +77,8 @@ class SpaNetController {
         float waterTemperatureSetPoint;
         heat_pump_modes heatPumpMode;
         bool auxHeatElement;
+
+        int serialNo;
 
         Register registers[13]={1,33,30,31,29,31,34,15,15,15,17,33,18};
 

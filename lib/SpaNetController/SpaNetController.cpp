@@ -121,6 +121,10 @@ bool SpaNetController::toggleLights(){
   return true;
 }
 
+int SpaNetController::getSerialNo() {
+  return serialNo;
+}
+
 bool SpaNetController::initialised() {
   return init;
 }
@@ -184,6 +188,8 @@ bool SpaNetController::parseStatus(String str) {
     hpump_con_temperature = String(registers[11].getField(12)).toInt();
 
     auxHeatElement = bool(String(registers[6].getField(26)).toInt());
+
+    serialNo = String(registers[2].getField(9)).toInt();
 
     if (!init) {
       init = true;
