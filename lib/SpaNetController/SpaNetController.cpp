@@ -121,6 +121,10 @@ bool SpaNetController::toggleLights(){
   return true;
 }
 
+bool SpaNetController::initialised() {
+  return init;
+}
+
 bool SpaNetController::parseStatus(String str) {
 
 //R4 is hit and miss as to if it returns all its data.
@@ -180,6 +184,10 @@ bool SpaNetController::parseStatus(String str) {
     hpump_con_temperature = String(registers[11].getField(12)).toInt();
 
     auxHeatElement = bool(String(registers[6].getField(26)).toInt());
+
+    if (!init) {
+      init = true;
+    }
   }
 
   return regValid;

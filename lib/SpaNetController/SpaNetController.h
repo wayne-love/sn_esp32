@@ -41,13 +41,12 @@ class SpaNetController {
         float   getHpumpConTemp();
         float   getWaterTemp();
 
-
         float   getWaterTempSetPoint();
         bool    setWaterTempSetPoint(float temp);
 
         heat_pump_modes getHeatPumpMode();
         bool setHeatPumpMode(heat_pump_modes mode);
-        
+
         bool isAuxHeatingEnabled();
         bool setAuxHeatingEnabled(bool enabled);
 
@@ -58,11 +57,15 @@ class SpaNetController {
         ~SpaNetController();
 
         void tick();
+
         void subscribeUpdate(void (*u)(SpaNetController *));
 
         void forceUpdate();
 
+        bool initialised();
+
     private:
+        bool init = false;
 
         float amps; 
         int volts;

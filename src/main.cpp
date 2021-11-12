@@ -440,6 +440,11 @@ void setup() {
   } else {
     debugW("Failed to mount file system");
   }
+
+  while (!snc.initialised()){
+    snc.tick();
+    delay(100);
+  }
   
   if (mqtt.server == "") { mqtt.server = "mqtt"; }
   if (mqtt.port == "") { mqtt.port = "1883"; }
