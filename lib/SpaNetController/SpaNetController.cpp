@@ -121,6 +121,18 @@ bool SpaNetController::toggleLights(){
   return true;
 }
 
+bool SpaNetController::isHeatingOn() {
+  return heatingActive;
+}
+
+bool SpaNetController::isUVOn() {
+  return uvActive;
+}
+
+bool SpaNetController::isSanatiseRunning() {
+  return sanatiseActive;
+}
+
 int SpaNetController::getSerialNo() {
   return serialNo;
 }
@@ -189,9 +201,16 @@ bool SpaNetController::parseStatus(String str) {
 
     auxHeatElement = bool(String(registers[6].getField(26)).toInt());
 
-    serialNo = String(registers[2].getField(9)).toInt();
+    heatingActive = bool(String(registers[4].getField(13)).toInt());
 
-    if (!init) {
+    uvActive = bool(String(registers[4].getField(12)).toInt());
+
+    sanatiseActive = bool(String(registers[4].getField(17)).toInt());
+
+    if (!init) { // On first read, set static variables & set initialised flag
+      
+      serialNo = String(registers[2].getField(9)).toInt();
+
       init = true;
     }
   }

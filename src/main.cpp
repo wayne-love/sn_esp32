@@ -287,6 +287,9 @@ void mqttPublishStatus(SpaNetController *s){
   }
   mqttClient.publish((mqtt.baseTopic + "aux_heating_enabled/value").c_str(), resp);
   mqttClient.publish((mqtt.baseTopic + "water_temp/value").c_str(), String(s->getWaterTemp()).c_str());
+  mqttClient.publish((mqtt.baseTopic + "heating_active/value").c_str(), String(snc.isHeatingOn()).c_str());
+  mqttClient.publish((mqtt.baseTopic + "uv_ozone_active/value").c_str(), String(snc.isUVOn()).c_str());
+  mqttClient.publish((mqtt.baseTopic + "sanatise_running/value").c_str(), String(snc.isSanatiseRunning()).c_str());
 }
 
 
@@ -298,6 +301,22 @@ DynamicJsonDocument mqttSensorJson(DynamicJsonDocument base,String dataPointId,S
   return base;
 
 }
+
+void mqttBinarySensorADPublish(DynamicJsonDocument base,String dataPointId,String dataPointName,String deviceClass){
+  base = mqttSensorJson(base, dataPointId, dataPointName);
+  String spaId = base["device"]["identifiers"];
+
+  if (deviceClass!="") {base["device_class"]=deviceClass;}
+
+  base["payload_on"] = "1";
+  base["payload_off"] = "0";
+
+  String topic = "homeassistant/binary_sensor/spanet_"+spaId+"/"+dataPointId+"/config";
+  String output;
+  serializeJsonPretty(base,output);
+  mqttClient.publish(topic.c_str(),output.c_str(),true);
+}
+
 
 void mqttSensorADPublish(DynamicJsonDocument base,String dataPointId,String dataPointName,String deviceClass, String uom){
   base = mqttSensorJson(base, dataPointId, dataPointName);
@@ -381,8 +400,11 @@ void mqttHaAutoDiscovery()
 
   mqttSensorADPublish(haTemplate,"voltage","Supply Voltage","voltage","v");
   mqttSensorADPublish(haTemplate,"current","Supply Current","current","A");
-  mqttSensorADPublish(haTemplate,"hpump_amb_temp","Heatpump Ambient Temperature","temperature","℃");
-  mqttSensorADPublish(haTemplate,"hpump_con_temp","Heatpump Condensor Temperature","temperature","℃");
+  mqttBinarySensorADPublish(haTemplate, "heating_active", "Heating Active", "");
+  mqttBinarySensorADPublish(haTemplate, "uv_ozone_active", "UV/Ozone Active", "");
+  mqttBinarySensorADPublish(haTemplate, "sanatise_running", "Sanatise Cycle Running", "");
+  mqttSensorADPublish(haTemplate,"hpump_amb_temp","Heatpump Ambient Temperature","temperature","C");
+  mqttSensorADPublish(haTemplate,"hpump_con_temp","Heatpump Condensor Temperature","temperature","C");
   mqttLightsADPublish(haTemplate,"lights","Lights");
   mqttClimateADPublish(haTemplate);
 }

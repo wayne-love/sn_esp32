@@ -40,6 +40,9 @@ class SpaNetController {
         float   getHpumpAmbTemp();
         float   getHpumpConTemp();
         float   getWaterTemp();
+        bool    isHeatingOn();
+        bool    isUVOn();
+        bool    isSanatiseRunning();
         int     getSerialNo();
 
         float   getWaterTempSetPoint();
@@ -77,6 +80,9 @@ class SpaNetController {
         float waterTemperatureSetPoint;
         heat_pump_modes heatPumpMode;
         bool auxHeatElement;
+        bool heatingActive;
+        bool uvActive;
+        bool sanatiseActive;
 
         int serialNo;
 
