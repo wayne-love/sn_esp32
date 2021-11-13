@@ -335,6 +335,7 @@ void mqttLightsADPublish(DynamicJsonDocument base,String dataPointId,String data
 void mqttClimateADPublish(DynamicJsonDocument base) {
   
   String spaId = base["device"]["identifiers"];
+  base["unique_id"]="spanet_"+spaId+"_thermostat";
   base["temperature_state_topic"] = mqtt.baseTopic + "water_temp_set_point/value";
   base["temperature_command_topic"] = mqtt.baseTopic + "water_temp_set_point/set";
   base["current_temperature_topic"] = mqtt.baseTopic + "water_temp/value";
