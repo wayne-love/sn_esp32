@@ -237,6 +237,16 @@ void mqttCallback(char* topic, byte* payload, unsigned int length){
     } else if (p == "off") {
       snc.setHeatPumpMode(SpaNetController::heat_pump_modes(SpaNetController::off));
     }
+  } else if (item=="pump1_operating_mode") {
+    snc.setPump1Operating(p.toInt());
+  } else if (item=="pump2_operating_mode") {
+    snc.setPump2Operating(p.toInt());
+  } else if (item=="pump3_operating_mode") {
+    snc.setPump3Operating(p.toInt());
+  } else if (item=="pump4_operating_mode") {
+    snc.setPump4Operating(p.toInt());
+  } else if (item=="pump5_operating_mode") {
+    snc.setPump5Operating(p.toInt());
   }
 
 }
@@ -258,6 +268,7 @@ void mqttPublishStatus(SpaNetController *s){
   mqttClient.publish((mqtt.baseTopic+"current/value").c_str(),String(s->getAmps()).c_str());
   mqttClient.publish((mqtt.baseTopic+"hpump_amb_temp/value").c_str(),String(s->getHpumpAmbTemp()).c_str());
   mqttClient.publish((mqtt.baseTopic+"hpump_con_temp/value").c_str(),String(s->getHpumpConTemp()).c_str());
+  mqttClient.publish((mqtt.baseTopic+"heater_temp/value").c_str(),String(s->getHeaterTemp()).c_str());
   mqttClient.publish((mqtt.baseTopic+"lights/value").c_str(),String(s->isLightsOn()).c_str());
   mqttClient.publish((mqtt.baseTopic + "heat_pump_mode/value").c_str(), String(snc.getHeatPumpMode()).c_str());
 
@@ -290,15 +301,21 @@ void mqttPublishStatus(SpaNetController *s){
   mqttClient.publish((mqtt.baseTopic + "heating_active/value").c_str(), String(snc.isHeatingOn()).c_str());
   mqttClient.publish((mqtt.baseTopic + "uv_ozone_active/value").c_str(), String(snc.isUVOn()).c_str());
   mqttClient.publish((mqtt.baseTopic + "sanatise_running/value").c_str(), String(snc.isSanatiseRunning()).c_str());
+  mqttClient.publish((mqtt.baseTopic + "status/value").c_str(), snc.getStatus());
+
+  for (int x = 0; x < 5;x++){
+    String pump = "pump" + String(x+1) + "_operating_mode";
+    mqttClient.publish((mqtt.baseTopic + pump + "/value").c_str(), String(snc.getPump(x)->getOperatingMode()).c_str());
+  }
 }
 
-
-DynamicJsonDocument mqttSensorJson(DynamicJsonDocument base,String dataPointId,String dataPointName){
-  String spaId = base["device"]["identifiers"];
-  base["state_topic"]=mqtt.baseTopic+dataPointId+"/value";
-  base["name"]=dataPointName;
-  base["unique_id"]="spanet_"+spaId+"_"+dataPointId;
-  return base;
+DynamicJsonDocument mqttSensorJson(DynamicJsonDocument base, String dataPointId, String dataPointName)
+  {
+    String spaId = base["device"]["identifiers"];
+    base["state_topic"] = mqtt.baseTopic + dataPointId + "/value";
+    base["name"] = dataPointName;
+    base["unique_id"] = "spanet_" + spaId + "_" + dataPointId;
+    return base;
 
 }
 
@@ -338,6 +355,18 @@ DynamicJsonDocument mqttSwitchJson(DynamicJsonDocument base,String dataPointId,S
   base["payload_on"]="1";
   base["payload_off"]="0";
   return base;
+}
+
+
+void mqttSwitchADPublish(DynamicJsonDocument base,String dataPointId,String dataPointName) {
+  String spaId = base["device"]["identifiers"];
+  base = mqttSwitchJson(base, dataPointId, dataPointName);
+
+  String topic = "homeassistant/switch/spanet_"+spaId+"/"+dataPointId+"/config";
+  String output;
+  serializeJsonPretty(base,output);
+  mqttClient.publish(topic.c_str(),output.c_str(),true);
+
 }
 
 void mqttLightsADPublish(DynamicJsonDocument base,String dataPointId,String dataPointName) {
@@ -405,8 +434,18 @@ void mqttHaAutoDiscovery()
   mqttBinarySensorADPublish(haTemplate, "sanatise_running", "Sanatise Cycle Running", "");
   mqttSensorADPublish(haTemplate,"hpump_amb_temp","Heatpump Ambient Temperature","temperature","C");
   mqttSensorADPublish(haTemplate,"hpump_con_temp","Heatpump Condensor Temperature","temperature","C");
+  mqttSensorADPublish(haTemplate,"water_temp","Water Temperature","temperature","C");  //Publish this as a sensor as well as HVAC so as to allow eaiser trending
   mqttLightsADPublish(haTemplate,"lights","Lights");
   mqttClimateADPublish(haTemplate);
+
+  for (int x = 0; x < 5; x++){
+    Pump *pump = snc.getPump(x);
+    if (pump->isInstalled() && !pump->isAutoModeSupported()){  // Dont publish auto enabled pumps as these need to be represented in HA with a tri state field and hence done manually.
+        String id = "pump" + String(x+1) + "_operating_mode";
+        String name = "Pump "+ String(x+1);
+        mqttSwitchADPublish(haTemplate, id, name);  // Pumps should not be published as switches, rather fans, so to support mutispeed pumps.
+    }
+  }
 }
 
 
@@ -461,14 +500,6 @@ void setup() {
   } else {
     debugW("Failed to mount file system");
   }
-
-
-//Wait for first read from spa controller so that we can initialise
-//the mqtt interface correctly.
-  while (!snc.initialised()){
-    snc.tick();
-    delay(100);
-  }
   
   if (mqtt.server == "") { mqtt.server = "mqtt"; }
   if (mqtt.port == "") { mqtt.port = "1883"; }
@@ -516,6 +547,9 @@ void setup() {
 
 long mqttLastConnect = 0;
 long wifiLastConnect = millis();
+long bootTime = millis();
+bool autoDiscoveryPublished = false;
+bool sncFirstInit = false;
 
 void loop() {
   checkButton();
@@ -523,38 +557,50 @@ void loop() {
   server.handleClient();
   snc.tick();
 
-  if (WiFi.status() == WL_CONNECTED) {
-  
-      if (!mqttClient.connected()) {
-        long now=millis();
-        if (now - mqttLastConnect > 5000) {
-          led.setInterval(500);
-          debugW("MQTT not connected, attempting connection to %s:%s",mqtt.server.c_str(),mqtt.port.c_str());
-          mqttLastConnect = now;
-          if (mqttClient.connect("sn_esp32", (mqtt.baseTopic+"available").c_str(),2,true,"offline")) {
-            debugI("MQTT connected");
-            mqttClient.subscribe((mqtt.baseTopic+"+/set").c_str());
-            mqttClient.publish((mqtt.baseTopic+"available").c_str(),"online",true);
-            mqttHaAutoDiscovery();
-            snc.forceUpdate();
-          } else {
-            debugW("MQTT connection failed");
+  if (!sncFirstInit && snc.initialised()) {
+    mqtt.baseTopic = "sn_esp32/" + snc.getSerialNo() + "/";
+    sncFirstInit = true;
+  }
+
+  if (millis()>bootTime+10000){
+    if (WiFi.status() == WL_CONNECTED) {
+      if (snc.initialised()){
+        if (!mqttClient.connected()) {
+          long now=millis();
+          if (now - mqttLastConnect > 5000) {
+            led.setInterval(500);
+            debugW("MQTT not connected, attempting connection to %s:%s",mqtt.server.c_str(),mqtt.port.c_str());
+            mqttLastConnect = now;
+            if (mqttClient.connect("sn_esp32", (mqtt.baseTopic+"available").c_str(),2,true,"offline")) {
+              debugI("MQTT connected");
+              mqttClient.subscribe((mqtt.baseTopic+"+/set").c_str());
+              mqttClient.publish((mqtt.baseTopic+"available").c_str(),"online",true);
+              autoDiscoveryPublished = false;
+            } else {
+              debugW("MQTT connection failed");
+            }
           }
         }
+        else {
+          if (!autoDiscoveryPublished) {
+            mqttHaAutoDiscovery();
+            autoDiscoveryPublished = true;
+            snc.forceUpdate();
+          }
+          led.setInterval(2000);
+        }
       }
-      else {
-        led.setInterval(2000);
-      }
-
-  } else {
-      led.setInterval(100);
-      long now = millis();
-      if (now-wifiLastConnect > 10000) {
-        wifiLastConnect = now;
-        WiFi.disconnect();
-        WiFi.reconnect();
-      }
+    } else {
+        led.setInterval(100);
+        long now = millis();
+        if (now-wifiLastConnect > 10000) {
+          wifiLastConnect = now;
+          WiFi.disconnect();
+          WiFi.reconnect();
+        }
+    }
   }
+
 
   Debug.handle();
   mqttClient.loop();

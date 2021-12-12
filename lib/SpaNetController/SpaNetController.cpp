@@ -42,12 +42,36 @@ bool Register::isValid() {
 }
 
 
+// *** Pump
+
+void Pump::initialise(bool installed, bool autoOperation) {
+  _installed = installed;
+  _autoOperation = autoOperation;
+}
+
+bool Pump::isInstalled() {
+  return _installed;
+}
+
+void Pump::setOperatingMode(int mode){
+  _mode = mode;
+}
+
+int Pump::getOperatingMode() {
+  return _mode;
+}
+
+bool Pump::isAutoModeSupported(){
+  return _autoOperation;
+}
+
+
 
 // *** Start SpaNetController
 
 SpaNetController::SpaNetController() {
     Serial2.begin(38400,SERIAL_8N1, 16, 17);
-    Serial2.setTimeout(500); 
+    Serial2.setTimeout(500);
 }
 
 SpaNetController::~SpaNetController() {}
@@ -85,6 +109,35 @@ bool SpaNetController::setWaterTempSetPoint(float temp){
   return true;
 }
 
+bool SpaNetController::setPump1Operating(int operatingMode){
+  String cmd = "S22:" + String(operatingMode);
+  commands.emplace_back(cmd);
+  return true;
+}
+
+bool SpaNetController::setPump2Operating(int operatingMode){
+  String cmd = "S23:" + String(operatingMode);
+  commands.emplace_back(cmd);
+  return true;
+}
+
+bool SpaNetController::setPump3Operating(int operatingMode){
+  String cmd = "S24:" + String(operatingMode);
+  commands.emplace_back(cmd);
+  return true;
+}
+
+bool SpaNetController::setPump4Operating(int operatingMode){
+  String cmd = "S25:" + String(operatingMode);
+  commands.emplace_back(cmd);
+  return true;
+}
+
+bool SpaNetController::setPump5Operating(int operatingMode){
+  String cmd = "S26:" + operatingMode;
+  commands.emplace_back(cmd);
+  return true;
+}
 
 SpaNetController::heat_pump_modes SpaNetController::getHeatPumpMode(){
   return heatPumpMode;
@@ -133,12 +186,28 @@ bool SpaNetController::isSanatiseRunning() {
   return sanatiseActive;
 }
 
-int SpaNetController::getSerialNo() {
+String SpaNetController::getSerialNo() {
   return serialNo;
 }
 
+char* SpaNetController::getStatus() {
+  return registers[2].getField(21);
+}
+
+float SpaNetController::getHeaterTemp() {
+  return heater_temperature;
+}
+
 bool SpaNetController::initialised() {
-  return init;
+  return _firstrun;
+}
+
+bool SpaNetController::pumpInstalled(int pump){
+  return pumps[pump].isInstalled();
+}
+
+Pump* SpaNetController::getPump(int pump){
+  return &pumps[pump];
 }
 
 bool SpaNetController::parseStatus(String str) {
@@ -179,7 +248,14 @@ bool SpaNetController::parseStatus(String str) {
 
   }
 
-  bool regValid = registers[1].isValid() && registers[4].isValid() && registers[5].isValid() && registers[6].isValid() && registers[11].isValid();
+  bool regValid = registers[1].isValid() && \
+    registers[2].isValid() && \
+    registers[4].isValid() && \
+    registers[5].isValid() && \
+    registers[6].isValid() && \
+    registers[9].isValid() && \
+    registers[11].isValid() &&\
+    registers[12].isValid();
 
   // First datapoint in registers is at array position 2
   if (regValid)
@@ -207,12 +283,46 @@ bool SpaNetController::parseStatus(String str) {
 
     sanatiseActive = bool(String(registers[4].getField(17)).toInt());
 
-    if (!init) { // On first read, set static variables & set initialised flag
-      
-      serialNo = String(registers[2].getField(9)).toInt();
+    heater_temperature = float(String(registers[1].getField(13)).toInt()) / 10;
 
-      init = true;
+    for (int x = 0; x < 5; x++) {
+      pumps[x].setOperatingMode(String(registers[4].getField(19 + x)).toInt()); 
     }
+
+    if (!_firstrun) { // On first read, set static variables & set initialised flag
+
+      debugD("First time, setting static elements");
+      debugD("Serial number set to '%s'", registers[2].getField(9));
+
+      serialNo = String(registers[2].getField(9));
+
+      for (int x = 0; x < 5;x++) {
+
+        // Itterate through string until you get to the 3rd field
+        // ('-' delimiter field boundaries).  If 3rd field contains '4'
+        // then the pump supports auto operation.
+        bool ao = false;
+        char *s = registers[12].getField(8 + x);
+        int len = strlen(s);
+        int d_count = 0;
+        for (int c = 0; c < len;c++){
+          if (s[c]=='-') {
+            d_count++;
+          }
+          if (d_count==2) {
+            if (s[c]=='4') {
+              ao = true;
+            }
+          }
+        }
+
+          pumps[x].initialise(registers[12].getField(8 + x)[0] == '1', ao);
+      }
+
+      _firstrun = true;
+    }
+
+
   }
 
   return regValid;

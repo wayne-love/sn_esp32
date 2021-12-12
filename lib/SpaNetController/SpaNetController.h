@@ -15,7 +15,6 @@ class Register {
     public:
         Register(int req);
 
-
         bool updateRegister(const char update[]);
         bool isValid();
         char* getField(int field);
@@ -29,7 +28,22 @@ class Register {
 
 };
 
+class Pump {
+    public:
+        void initialise(bool installed, bool autoOperation);
 
+        bool isInstalled();
+
+        bool isAutoModeSupported();
+
+        void setOperatingMode(int mode);
+        int getOperatingMode();
+
+    private:
+        bool _installed;
+        bool _autoOperation;
+        int _mode;
+};
 
 class SpaNetController {
     public:
@@ -43,7 +57,12 @@ class SpaNetController {
         bool    isHeatingOn();
         bool    isUVOn();
         bool    isSanatiseRunning();
-        int     getSerialNo();
+        String     getSerialNo();
+        char *getStatus();
+        float getHeaterTemp();
+        
+        bool pumpInstalled(int pump);
+        Pump *getPump(int pump);
 
         float   getWaterTempSetPoint();
         bool    setWaterTempSetPoint(float temp);
@@ -57,6 +76,12 @@ class SpaNetController {
         bool isLightsOn();
         bool toggleLights();
 
+        bool setPump1Operating(int mode);
+        bool setPump2Operating(int mode);
+        bool setPump3Operating(int mode);
+        bool setPump4Operating(int mode);
+        bool setPump5Operating(int mode);
+
         SpaNetController();
         ~SpaNetController();
 
@@ -69,12 +94,13 @@ class SpaNetController {
         bool initialised();
 
     private:
-        bool init = false;
+        bool _firstrun = false;
 
         float amps; 
         int volts;
         float hpump_amb_temperature;
         float hpump_con_temperature;
+        float heater_temperature;
         bool lightsOn;
         float waterTemperature;
         float waterTemperatureSetPoint;
@@ -83,10 +109,13 @@ class SpaNetController {
         bool heatingActive;
         bool uvActive;
         bool sanatiseActive;
+        char* status;
 
-        int serialNo;
+        String serialNo;
 
         Register registers[13]={1,33,30,31,29,31,34,15,15,15,17,33,18};
+
+        Pump pumps[5];
 
         ulong _nextUpdate=millis();
         ulong lastCommand = millis();
