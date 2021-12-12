@@ -1,3 +1,6 @@
+20211212/1
+- Spa jet control supported.  HA information only published for jets that do not support auto operation.
+
 20211113/1
 - Device waits for first read of spa registers before connecting to mqtt server
 - Mqtt topics are now unique based on spa serial number, allow multiple spas on same network
