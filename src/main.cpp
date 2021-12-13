@@ -521,8 +521,7 @@ void setup() {
     server.sendHeader("Connection", "close");
     server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
     ESP.restart();
-  }, []() {
-    HTTPUpload& upload = server.upload();
+  }, []() {HTTPUpload& upload = server.upload();
     if (upload.status == UPLOAD_FILE_START) {
       Serial.printf("Update: %s\n", upload.filename.c_str());
       if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
@@ -595,7 +594,6 @@ void loop() {
         long now = millis();
         if (now-wifiLastConnect > 10000) {
           wifiLastConnect = now;
-          WiFi.disconnect();
           WiFi.reconnect();
         }
     }
