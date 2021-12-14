@@ -4,10 +4,7 @@
 #include <WiFiClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
-#include <Update.h>
-
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
-#include <WebServer.h>
 #include <RemoteDebug.h>
 #include <PubSubClient.h>
 #include <LITTLEFS.h>
@@ -15,6 +12,8 @@
 #include <ArduinoJson.h>
 #include "Blinker.h"
 #include "SpaNetController.h"
+#include "WebUI.h"
+
 
   //See file .../hardware/espressif/esp32/variants/(esp32|doitESP32devkitV1)/pins_arduino.h
   #define LED_BUILTIN       2         // Pin D2 mapped to pin GPIO2/ADC12 of ESP32, control on-board LED
@@ -77,57 +76,16 @@ const int TRIGGER_PIN2 = PIN_D25; // Pin D25 mapped to pin GPIO25/ADC18/DAC1 of 
 
 #define LED_BUILTIN       2 // Pin D2 mapped to pin GPIO2/ADC12 of ESP32, control on-board LED
 
-WebServer server(80);
+
 RemoteDebug Debug;
 Blinker led(LED_BUILTIN);
 WiFiClient wifi;
 PubSubClient mqttClient(wifi);
 SpaNetController snc;
 
-
-
-const char* serverIndex =
-"<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>"
-"<form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>"
-   "<input type='file' name='update'>"
-        "<input type='submit' value='Update'>"
-    "</form>"
- "<div id='prg'>progress: 0%</div>"
- "<script>"
-  "$('form').submit(function(e){"
-  "e.preventDefault();"
-  "var form = $('#upload_form')[0];"
-  "var data = new FormData(form);"
-  " $.ajax({"
-  "url: '/update',"
-  "type: 'POST',"
-  "data: data,"
-  "contentType: false,"
-  "processData:false,"
-  "xhr: function() {"
-  "var xhr = new window.XMLHttpRequest();"
-  "xhr.upload.addEventListener('progress', function(evt) {"
-  "if (evt.lengthComputable) {"
-  "var per = evt.loaded / evt.total;"
-  "$('#prg').html('progress: ' + Math.round(per*100) + '%');"
-  "}"
-  "}, false);"
-  "return xhr;"
-  "},"
-  "success:function(d, s) {"
-  "console.log('success!')"
- "},"
- "error: function (a, b, c) {"
- "}"
- "});"
- "});"
- "</script>";
-
+WebUI ui(&snc);
 
 // MQTT Interface
-
-
-
 
 class MQTT {
   public:
@@ -155,7 +113,9 @@ void checkButton(){
   if(digitalRead(TRIGGER_PIN) == LOW) {
     delay(100);
     if(digitalRead(TRIGGER_PIN) == LOW) {
-      server.stop();
+
+  
+      if (ui.initialised) {ui.server->stop();}
       
       WiFiManager wm;
       WiFiManagerParameter custom_mqtt_server("server", "MQTT server", mqtt.server.c_str(), 40);
@@ -512,36 +472,6 @@ void setup() {
   mqttClient.setCallback(mqttCallback);
   mqttClient.setBufferSize(2048);
   snc.subscribeUpdate(mqttPublishStatus);
-
-  server.on("/", HTTP_GET, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/html", serverIndex);
-  });
-  server.on("/update", HTTP_POST, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
-    ESP.restart();
-  }, []() {HTTPUpload& upload = server.upload();
-    if (upload.status == UPLOAD_FILE_START) {
-      Serial.printf("Update: %s\n", upload.filename.c_str());
-      if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
-        Update.printError(Serial);
-      }
-    } else if (upload.status == UPLOAD_FILE_WRITE) {
-      /* flashing firmware to ESP*/
-      if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-        Update.printError(Serial);
-      }
-    } else if (upload.status == UPLOAD_FILE_END) {
-      if (Update.end(true)) { //true to set the size to the current progress
-        Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
-      } else {
-        Update.printError(Serial);
-      }
-    }
-  });
-  server.begin();    
-
 };
 
 long mqttLastConnect = 0;
@@ -551,54 +481,56 @@ bool autoDiscoveryPublished = false;
 bool sncFirstInit = false;
 
 void loop() {
+
+  
   checkButton();
   led.tick();
-  server.handleClient();
+
   snc.tick();
 
   if (!sncFirstInit && snc.initialised()) {
     mqtt.baseTopic = "sn_esp32/" + snc.getSerialNo() + "/";
     sncFirstInit = true;
+    ui.begin();
   }
 
-  if (millis()>bootTime+10000){
-    if (WiFi.status() == WL_CONNECTED) {
-      if (snc.initialised()){
-        if (!mqttClient.connected()) {
-          long now=millis();
-          if (now - mqttLastConnect > 5000) {
-            led.setInterval(500);
-            debugW("MQTT not connected, attempting connection to %s:%s",mqtt.server.c_str(),mqtt.port.c_str());
-            mqttLastConnect = now;
-            if (mqttClient.connect("sn_esp32", (mqtt.baseTopic+"available").c_str(),2,true,"offline")) {
-              debugI("MQTT connected");
-              mqttClient.subscribe((mqtt.baseTopic+"+/set").c_str());
-              mqttClient.publish((mqtt.baseTopic+"available").c_str(),"online",true);
-              autoDiscoveryPublished = false;
-            } else {
-              debugW("MQTT connection failed");
-            }
+  if (ui.initialised) { ui.server->handleClient(); }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    if (snc.initialised()){
+      if (!mqttClient.connected()) {
+        long now=millis();
+        if (now - mqttLastConnect > 5000) {
+          led.setInterval(500);
+          debugW("MQTT not connected, attempting connection to %s:%s",mqtt.server.c_str(),mqtt.port.c_str());
+          mqttLastConnect = now;
+          if (mqttClient.connect("sn_esp32", (mqtt.baseTopic+"available").c_str(),2,true,"offline")) {
+            debugI("MQTT connected");
+            mqttClient.subscribe((mqtt.baseTopic+"+/set").c_str());
+            mqttClient.publish((mqtt.baseTopic+"available").c_str(),"online",true);
+            autoDiscoveryPublished = false;
+          } else {
+            debugW("MQTT connection failed");
           }
-        }
-        else {
-          if (!autoDiscoveryPublished) {
-            mqttHaAutoDiscovery();
-            autoDiscoveryPublished = true;
-            snc.forceUpdate();
-          }
-          led.setInterval(2000);
         }
       }
-    } else {
-        led.setInterval(100);
-        long now = millis();
-        if (now-wifiLastConnect > 10000) {
-          wifiLastConnect = now;
-          WiFi.reconnect();
+      else {
+        if (!autoDiscoveryPublished) {
+          mqttHaAutoDiscovery();
+          autoDiscoveryPublished = true;
+          snc.forceUpdate();
         }
+        led.setInterval(2000);
+      }
     }
+  } else {
+      led.setInterval(100);
+      long now = millis();
+      if (now-wifiLastConnect > 10000) {
+        wifiLastConnect = now;
+        WiFi.reconnect();
+      }
   }
-
 
   Debug.handle();
   mqttClient.loop();
