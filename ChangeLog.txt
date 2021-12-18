@@ -1,5 +1,9 @@
+20211214/1
+- moved OTA update page to /fota on webserver
+- added auto updating status page to / on webserver
+
 20211212/1
-- Spa jet control supported.  HA information only published for jets that do not support auto operation.
+- Spa jet control supported.  HA auto discover information only published for jets that do not support auto operation.
 
 20211113/1
 - Device waits for first read of spa registers before connecting to mqtt server
