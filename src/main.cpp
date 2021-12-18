@@ -392,9 +392,9 @@ void mqttHaAutoDiscovery()
   mqttBinarySensorADPublish(haTemplate, "heating_active", "Heating Active", "");
   mqttBinarySensorADPublish(haTemplate, "uv_ozone_active", "UV/Ozone Active", "");
   mqttBinarySensorADPublish(haTemplate, "sanatise_running", "Sanatise Cycle Running", "");
-  mqttSensorADPublish(haTemplate,"hpump_amb_temp","Heatpump Ambient Temperature","temperature","C");
-  mqttSensorADPublish(haTemplate,"hpump_con_temp","Heatpump Condensor Temperature","temperature","C");
-  mqttSensorADPublish(haTemplate,"water_temp","Water Temperature","temperature","C");  //Publish this as a sensor as well as HVAC so as to allow eaiser trending
+  mqttSensorADPublish(haTemplate,"hpump_amb_temp","Heatpump Ambient Temperature","temperature","°C");
+  mqttSensorADPublish(haTemplate,"hpump_con_temp","Heatpump Condensor Temperature","temperature","°C");
+  mqttSensorADPublish(haTemplate,"water_temp","Water Temperature","temperature","°C");  //Publish this as a sensor as well as HVAC so as to allow eaiser trending
   mqttLightsADPublish(haTemplate,"lights","Lights");
   mqttClimateADPublish(haTemplate);
 
