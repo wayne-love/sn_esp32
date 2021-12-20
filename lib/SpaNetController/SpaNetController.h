@@ -28,17 +28,21 @@ class Register {
 
 };
 
+
+
 class Pump {
     public:
+    #define PUMP_MODES_COUNT 5
+        static const char *pump_modes[PUMP_MODES_COUNT];  // Off = 0, On = 1, Auto = 4
+
         void initialise(bool installed, bool autoOperation);
-
         bool isInstalled();
-
         bool isAutoModeSupported();
 
         void setOperatingMode(int mode);
+        void setOperatingMode(const char *mode);
         int getOperatingMode();
-
+        
     private:
         bool _installed;
         bool _autoOperation;
@@ -47,6 +51,8 @@ class Pump {
 
 class SpaNetController {
     public:
+
+
         enum heat_pump_modes {automatic=0, heat=1, cool=2, off=3};
         
         float   getAmps();
@@ -76,6 +82,8 @@ class SpaNetController {
         bool isLightsOn();
         bool toggleLights();
 
+        bool setPumpOperating(int pump, int mode);
+        void setPumpOperating(int pump, const char *mode);
         bool setPump1Operating(int mode);
         bool setPump2Operating(int mode);
         bool setPump3Operating(int mode);
@@ -92,6 +100,8 @@ class SpaNetController {
         void forceUpdate();
 
         bool initialised();
+
+        Pump pumps[5];
 
     private:
         bool _firstrun = false;
@@ -115,7 +125,6 @@ class SpaNetController {
 
         Register registers[13]={1,33,30,31,29,31,34,15,15,15,17,33,18};
 
-        Pump pumps[5];
 
         ulong _nextUpdate=millis();
         ulong lastCommand = millis();

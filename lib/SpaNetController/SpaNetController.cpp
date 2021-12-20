@@ -43,6 +43,7 @@ bool Register::isValid() {
 
 
 // *** Pump
+const char *Pump::pump_modes[5] = {"Off", "On", "", "", "Auto"};
 
 void Pump::initialise(bool installed, bool autoOperation) {
   _installed = installed;
@@ -107,6 +108,22 @@ bool SpaNetController::setWaterTempSetPoint(float temp){
   String cmd = "W40:" + String(int(temp * 10));
   commands.emplace_back(cmd);
   return true;
+}
+
+bool SpaNetController::setPumpOperating(int pump,int mode){
+  debugD("pump=%d,mode=%d", pump, mode);
+  String cmd = "S"+String(pump+21)+":" + String(mode);
+  commands.emplace_back(cmd);
+  return true;
+}
+
+void SpaNetController::setPumpOperating(int pump, const char *mode){
+  debugD("pump=%d,mode=%s", pump, mode);
+  for (int i = 0; i < PUMP_MODES_COUNT; i++ ) {
+    if (strcmp(mode,Pump::pump_modes[i])==0) {
+      setPumpOperating(pump,i);
+    }
+  }
 }
 
 bool SpaNetController::setPump1Operating(int operatingMode){

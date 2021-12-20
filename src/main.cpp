@@ -179,7 +179,17 @@ void mqttCallback(char* topic, byte* payload, unsigned int length){
 
   debugI("Got update for %s - %s",item.c_str(),p.c_str());
 
-  if (item=="lights") {
+  String itemCopy = item;
+  itemCopy.remove(4,1);
+
+  if (itemCopy=="pump_operating_mode_text") {
+    debugI("pump mode update");
+    int pump = item.substring(4, 5).toInt();
+    snc.setPumpOperating(pump, p.c_str());
+   } else if (itemCopy=="pump_operating_mode") {
+    int pump = item.substring(4, 5).toInt();
+    snc.setPumpOperating(pump, p.toInt());
+  } else if (item=="lights") {
     snc.toggleLights();
   } else if (item=="heat_pump_mode") {
     snc.setHeatPumpMode(SpaNetController::heat_pump_modes(p.toInt()));
@@ -197,17 +207,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length){
     } else if (p == "off") {
       snc.setHeatPumpMode(SpaNetController::heat_pump_modes(SpaNetController::off));
     }
-  } else if (item=="pump1_operating_mode") {
-    snc.setPump1Operating(p.toInt());
-  } else if (item=="pump2_operating_mode") {
-    snc.setPump2Operating(p.toInt());
-  } else if (item=="pump3_operating_mode") {
-    snc.setPump3Operating(p.toInt());
-  } else if (item=="pump4_operating_mode") {
-    snc.setPump4Operating(p.toInt());
-  } else if (item=="pump5_operating_mode") {
-    snc.setPump5Operating(p.toInt());
-  }
+  } 
 
 }
 
@@ -265,7 +265,9 @@ void mqttPublishStatus(SpaNetController *s){
 
   for (int x = 0; x < 5;x++){
     String pump = "pump" + String(x+1) + "_operating_mode";
-    mqttClient.publish((mqtt.baseTopic + pump + "/value").c_str(), String(snc.getPump(x)->getOperatingMode()).c_str());
+    int mode = snc.getPump(x)->getOperatingMode();
+    mqttClient.publish((mqtt.baseTopic + pump + "/value").c_str(), String(mode).c_str());
+    mqttClient.publish((mqtt.baseTopic + pump + "_text/value").c_str(), Pump::pump_modes[mode]);
   }
 }
 
@@ -321,7 +323,6 @@ DynamicJsonDocument mqttSwitchJson(DynamicJsonDocument base,String dataPointId,S
 void mqttSwitchADPublish(DynamicJsonDocument base,String dataPointId,String dataPointName) {
   String spaId = base["device"]["identifiers"];
   base = mqttSwitchJson(base, dataPointId, dataPointName);
-
   String topic = "homeassistant/switch/spanet_"+spaId+"/"+dataPointId+"/config";
   String output;
   serializeJsonPretty(base,output);
@@ -332,8 +333,26 @@ void mqttSwitchADPublish(DynamicJsonDocument base,String dataPointId,String data
 void mqttLightsADPublish(DynamicJsonDocument base,String dataPointId,String dataPointName) {
   String spaId = base["device"]["identifiers"];
   base = mqttSwitchJson(base, dataPointId, dataPointName);
-
   String topic = "homeassistant/light/spanet_"+spaId+"/"+dataPointId+"/config";
+  String output;
+  serializeJsonPretty(base,output);
+  mqttClient.publish(topic.c_str(),output.c_str(),true);
+
+}
+
+void mqttPumpSelectADPublish(DynamicJsonDocument base,String dataPointId, String dataPointName) {
+  String spaId = base["device"]["identifiers"];
+  base["state_topic"] = mqtt.baseTopic + dataPointId + "_text/value";
+  base["command_topic"] = mqtt.baseTopic + dataPointId + "_text/set";
+  base["name"] = dataPointName;
+  base["unique_id"] = "spanet_" + spaId + "_" + dataPointId;
+  JsonArray options = base.createNestedArray("options");
+  for (int i = 0; i < PUMP_MODES_COUNT; i++){
+    if (strcmp(Pump::pump_modes[i],"")!=0) {
+      options.add(Pump::pump_modes[i]);
+    }
+  }
+  String topic = "homeassistant/select/spanet_"+spaId+"/"+dataPointId+"/config";
   String output;
   serializeJsonPretty(base,output);
   mqttClient.publish(topic.c_str(),output.c_str(),true);
@@ -400,10 +419,14 @@ void mqttHaAutoDiscovery()
 
   for (int x = 0; x < 5; x++){
     Pump *pump = snc.getPump(x);
-    if (pump->isInstalled() && !pump->isAutoModeSupported()){  // Dont publish auto enabled pumps as these need to be represented in HA with a tri state field and hence done manually.
-        String id = "pump" + String(x+1) + "_operating_mode";
-        String name = "Pump "+ String(x+1);
+    if (pump->isInstalled()){
+      String id = "pump" + String(x+1) + "_operating_mode";
+      String name = "Pump "+ String(x+1);
+      if (!pump->isAutoModeSupported()){
         mqttSwitchADPublish(haTemplate, id, name);  // Pumps should not be published as switches, rather fans, so to support mutispeed pumps.
+      } else {
+        mqttPumpSelectADPublish(haTemplate, id, name);
+      }
     }
   }
 }
