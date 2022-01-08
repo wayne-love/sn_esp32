@@ -164,6 +164,45 @@ bool parseBool(String val){
   }
 }
 
+void parseLightsJSON(String jString){
+  DynamicJsonDocument json(1024);
+
+  deserializeJson(json, jString);
+
+  snc.lights.setIsOn(strcmp(json["state"], "ON") == 0);
+  if (json.containsKey("effect")) {
+    const char *effect = json["effect"];
+    snc.lights.setMode(effect);
+  }
+
+  if (json.containsKey("brightness")) {
+    byte value = json["brightness"];
+    if (value == 255) {
+      value = 254;
+    }
+    value = (value / 51) + 1; // Map from 0 to 254 to 1 to 5
+    snc.lights.setBrightness(value);
+  }
+
+}
+
+String buildLightsJSON() {
+  DynamicJsonDocument json(1024);
+
+  if (snc.lights.isOn()) {
+    json["state"] = "ON";
+  } else {
+    json["state"] = "OFF";
+  }
+
+  json["effect"] = snc.lights.getMode();
+  json["brightness"] = int(snc.lights.getBrightness() * 51);
+
+  String buffer;
+  serializeJsonPretty(json, buffer);
+  return buffer;
+}
+
 
 void mqttCallback(char* topic, byte* payload, unsigned int length){
   String t = String(topic);
@@ -190,7 +229,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length){
     int pump = item.substring(4, 5).toInt();
     snc.setPumpOperating(pump, p.toInt());
   } else if (item=="lights") {
-    snc.lights.setIsOn(p == "1");
+    parseLightsJSON(p);
   } else if (item=="heat_pump_mode") {
     snc.setHeatPumpMode(SpaNetController::heat_pump_modes(p.toInt()));
   } else if (item=="water_temp_set_point") {
@@ -229,7 +268,7 @@ void mqttPublishStatus(SpaNetController *s){
   mqttClient.publish((mqtt.baseTopic+"hpump_amb_temp/value").c_str(),String(s->getHpumpAmbTemp()).c_str());
   mqttClient.publish((mqtt.baseTopic+"hpump_con_temp/value").c_str(),String(s->getHpumpConTemp()).c_str());
   mqttClient.publish((mqtt.baseTopic+"heater_temp/value").c_str(),String(s->getHeaterTemp()).c_str());
-  mqttClient.publish((mqtt.baseTopic+"lights/value").c_str(),String(s->lights.isOn()).c_str());
+  mqttClient.publish((mqtt.baseTopic+"lights/value").c_str(),buildLightsJSON().c_str());
   mqttClient.publish((mqtt.baseTopic + "heat_pump_mode/value").c_str(), String(snc.getHeatPumpMode()).c_str());
 
   String hpModeStr="unknown";
@@ -332,8 +371,22 @@ void mqttSwitchADPublish(DynamicJsonDocument base,String dataPointId,String data
 
 void mqttLightsADPublish(DynamicJsonDocument base,String dataPointId,String dataPointName) {
   String spaId = base["device"]["identifiers"];
-  base = mqttSwitchJson(base, dataPointId, dataPointName);
-  String topic = "homeassistant/light/spanet_"+spaId+"/"+dataPointId+"/config";
+  base = mqttSensorJson(base, dataPointId, dataPointName);
+  base["command_topic"]=mqtt.baseTopic+dataPointId+"/set";
+  base["schema"] = "json";
+  base["brightness"] = true;
+  base["color_mode"] = true;
+  base["effect"] = true;
+  JsonArray effect_list = base.createNestedArray("effect_list");
+  effect_list.add("White");
+  effect_list.add("Color");
+  effect_list.add("Fade");
+  effect_list.add("Step");
+  effect_list.add("Party");
+  JsonArray color_modes = base.createNestedArray("supported_color_modes");
+  color_modes.add("hs");
+
+  String topic = "homeassistant/light/spanet_" + spaId + "/" + dataPointId + "/config";
   String output;
   serializeJsonPretty(base,output);
   mqttClient.publish(topic.c_str(),output.c_str(),true);

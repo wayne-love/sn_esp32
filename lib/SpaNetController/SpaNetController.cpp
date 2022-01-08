@@ -1,10 +1,11 @@
 #include "SpaNetController.h"
 
+#define NUM(a) (sizeof(a) / sizeof(*a))
+
 
 Register::Register(int req) {
   requiredFields = req;
 }
-
 
 bool Register::updateRegister(const char update[]) {
 
@@ -71,7 +72,7 @@ bool Pump::isAutoModeSupported(){
 SpaNetController::SpaNetController()
   : lights(this) {
     Serial2.begin(38400,SERIAL_8N1, 16, 17);
-    Serial2.setTimeout(500);
+    Serial2.setTimeout(250);
 }
 
 SpaNetController::~SpaNetController() {}
@@ -264,6 +265,7 @@ bool SpaNetController::parseStatus(String str) {
     registers[4].isValid() && \
     registers[5].isValid() && \
     registers[6].isValid() && \
+    registers[7].isValid() && \
     registers[9].isValid() && \
     registers[11].isValid() &&\
     registers[12].isValid();
@@ -277,8 +279,10 @@ bool SpaNetController::parseStatus(String str) {
     volts = String(registers[1].getField(3)).toInt();
 
     lights._isOn = (strcmp(registers[4].getField(15),"1") == 0);
+    lights._mode = byte(String(registers[5].getField(5)).toInt());
+    lights._brightness = byte(String(registers[5].getField(3)).toInt());
 
-    waterTemperature = float(String(registers[4].getField(16)).toInt())/10;
+     waterTemperature = float(String(registers[4].getField(16)).toInt())/10;
 
     waterTemperatureSetPoint = float(String(registers[5].getField(9)).toInt())/10;
 
@@ -347,7 +351,7 @@ String SpaNetController::sendCommand(String cmd) {
   Serial2.printf("\n");
   delay(100);
   Serial2.print(cmd+"\n");
-  delay(100);
+  //delay(100);
   String resp = Serial2.readString();
 
   debugD("Received %s",resp.c_str());
@@ -430,7 +434,13 @@ SpaNetController::Light::Light(SpaNetController* p){
 }
 
 /**
- * @brief Destroy the Spa Net Controller:: Light:: Light object
+ * @brief Operating modes for spa lights {"White", "Color", "Fade", "Step", "Party"} 
+ * 
+ */
+const char *SpaNetController::Light::light_modes[] = {"White", "Color", "Fade", "Step", "Party"};
+
+/**
+ * @brief Empty function
  * 
  */
 SpaNetController::Light::~Light(){}
@@ -455,4 +465,54 @@ void SpaNetController::Light::setIsOn(bool state) {
   if (state != _isOn) {
     _parent->queueCommand("W14");
   } 
+}
+
+/**
+ * @brief Get current light mode
+ * 
+ * @return const char* - one of "White", "Color", "Fade", "Step", "Party"
+ */
+const char *SpaNetController::Light::getMode(){
+  return light_modes[_mode];
+}
+
+/**
+ * @brief Set light mode
+ * 
+ * @param mode - one of "White", "Color", "Fade", "Step", "Party"
+ */
+void SpaNetController::Light::setMode(const char *mode){
+  for (byte count = 0; count < NUM(light_modes); count++) {
+    if (strcmp(mode,light_modes[count])==0) {
+      setMode(count);
+      return;
+    }
+  }
+}
+
+void SpaNetController::Light::setMode(byte mode){
+  if (mode != _mode) {
+      _parent->queueCommand("S07:" + String(mode));
+  }
+}
+
+/**
+ * @brief Gets the current brightness setting
+ * 
+ * @return byte (min 1, max 5)
+ */
+byte SpaNetController::Light::getBrightness() {
+  return _brightness;
+}
+
+
+/**
+ * @brief Sets the lights brightness
+ * 
+ * @param value integer between 1 and 5
+ */
+void SpaNetController::Light::setBrightness(byte value) {
+  if (value != _brightness) {
+    _parent->queueCommand("S08:" + String(value));
+  }
 }

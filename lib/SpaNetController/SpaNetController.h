@@ -54,8 +54,17 @@ class SpaNetController {
     public:
         class Light{
             public:
+                byte getBrightness();
+                void setBrightness(byte value);
+
+                static const char *light_modes[5]; // "White", "Color", "Fade", "Step", "Party"
+                const char *getMode();
+                void setMode(const char *mode);
+                void setMode(byte mode);
+
                 bool isOn();
                 void setIsOn(bool state);
+        
                 friend class SpaNetController;
 
                 Light(SpaNetController* p);
@@ -64,7 +73,8 @@ class SpaNetController {
             private:
                 SpaNetController* _parent;
                 bool _isOn = false;
-                void (SpaNetController::*_queueCommand)(String) = nullptr;
+                byte _mode = 0; // min = 0, max = 4
+                byte _brightness = 5; // min = 1, max = 5
         };
 
         Light lights;
