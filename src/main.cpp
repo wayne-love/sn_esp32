@@ -190,7 +190,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length){
     int pump = item.substring(4, 5).toInt();
     snc.setPumpOperating(pump, p.toInt());
   } else if (item=="lights") {
-    snc.toggleLights();
+    snc.lights.setIsOn(p == "1");
   } else if (item=="heat_pump_mode") {
     snc.setHeatPumpMode(SpaNetController::heat_pump_modes(p.toInt()));
   } else if (item=="water_temp_set_point") {
@@ -229,7 +229,7 @@ void mqttPublishStatus(SpaNetController *s){
   mqttClient.publish((mqtt.baseTopic+"hpump_amb_temp/value").c_str(),String(s->getHpumpAmbTemp()).c_str());
   mqttClient.publish((mqtt.baseTopic+"hpump_con_temp/value").c_str(),String(s->getHpumpConTemp()).c_str());
   mqttClient.publish((mqtt.baseTopic+"heater_temp/value").c_str(),String(s->getHeaterTemp()).c_str());
-  mqttClient.publish((mqtt.baseTopic+"lights/value").c_str(),String(s->isLightsOn()).c_str());
+  mqttClient.publish((mqtt.baseTopic+"lights/value").c_str(),String(s->lights.isOn()).c_str());
   mqttClient.publish((mqtt.baseTopic + "heat_pump_mode/value").c_str(), String(snc.getHeatPumpMode()).c_str());
 
   String hpModeStr="unknown";

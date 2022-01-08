@@ -1,8 +1,6 @@
 #include "SpaNetController.h"
 
 
-
-
 Register::Register(int req) {
   requiredFields = req;
 }
@@ -70,7 +68,8 @@ bool Pump::isAutoModeSupported(){
 
 // *** Start SpaNetController
 
-SpaNetController::SpaNetController() {
+SpaNetController::SpaNetController()
+  : lights(this) {
     Serial2.begin(38400,SERIAL_8N1, 16, 17);
     Serial2.setTimeout(500);
 }
@@ -103,17 +102,21 @@ float SpaNetController::getWaterTempSetPoint(){
 }
 
 
+void SpaNetController::queueCommand(String command) {
+  commands.emplace_back(command);
+}
+
 bool SpaNetController::setWaterTempSetPoint(float temp){
   // Should do some error checking here to ensure that we arnt tryting to freeze the spa
   String cmd = "W40:" + String(int(temp * 10));
-  commands.emplace_back(cmd);
+  queueCommand(cmd);
   return true;
 }
 
 bool SpaNetController::setPumpOperating(int pump,int mode){
   debugD("pump=%d,mode=%d", pump, mode);
   String cmd = "S"+String(pump+21)+":" + String(mode);
-  commands.emplace_back(cmd);
+  queueCommand(cmd);
   return true;
 }
 
@@ -128,31 +131,31 @@ void SpaNetController::setPumpOperating(int pump, const char *mode){
 
 bool SpaNetController::setPump1Operating(int operatingMode){
   String cmd = "S22:" + String(operatingMode);
-  commands.emplace_back(cmd);
+  queueCommand(cmd);
   return true;
 }
 
 bool SpaNetController::setPump2Operating(int operatingMode){
   String cmd = "S23:" + String(operatingMode);
-  commands.emplace_back(cmd);
+  queueCommand(cmd);
   return true;
 }
 
 bool SpaNetController::setPump3Operating(int operatingMode){
   String cmd = "S24:" + String(operatingMode);
-  commands.emplace_back(cmd);
+  queueCommand(cmd);
   return true;
 }
 
 bool SpaNetController::setPump4Operating(int operatingMode){
   String cmd = "S25:" + String(operatingMode);
-  commands.emplace_back(cmd);
+  queueCommand(cmd);
   return true;
 }
 
 bool SpaNetController::setPump5Operating(int operatingMode){
   String cmd = "S26:" + operatingMode;
-  commands.emplace_back(cmd);
+  queueCommand(cmd);
   return true;
 }
 
@@ -162,7 +165,7 @@ SpaNetController::heat_pump_modes SpaNetController::getHeatPumpMode(){
 
 bool SpaNetController::setHeatPumpMode(SpaNetController::heat_pump_modes mode){
   String cmd = "W99:" + String(mode);
-  commands.emplace_back(cmd);
+  queueCommand(cmd);
   return true;
 }
 
@@ -177,17 +180,7 @@ bool SpaNetController::setAuxHeatingEnabled(bool enabled){
   } else {
     cmd="W98:0";
   }
-  commands.emplace_back(cmd);
-  return true;
-}
-
-bool SpaNetController::isLightsOn() {
-  return lightsOn;
-}
-
-bool SpaNetController::toggleLights(){
-  String cmd = "W14";
-  commands.emplace_back(cmd);
+  queueCommand(cmd);
   return true;
 }
 
@@ -283,7 +276,8 @@ bool SpaNetController::parseStatus(String str) {
     
     volts = String(registers[1].getField(3)).toInt();
 
-    lightsOn = String(registers[4].getField(15)).toInt();
+    lights._isOn = (strcmp(registers[4].getField(15),"1") == 0);
+
     waterTemperature = float(String(registers[4].getField(16)).toInt())/10;
 
     waterTemperatureSetPoint = float(String(registers[5].getField(9)).toInt())/10;
@@ -347,21 +341,28 @@ bool SpaNetController::parseStatus(String str) {
 }
 
 String SpaNetController::sendCommand(String cmd) {
+
   debugD("Sending %s",cmd.c_str());
+  
   Serial2.printf("\n");
   delay(100);
   Serial2.print(cmd+"\n");
   delay(100);
   String resp = Serial2.readString();
+
   debugD("Received %s",resp.c_str());
+  
   return resp;
+
 }
 
 bool SpaNetController::pollStatus(){
+
+  debugD("Polling Status with RF command");
+  
   if (parseStatus(sendCommand("RF"))) {
     debugD("Successful register poll, notify subscribers.");
     if (update) {
-      debugD("Subscriber update called");
       update(this);
       }
     return true;
@@ -371,6 +372,7 @@ bool SpaNetController::pollStatus(){
 }
 
 void SpaNetController::getRegisters() {
+  debugD("Getting registers");
   if (pollStatus()) {
     _nextUpdate = millis() + UPDATEFREQUENCY;
   } else {
@@ -380,7 +382,8 @@ void SpaNetController::getRegisters() {
 
 void SpaNetController::processCommands() {
 
-  debugD("Processing %d commands in command queue",commands.size());
+  debugD("Processsing commands");
+  debugD("%d commands in command queue",commands.size());
 
   while(commands.size()>0){
     String command = commands.front();
@@ -398,8 +401,9 @@ void SpaNetController::forceUpdate(){
   _nextUpdate = 0;
 }
 
-void SpaNetController::tick(){
 
+
+void SpaNetController::tick(){
   if (millis()>_nextUpdate) {
     getRegisters();
   }
@@ -413,4 +417,42 @@ void SpaNetController::tick(){
 
 void SpaNetController::subscribeUpdate(void (*u)(SpaNetController *)){
   this->update=u;
+}
+
+
+/**
+ * @brief Construct a new Spa Net Controller:: Light:: Light object
+ * 
+ * @param p pointer to parent SpaNetController object
+ */
+SpaNetController::Light::Light(SpaNetController* p){
+  _parent = p;
+}
+
+/**
+ * @brief Destroy the Spa Net Controller:: Light:: Light object
+ * 
+ */
+SpaNetController::Light::~Light(){}
+
+
+/**
+ * @brief Is the spa light on?
+ * 
+ * @return true Light is on
+ * @return false Light is off
+ */
+bool SpaNetController::Light::isOn() {
+  return _isOn;
+}
+
+/**
+ * @brief Set the light state
+ * 
+ * @param state True - lights on, False - lights off
+ */
+void SpaNetController::Light::setIsOn(bool state) {
+  if (state != _isOn) {
+    _parent->queueCommand("W14");
+  } 
 }
