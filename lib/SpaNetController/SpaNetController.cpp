@@ -387,6 +387,7 @@ void SpaNetController::processCommands() {
     debugD("Processing command %s",command.c_str());
     sendCommand(command);
     commands.pop_front();
+    delay(100);
   }
 
   getRegisters();
