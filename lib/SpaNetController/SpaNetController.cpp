@@ -267,6 +267,7 @@ bool SpaNetController::parseStatus(String str) {
 
   bool regValid = registers[1].isValid() && \
     registers[2].isValid() && \
+    registers[3].isValid() && \
     registers[4].isValid() && \
     registers[5].isValid() && \
     registers[6].isValid() && \
