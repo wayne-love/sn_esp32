@@ -440,6 +440,13 @@ SpaNetController::Light::Light(SpaNetController* p){
 const char *SpaNetController::Light::light_modes[] = {"White", "Color", "Fade", "Step", "Party"};
 
 /**
+ * @brief Colour hue to controller colour integer identifier mapping
+ * 
+ */
+const byte SpaNetController::Light::colour_map[] = {0, 4, 4, 19, 13, 25, 25, 16, 10, 7, 2, 8, 5, 3, 6, 6, 21, 21, 21, 18, 18, 9, 9, 1, 1};
+
+
+/**
  * @brief Empty function
  * 
  */
@@ -514,5 +521,26 @@ byte SpaNetController::Light::getBrightness() {
 void SpaNetController::Light::setBrightness(byte value) {
   if (value != _brightness) {
     _parent->queueCommand("S08:" + String(value));
+  }
+}
+
+/**
+ * @brief Returns the colour of the spa lights 
+ * 
+ * @return int 
+ */
+int SpaNetController::Light::getColour() {
+  return _colour;
+}
+
+/**
+ * @brief Set the lights colour
+ * 
+ * @param colour 
+ */
+void SpaNetController::Light::setColour(int colour){
+  if (colour != _colour) {
+    _parent->queueCommand("S10:" + String(colour));
+    _colour = colour;
   }
 }

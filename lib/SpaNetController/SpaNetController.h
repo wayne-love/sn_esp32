@@ -62,6 +62,10 @@ class SpaNetController {
                 void setMode(const char *mode);
                 void setMode(byte mode);
 
+                static const byte colour_map[25];
+                void setColour(int colour);
+                int getColour();
+
                 bool isOn();
                 void setIsOn(bool state);
         
@@ -75,6 +79,7 @@ class SpaNetController {
                 bool _isOn = false;
                 byte _mode = 0; // min = 0, max = 4
                 byte _brightness = 5; // min = 1, max = 5
+                int _colour = 0; // 0 to 30
         };
 
         Light lights;

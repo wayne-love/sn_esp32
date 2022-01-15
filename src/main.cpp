@@ -14,6 +14,8 @@
 #include "SpaNetController.h"
 #include "WebUI.h"
 
+#define NUM(a) (sizeof(a) / sizeof(*a))
+
 
   //See file .../hardware/espressif/esp32/variants/(esp32|doitESP32devkitV1)/pins_arduino.h
   #define LED_BUILTIN       2         // Pin D2 mapped to pin GPIO2/ADC12 of ESP32, control on-board LED
@@ -184,6 +186,11 @@ void parseLightsJSON(String jString){
     snc.lights.setBrightness(value);
   }
 
+  if (json.containsKey("color")) {
+    int value = json["color"]["h"];
+    snc.lights.setColour(SpaNetController::Light::colour_map[value/15]);
+  }
+
 }
 
 String buildLightsJSON() {
@@ -197,6 +204,15 @@ String buildLightsJSON() {
 
   json["effect"] = snc.lights.getMode();
   json["brightness"] = int(snc.lights.getBrightness() * 51);
+  int hue;
+  for (int count=0; count < NUM(SpaNetController::Light::colour_map);count++){
+    if (SpaNetController::Light::colour_map[count]==snc.lights.getColour()) {
+      hue = count * 15;
+    }
+  }
+
+  json["color"]["h"] = hue;
+  json["color"]["s"] = 100;
 
   String buffer;
   serializeJsonPretty(json, buffer);
