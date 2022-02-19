@@ -1,8 +1,14 @@
-# sn_esp32
+# SpaNet MQTT ESP32 bridge
 
 SpaNet serial to mqtt bridge, including HomeAssitant autodiscovery.
 
-Developed for the ESP32 Dev board but should work on any ESP32 platform or even 8266 platforms with the right pins 
-assigned. By default uses UART2 for communications with the SpaNet controller.
+Developed for the ESP32 Dev board but should work on any ESP32 platform. By default uses UART2 for communications with the SpaNet controller.
 
-![Circuit](https://github.com/wayne-love/sn_esp32/blob/master/circuit/circuit.png?raw=true)
+## Circuit
+To keep things as simple as possible, off the shelf modules have been used.  
+NOTE: The resitors on the RX/TX pins are recommended but optional.  
+
+
+![Circuit](circuit/circuit.png)![Assembly](images/board.png){ height:360px }
+
+ ![Compontents](images/disassembled.png){ height:360px } ![Wiring](images/wiring.png){ height:360px }
