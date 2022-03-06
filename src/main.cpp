@@ -214,6 +214,8 @@ String buildLightsJSON() {
   json["color"]["h"] = hue;
   json["color"]["s"] = 100;
 
+  json["color_mode"] = "hs";
+
   String buffer;
   serializeJsonPretty(json, buffer);
   return buffer;
