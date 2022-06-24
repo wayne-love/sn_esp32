@@ -351,7 +351,6 @@ String SpaNetController::sendCommand(String cmd) {
   Serial2.printf("\n");
   delay(100);
   Serial2.print(cmd+"\n");
-  //delay(100);
   String resp = Serial2.readString();
 
   debugD("Received %s",resp.c_str());

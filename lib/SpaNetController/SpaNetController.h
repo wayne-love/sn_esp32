@@ -5,34 +5,37 @@
 #include <RemoteDebug.h>
 #include <list>
 
+#define UPDATEFREQUENCY 60000 //(ms) Frequency to poll controller when idle.
 
+extern RemoteDebug Debug; //Must be defined / called in main.c 
 
-#define UPDATEFREQUENCY 60000
-
-extern RemoteDebug Debug;
 
 class Register {
     public:
+        /**
+         * @brief Construct a new Register object
+         * 
+         * @param req Number of fields that we are expecting
+         */
         Register(int req);
 
         bool updateRegister(const char update[]);
         bool isValid();
         char* getField(int field);
 
+
     private:
         int requiredFields;
         char reg[256];
         char* element[64];
         bool valid=false;
-
-
 };
 
 
 
 class Pump {
     public:
-    #define PUMP_MODES_COUNT 5
+    #define PUMP_MODES_COUNT 5 //Maximum number of pumps supported.
         static const char *pump_modes[PUMP_MODES_COUNT];  // Off = 0, On = 1, Auto = 4
 
         void initialise(bool installed, bool autoOperation);
@@ -94,31 +97,31 @@ class SpaNetController {
         bool    isHeatingOn();
         bool    isUVOn();
         bool    isSanatiseRunning();
-        String     getSerialNo();
-        char *getStatus();
-        float getHeaterTemp();
+        String  getSerialNo();
+        char    *getStatus();
+        float   getHeaterTemp();
         
-        bool pumpInstalled(int pump);
-        Pump *getPump(int pump);
+        bool    pumpInstalled(int pump);
+        Pump    *getPump(int pump);
 
         float   getWaterTempSetPoint();
         bool    setWaterTempSetPoint(float temp);
 
         heat_pump_modes getHeatPumpMode();
-        bool setHeatPumpMode(heat_pump_modes mode);
+        bool    setHeatPumpMode(heat_pump_modes mode);
 
-        bool isAuxHeatingEnabled();
-        bool setAuxHeatingEnabled(bool enabled);
+        bool    isAuxHeatingEnabled();
+        bool    setAuxHeatingEnabled(bool enabled);
 
-        bool setPumpOperating(int pump, int mode);
-        void setPumpOperating(int pump, const char *mode);
-        bool setPump1Operating(int mode);
-        bool setPump2Operating(int mode);
-        bool setPump3Operating(int mode);
-        bool setPump4Operating(int mode);
-        bool setPump5Operating(int mode);
+        bool    setPumpOperating(int pump, int mode);
+        void    setPumpOperating(int pump, const char *mode);
+        bool    setPump1Operating(int mode);
+        bool    setPump2Operating(int mode);
+        bool    setPump3Operating(int mode);
+        bool    setPump4Operating(int mode);
+        bool    setPump5Operating(int mode);
 
-        void queueCommand(String command);
+        void    queueCommand(String command);
 
         SpaNetController();
         ~SpaNetController();
