@@ -232,6 +232,8 @@ bool SpaNetController::parseStatus(String str) {
   int currentPos = 0;
   int colonIndex = str.indexOf(':');
 
+  
+
   while (colonIndex>-1) {
     int r = str.indexOf('R',currentPos);
     if (r>-1){
@@ -365,7 +367,7 @@ bool SpaNetController::pollStatus(){
   
   if (parseStatus(sendCommand("RF"))) {
     debugD("Successful register poll, notify subscribers.");
-    if (update) {
+    if (update) { //If there is a function pointer assiged then call function
       update(this);
       }
     return true;

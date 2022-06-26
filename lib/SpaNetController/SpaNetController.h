@@ -159,13 +159,13 @@ class SpaNetController {
         Register registers[13]={1,33,30,31,29,31,34,15,15,15,17,33,18};
 
         /**
-         * @brief time (mils) of next read of spa registers
+         * @brief time (ms) of next read of spa registers
          * 
          */
         ulong _nextUpdate=millis();
 
         /**
-         * @brief time (mils) of last command queue check/publish
+         * @brief time (ms) of last command queue check/publish
          * 
          */
         ulong lastCommand = millis();
