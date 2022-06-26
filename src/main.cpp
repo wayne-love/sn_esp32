@@ -7,7 +7,7 @@
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <RemoteDebug.h>
 #include <PubSubClient.h>
-#include <LITTLEFS.h>
+#include <LittleFS.h>
 #include <FS.h>
 #include <ArduinoJson.h>
 #include "Blinker.h"
@@ -142,7 +142,7 @@ void checkButton(){
         json["mqtt_server"] = mqtt.server;
         json["mqtt_port"] = mqtt.port;
 
-        File configFile = LITTLEFS.open("/config.json","w");
+        File configFile = LittleFS.open("/config.json","w");
         if (!configFile) {
           debugE("Failed to open config file for writing");
         } else {
@@ -527,10 +527,10 @@ void setup() {
 
 
   debugI("Mounting FS");
-  if (LITTLEFS.begin()){
+  if (LittleFS.begin()){
     debugI("Mounted FS");
     debugI("Reading config file");
-    File configFile = LITTLEFS.open("/config.json","r");
+    File configFile = LittleFS.open("/config.json","r");
     if (configFile) {
       debugI("Reading config file");
       size_t size = configFile.size();
