@@ -1,6 +1,20 @@
 #include "SpaNetController.h"
 
 #define NUM(a) (sizeof(a) / sizeof(*a))
+#define BAUD_RATE 38400
+
+#if defined(ESP8266)
+  #define RX_PIN 14 //goes to rx on spanet pin5
+  #define TX_PIN 12 //goes to tx on spanet pin6
+
+  #include <SoftwareSerial.h>
+
+  SoftwareSerial spaSerial;
+#elif defined(ESP32)
+  #define RX_PIN 16 //goes to rx on spanet pin5
+  #define TX_PIN 17 //goes to tx on spanet pin6
+  HardwareSerial spaSerial = Serial2;
+#endif
 
 
 Register::Register(int req) {
@@ -71,8 +85,15 @@ bool Pump::isAutoModeSupported(){
 
 SpaNetController::SpaNetController()
   : lights(this) {
-    Serial2.begin(38400,SERIAL_8N1, 16, 17);
-    Serial2.setTimeout(250);
+    
+    #if defined(ESP8266)
+        // Start Software Serial
+        spaSerial.begin(BAUD_RATE, SWSERIAL_8N1, RX_PIN, TX_PIN, false, 95, 11);  
+    #elif defined(ESP32)
+        spaSerial.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
+    #endif
+    
+    spaSerial.setTimeout(250);
 }
 
 SpaNetController::~SpaNetController() {}
@@ -350,10 +371,10 @@ String SpaNetController::sendCommand(String cmd) {
 
   debugD("Sending %s",cmd.c_str());
   
-  Serial2.printf("\n");
+  spaSerial.printf("\n");
   delay(100);
-  Serial2.print(cmd+"\n");
-  String resp = Serial2.readString();
+  spaSerial.print(cmd+"\n");
+  String resp = spaSerial.readString();
 
   debugD("Received %s",resp.c_str());
   

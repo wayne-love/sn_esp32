@@ -1,13 +1,23 @@
 #ifndef WEBUI_H
 #define WEBUI_H
 
-#include <WebServer.h>
-#include <Update.h>
+#if defined(ESP8266)
+  #include <ESP8266WebServer.h>
+#elif defined(ESP32)
+  #include <WebServer.h>
+  #include <Update.h>
+#endif
+
 #include "SpaNetController.h"
 
 class WebUI {
     public:
-        std::unique_ptr<WebServer> server;
+        #if defined(ESP8266)
+            std::unique_ptr<ESP8266WebServer> server;
+        #elif defined(ESP32)
+            std::unique_ptr<WebServer> server;
+        #endif
+        
         char indexPage[1024] = "\0";
 
         WebUI(SpaNetController *spa);
