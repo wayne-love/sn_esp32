@@ -260,14 +260,15 @@ void mqttPublishStatus(SpaNetController *s) {
     resp = OFF;
   }
 
-
-
   mqttClient.publish((mqtt.baseTopic + "resitive_heating/value").c_str(), String(snc.isAuxHeatingEnabled()).c_str());
   mqttClient.publish((mqtt.baseTopic + "water_temp/value").c_str(), String(s->getWaterTemp()).c_str());
   mqttClient.publish((mqtt.baseTopic + "heating_active/value").c_str(), String(snc.isHeatingOn()).c_str());
   mqttClient.publish((mqtt.baseTopic + "uv_ozone_active/value").c_str(), String(snc.isUVOn()).c_str());
   mqttClient.publish((mqtt.baseTopic + "sanatise_running/value").c_str(), String(snc.isSanatiseRunning()).c_str());
   mqttClient.publish((mqtt.baseTopic + "status/value").c_str(), snc.getStatus());
+
+  mqttClient.publish((mqtt.baseTopic + "total_power/value").c_str(), String(s->getTotalPower()).c_str());
+  mqttClient.publish((mqtt.baseTopic + "power_today/value").c_str(), String(s->getPowerToday()).c_str());
 
   for (int x = 0; x < 5;x++) {
     String pump = "pump" + String(x+1) + "_operating_mode";
@@ -314,6 +315,21 @@ void mqttSensorADPublish(DynamicJsonDocument base, String dataPointId, String da
   serializeJsonPretty(base,output);
   mqttClient.publish(topic.c_str(),output.c_str(),true);
 }
+
+void mqttSensorADPublish(DynamicJsonDocument base, String dataPointId, String dataPointName, String deviceClass, String stateClass, String uom){
+  base = mqttSensorJson(base, dataPointId, dataPointName);
+  String spaId = base["device"]["identifiers"];
+
+  base["unit_of_measurement"]=uom;
+  base["device_class"]=deviceClass;
+  base["state_class"]=stateClass;
+  
+  String topic = "homeassistant/sensor/spanet_"+spaId+"/"+dataPointId+"/config";
+  String output;
+  serializeJsonPretty(base,output);
+  mqttClient.publish(topic.c_str(),output.c_str(),true);
+}
+
 
 DynamicJsonDocument mqttSwitchJson(DynamicJsonDocument base, String dataPointId, String dataPointName) {
   base = mqttSensorJson(base, dataPointId, dataPointName);
@@ -430,7 +446,12 @@ void mqttHaAutoDiscovery() {
   mqttLightsADPublish(haTemplate, "lights", "Lights");
   mqttClimateADPublish(haTemplate);
 
+  mqttSensorADPublish(haTemplate, "total_power", "Total Power", "energy", "total", "kWh");
+  mqttSensorADPublish(haTemplate, "power_today", "Power Today", "energy", "total_increasing", "kWh");
+  
   mqttSwitchADPublish(haTemplate,"resitive_heating","Aux Resitive Heating");
+
+
 
   for (int x = 0; x < 5; x++) {
     Pump *pump = snc.getPump(x);

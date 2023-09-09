@@ -100,6 +100,17 @@ class SpaNetController {
         String  getSerialNo();
         char    *getStatus();
         float   getHeaterTemp();
+
+        /// @brief getPower()
+        /// @return Returns the current power draw (W)
+        float   getEnergy();
+        /// @brief getKWH()
+        /// @return Retuns KWH consumption since comisssioning (kWH)
+        float   getTotalPower();
+        /// @brief getPowerToday()
+        /// @return Returns power consumed today (kWH)
+        float   getPowerToday();
+
         
         bool    pumpInstalled(int pump);
         Pump    *getPump(int pump);
@@ -153,6 +164,8 @@ class SpaNetController {
         bool uvActive;
         bool sanatiseActive;
         char* status;
+
+        float instEnergy, totalPower, powerToday;
 
         String serialNo;
 

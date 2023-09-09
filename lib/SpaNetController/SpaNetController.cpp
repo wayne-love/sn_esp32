@@ -206,6 +206,12 @@ bool SpaNetController::setAuxHeatingEnabled(bool enabled){
   return true;
 }
 
+
+float SpaNetController::getEnergy() { return instEnergy; }
+float SpaNetController::getTotalPower() { return totalPower; }
+float SpaNetController::getPowerToday() { return powerToday; }
+
+
 bool SpaNetController::isHeatingOn() {
   return heatingActive;
 }
@@ -297,6 +303,10 @@ bool SpaNetController::parseStatus(String str) {
   if (regValid)
   {
     
+    instEnergy = float(String(registers[3].getField(11)).toInt())/10;
+    totalPower = float(String(registers[3].getField(12)).toInt())/10;
+    powerToday = float(String(registers[3].getField(13)).toInt())/10;
+
     amps = float(String(registers[1].getField(2)).toInt())/10;
     
     volts = String(registers[1].getField(3)).toInt();
