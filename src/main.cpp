@@ -202,7 +202,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     snc.setHeatPumpMode(SpaNetController::heat_pump_modes(p.toInt()));
   } else if (item == "water_temp_set_point") {
     snc.setWaterTempSetPoint(p.toFloat());
-  } else if (item == "aux_heating_enabled") {
+  } else if (item == "resitive_heating") {
     snc.setAuxHeatingEnabled(parseBool(p));
   } else if (item == "heat_pump_mode_txt") {
     if (p == "auto") {
@@ -260,7 +260,9 @@ void mqttPublishStatus(SpaNetController *s) {
     resp = OFF;
   }
 
-  mqttClient.publish((mqtt.baseTopic + "aux_heating_enabled/value").c_str(), resp);
+
+
+  mqttClient.publish((mqtt.baseTopic + "resitive_heating/value").c_str(), String(snc.isAuxHeatingEnabled()).c_str());
   mqttClient.publish((mqtt.baseTopic + "water_temp/value").c_str(), String(s->getWaterTemp()).c_str());
   mqttClient.publish((mqtt.baseTopic + "heating_active/value").c_str(), String(snc.isHeatingOn()).c_str());
   mqttClient.publish((mqtt.baseTopic + "uv_ozone_active/value").c_str(), String(snc.isUVOn()).c_str());
@@ -389,8 +391,6 @@ void mqttClimateADPublish(DynamicJsonDocument base) {
   
   base["mode_state_topic"] = mqtt.baseTopic + "heat_pump_mode_txt/value";
   base["mode_command_topic"] = mqtt.baseTopic + "heat_pump_mode_txt/set";
-  base["aux_state_topic"] = mqtt.baseTopic + "aux_heating_enabled/value";
-  base["aux_command_topic"] = mqtt.baseTopic + "aux_heating_enabled/set";
   base["max_temp"] = 41;
   base["min_temp"] = 5;
   base["precision"] = 0.1;
@@ -429,6 +429,8 @@ void mqttHaAutoDiscovery() {
   mqttSensorADPublish(haTemplate, "water_temp", "Water Temperature", "temperature", "°C");  //Publish this as a sensor as well as HVAC so as to allow eaiser trending
   mqttLightsADPublish(haTemplate, "lights", "Lights");
   mqttClimateADPublish(haTemplate);
+
+  mqttSwitchADPublish(haTemplate,"resitive_heating","Aux Resitive Heating");
 
   for (int x = 0; x < 5; x++) {
     Pump *pump = snc.getPump(x);
