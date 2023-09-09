@@ -9,6 +9,14 @@ Discussion on this (and other) SpaNet projects can be found here https://discord
 ## Configuration
 On first boot or whenever the enable key is press the board will enter hotspot mode.  Connect to the hotspot to configure wifi & mqtt settings.  
 
+## Firmware updates
+
+Firmware updates can be pushed to http://<ipaddress>/fota
+
+## Logging
+
+Debug / log functionality is available by telneting to the device's ip address
+
 
 ## Circuit
 To keep things as simple as possible, off the shelf modules have been used.  
