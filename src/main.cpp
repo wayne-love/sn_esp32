@@ -267,8 +267,10 @@ void mqttPublishStatus(SpaNetController *s) {
   mqttClient.publish((mqtt.baseTopic + "sanatise_running/value").c_str(), String(snc.isSanatiseRunning()).c_str());
   mqttClient.publish((mqtt.baseTopic + "status/value").c_str(), snc.getStatus());
 
-  mqttClient.publish((mqtt.baseTopic + "total_power/value").c_str(), String(s->getTotalPower()).c_str());
-  mqttClient.publish((mqtt.baseTopic + "power_today/value").c_str(), String(s->getPowerToday()).c_str());
+  mqttClient.publish((mqtt.baseTopic + "total_energy/value").c_str(), String(s->getTotalEnergy()).c_str());
+  mqttClient.publish((mqtt.baseTopic + "energy_today/value").c_str(), String(s->getEnergyToday()).c_str());
+  mqttClient.publish((mqtt.baseTopic + "power_consumption/value").c_str(), String(s->getPower()).c_str());
+  
 
   for (int x = 0; x < 5;x++) {
     String pump = "pump" + String(x+1) + "_operating_mode";
@@ -446,8 +448,10 @@ void mqttHaAutoDiscovery() {
   mqttLightsADPublish(haTemplate, "lights", "Lights");
   mqttClimateADPublish(haTemplate);
 
-  mqttSensorADPublish(haTemplate, "total_power", "Total Power", "energy", "total", "kWh");
-  mqttSensorADPublish(haTemplate, "power_today", "Power Today", "energy", "total_increasing", "kWh");
+  mqttSensorADPublish(haTemplate, "total_energy", "Total Energy", "energy", "total_increasing", "kWh");
+  mqttSensorADPublish(haTemplate, "energy_today", "Energy Today", "energy", "total_increasing", "kWh");
+  mqttSensorADPublish(haTemplate, "power_consumption", "Power Consumption", "power", "W");
+  
   
   mqttSwitchADPublish(haTemplate,"resitive_heating","Aux Resitive Heating");
 

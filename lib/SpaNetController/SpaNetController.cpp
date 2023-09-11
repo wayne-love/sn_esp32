@@ -207,9 +207,9 @@ bool SpaNetController::setAuxHeatingEnabled(bool enabled){
 }
 
 
-float SpaNetController::getEnergy() { return instEnergy; }
-float SpaNetController::getTotalPower() { return totalPower; }
-float SpaNetController::getPowerToday() { return powerToday; }
+float SpaNetController::getPower() { return instEnergy; }
+float SpaNetController::getTotalEnergy() { return totalPower; }
+float SpaNetController::getEnergyToday() { return powerToday; }
 
 
 bool SpaNetController::isHeatingOn() {
@@ -315,7 +315,7 @@ bool SpaNetController::parseStatus(String str) {
     lights._mode = byte(String(registers[5].getField(5)).toInt());
     lights._brightness = byte(String(registers[5].getField(3)).toInt());
 
-     waterTemperature = float(String(registers[4].getField(16)).toInt())/10;
+    waterTemperature = float(String(registers[4].getField(16)).toInt())/10;
 
     waterTemperatureSetPoint = float(String(registers[5].getField(9)).toInt())/10;
 

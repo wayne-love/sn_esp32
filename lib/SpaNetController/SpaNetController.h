@@ -103,13 +103,13 @@ class SpaNetController {
 
         /// @brief getPower()
         /// @return Returns the current power draw (W)
-        float   getEnergy();
+        float   getPower();
         /// @brief getKWH()
         /// @return Retuns KWH consumption since comisssioning (kWH)
-        float   getTotalPower();
+        float   getTotalEnergy();
         /// @brief getPowerToday()
         /// @return Returns power consumed today (kWH)
-        float   getPowerToday();
+        float   getEnergyToday();
 
         
         bool    pumpInstalled(int pump);
