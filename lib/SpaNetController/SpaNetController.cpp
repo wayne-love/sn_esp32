@@ -304,8 +304,8 @@ bool SpaNetController::parseStatus(String str) {
   {
     
     instEnergy = float(String(registers[3].getField(11)).toInt())/10;
-    totalPower = float(String(registers[3].getField(12)).toInt())/10;
-    powerToday = float(String(registers[3].getField(13)).toInt())/10;
+    totalPower = float(String(registers[3].getField(12)).toInt())/100;
+    powerToday = float(String(registers[3].getField(13)).toInt())/100;
 
     amps = float(String(registers[1].getField(2)).toInt())/10;
     
