@@ -16,13 +16,16 @@
 #include <PubSubClient.h>
 #include <LittleFS.h>
 #include <FS.h>
-#include <ArduinoJson.h>
+
 
 #include "Blinker.h"
-#include "SpaNetController.h"
+
 #include "WebUI.h"
 
-#define NUM(a) (sizeof(a) / sizeof(*a))
+#include "SpaNetInterface.h"
+#include "autoDiscovery.h"
+
+#define NUM(a) (sizeof(a) / sizeof(*a)) //number of elements in an array
 
 #if defined(ESP8266)
   #define PIN_D0 D0
@@ -37,19 +40,9 @@ RemoteDebug Debug;
 Blinker led(LED_BUILTIN);
 WiFiClient wifi;
 PubSubClient mqttClient(wifi);
-SpaNetController snc;
-WebUI ui(&snc);
 
-// MQTT Interface
-
-class MQTT {
-  public:
-    String server;
-    String port;
-    String baseTopic;
-};
-
-MQTT mqtt;
+// **TODO** WebUI ui(&snc);
+SpaNetInterface sni;
 
 // End MQTT
 
@@ -66,9 +59,10 @@ void checkButton(){
   if(digitalRead(TRIGGER_PIN) == LOW) {
     delay(100);
     if(digitalRead(TRIGGER_PIN) == LOW) {
-      if (ui.initialised) {
-        ui.server->stop();
-      }
+
+//      if (ui.initialised) {
+//        ui.server->stop();
+//      }
       
       WiFiManager wm;
       WiFiManagerParameter custom_mqtt_server("server", "MQTT server", mqtt.server.c_str(), 40);
@@ -106,6 +100,7 @@ void checkButton(){
   }
 }
 
+/*
 bool parseBool(String val){
   val.toUpperCase();
   if (val=="ON" || val=="TRUE" || val=="1") {
@@ -279,197 +274,7 @@ void mqttPublishStatus(SpaNetController *s) {
     mqttClient.publish((mqtt.baseTopic + pump + "_text/value").c_str(), Pump::pump_modes[mode]);
   }
 }
-
-DynamicJsonDocument mqttSensorJson(DynamicJsonDocument base, String dataPointId, String dataPointName) {
-    String spaId = base["device"]["identifiers"];
-    base["state_topic"] = mqtt.baseTopic + dataPointId + "/value";
-    base["name"] = dataPointName;
-    base["unique_id"] = "spanet_" + spaId + "_" + dataPointId;
-    return base;
-}
-
-void mqttBinarySensorADPublish(DynamicJsonDocument base, String dataPointId, String dataPointName, String deviceClass) {
-  base = mqttSensorJson(base, dataPointId, dataPointName);
-  String spaId = base["device"]["identifiers"];
-
-  if (deviceClass!="") {
-    base["device_class"]=deviceClass;
-  }
-
-  base["payload_on"] = "1";
-  base["payload_off"] = "0";
-
-  String topic = "homeassistant/binary_sensor/spanet_"+spaId+"/"+dataPointId+"/config";
-  String output;
-  serializeJsonPretty(base,output);
-  mqttClient.publish(topic.c_str(),output.c_str(),true);
-}
-
-void mqttSensorADPublish(DynamicJsonDocument base, String dataPointId, String dataPointName, String deviceClass, String uom){
-  base = mqttSensorJson(base, dataPointId, dataPointName);
-  String spaId = base["device"]["identifiers"];
-
-  base["unit_of_measurement"]=uom;
-  base["device_class"]=deviceClass;
-  
-  String topic = "homeassistant/sensor/spanet_"+spaId+"/"+dataPointId+"/config";
-  String output;
-  serializeJsonPretty(base,output);
-  mqttClient.publish(topic.c_str(),output.c_str(),true);
-}
-
-void mqttSensorADPublish(DynamicJsonDocument base, String dataPointId, String dataPointName, String deviceClass, String stateClass, String uom){
-  base = mqttSensorJson(base, dataPointId, dataPointName);
-  String spaId = base["device"]["identifiers"];
-
-  base["unit_of_measurement"]=uom;
-  base["device_class"]=deviceClass;
-  base["state_class"]=stateClass;
-  
-  String topic = "homeassistant/sensor/spanet_"+spaId+"/"+dataPointId+"/config";
-  String output;
-  serializeJsonPretty(base,output);
-  mqttClient.publish(topic.c_str(),output.c_str(),true);
-}
-
-
-DynamicJsonDocument mqttSwitchJson(DynamicJsonDocument base, String dataPointId, String dataPointName) {
-  base = mqttSensorJson(base, dataPointId, dataPointName);
-  base["command_topic"]=mqtt.baseTopic+dataPointId+"/set";
-  base["payload_on"]="1";
-  base["payload_off"]="0";
-  return base;
-}
-
-void mqttSwitchADPublish(DynamicJsonDocument base, String dataPointId, String dataPointName) {
-  String spaId = base["device"]["identifiers"];
-  base = mqttSwitchJson(base, dataPointId, dataPointName);
-  String topic = "homeassistant/switch/spanet_"+spaId+"/"+dataPointId+"/config";
-  String output;
-  serializeJsonPretty(base,output);
-  mqttClient.publish(topic.c_str(),output.c_str(),true);
-
-}
-
-void mqttLightsADPublish(DynamicJsonDocument base, String dataPointId, String dataPointName) {
-  String spaId = base["device"]["identifiers"];
-  base = mqttSensorJson(base, dataPointId, dataPointName);
-  base["command_topic"]=mqtt.baseTopic+dataPointId+"/set";
-  base["schema"] = "json";
-  base["brightness"] = true;
-  base["color_mode"] = true;
-  base["effect"] = true;
-  JsonArray effect_list = base.createNestedArray("effect_list");
-  effect_list.add("White");
-  effect_list.add("Color");
-  effect_list.add("Fade");
-  effect_list.add("Step");
-  effect_list.add("Party");
-  JsonArray color_modes = base.createNestedArray("supported_color_modes");
-  color_modes.add("hs");
-
-  String topic = "homeassistant/light/spanet_" + spaId + "/" + dataPointId + "/config";
-  String output;
-  serializeJsonPretty(base,output);
-  mqttClient.publish(topic.c_str(),output.c_str(),true);
-}
-
-void mqttPumpSelectADPublish(DynamicJsonDocument base, String dataPointId, String dataPointName) {
-  String spaId = base["device"]["identifiers"];
-  base["state_topic"] = mqtt.baseTopic + dataPointId + "_text/value";
-  base["command_topic"] = mqtt.baseTopic + dataPointId + "_text/set";
-  base["name"] = dataPointName;
-  base["unique_id"] = "spanet_" + spaId + "_" + dataPointId;
-  
-  JsonArray options = base.createNestedArray("options");
-  for (int i = 0; i < PUMP_MODES_COUNT; i++) {
-    if (!strEquals(Pump::pump_modes[i],"")) {
-      options.add(Pump::pump_modes[i]);
-    }
-  }
-
-  String topic = "homeassistant/select/spanet_" + spaId + "/" + dataPointId + "/config";
-  String output;
-  serializeJsonPretty(base,output);
-  mqttClient.publish(topic.c_str(),output.c_str(),true);
-}
-
-void mqttClimateADPublish(DynamicJsonDocument base) {
-  String spaId = base["device"]["identifiers"];
-  base["unique_id"] = "spanet_" + spaId + "_thermostat";
-  base["temperature_state_topic"] = mqtt.baseTopic + "water_temp_set_point/value";
-  base["temperature_command_topic"] = mqtt.baseTopic + "water_temp_set_point/set";
-  base["current_temperature_topic"] = mqtt.baseTopic + "water_temp/value";
-
-  JsonArray modes = base.createNestedArray("modes");
-  modes.add("off");
-  modes.add("cool");
-  modes.add("heat");
-  modes.add("auto");
-  
-  base["mode_state_topic"] = mqtt.baseTopic + "heat_pump_mode_txt/value";
-  base["mode_command_topic"] = mqtt.baseTopic + "heat_pump_mode_txt/set";
-  base["max_temp"] = 41;
-  base["min_temp"] = 5;
-  base["precision"] = 0.1;
-  base["temp_step"] = 0.5;
-  base["name"] = base["device"]["name"];
-
-  String topic = "homeassistant/climate/spanet_" + spaId + "/config";
-  String output;
-  serializeJsonPretty(base,output);
-  mqttClient.publish(topic.c_str(),output.c_str(),true);
-}
-
-void mqttHaAutoDiscovery() {
-  String spaName = "MySpa";                             //TODO - This needs to be a settable parameter.
-  String spaSerialNumber = String(snc.getSerialNo());
-  String output,topic;
-
-  DynamicJsonDocument haTemplate(1024);
-
-  debugI("Publishing Home Assistant auto discovery");
-
-  JsonObject device = haTemplate.createNestedObject("device");
-
-  device["identifiers"]=spaSerialNumber;
-  device["name"]=spaName;
-
-  haTemplate["availability_topic"]=mqtt.baseTopic+"available";
-
-  mqttSensorADPublish(haTemplate, "voltage", "Supply Voltage", "voltage", "v");
-  mqttSensorADPublish(haTemplate, "current", "Supply Current", "current", "A");
-  mqttBinarySensorADPublish(haTemplate, "heating_active", "Heating Active", "");
-  mqttBinarySensorADPublish(haTemplate, "uv_ozone_active", "UV/Ozone Active", "");
-  mqttBinarySensorADPublish(haTemplate, "sanatise_running", "Sanatise Cycle Running", "");
-  mqttSensorADPublish(haTemplate, "hpump_amb_temp", "Heatpump Ambient Temperature", "temperature","°C");
-  mqttSensorADPublish(haTemplate, "hpump_con_temp", "Heatpump Condensor Temperature", "temperature", "°C");
-  mqttSensorADPublish(haTemplate, "water_temp", "Water Temperature", "temperature", "°C");  //Publish this as a sensor as well as HVAC so as to allow eaiser trending
-  mqttLightsADPublish(haTemplate, "lights", "Lights");
-  mqttClimateADPublish(haTemplate);
-
-  mqttSensorADPublish(haTemplate, "total_energy", "Total Energy", "energy", "total_increasing", "kWh");
-  mqttSensorADPublish(haTemplate, "energy_today", "Energy Today", "energy", "total_increasing", "kWh");
-  mqttSensorADPublish(haTemplate, "power_consumption", "Power Consumption", "power", "W");
-  
-  
-  mqttSwitchADPublish(haTemplate,"resitive_heating","Aux Resitive Heating");
-
-
-
-  for (int x = 0; x < 5; x++) {
-    Pump *pump = snc.getPump(x);
-    if (pump->isInstalled()) {
-      String id = "pump" + String(x+1) + "_operating_mode";
-      String name = "Pump " + String(x+1);
-      if (!pump->isAutoModeSupported()){
-        mqttSwitchADPublish(haTemplate, id, name);  // Pumps should not be published as switches, rather fans, so to support mutispeed pumps.
-      } else {
-        mqttPumpSelectADPublish(haTemplate, id, name);
-      }
-    }
-  }
-}
+*/
 
 void setup() {
   pinMode(TRIGGER_PIN, INPUT_PULLUP);
@@ -524,14 +329,15 @@ void setup() {
     mqtt.port = "1883"; 
   }
 
-  String snum = String(snc.getSerialNo());
+  // Get the serial numbers from the spare and use these as a unique identifier
+  String snum = sni.getSerialNo1()+"-"+sni.getSerialNo2();
 
-  mqtt.baseTopic = "sn_esp32/" + snum + "/"; 
+//  mqtt.baseTopic = "sn_esp32/" + snum + "/"; 
 
   mqttClient.setServer(mqtt.server.c_str(),mqtt.port.toInt());
-  mqttClient.setCallback(mqttCallback);
+//  mqttClient.setCallback(mqttCallback);
   mqttClient.setBufferSize(2048);
-  snc.subscribeUpdate(mqttPublishStatus);
+//  snc.subscribeUpdate(mqttPublishStatus);
 }
 
 long mqttLastConnect = 0;
@@ -544,8 +350,9 @@ void loop() {
   checkButton();
   led.tick();
 
-  snc.tick();
+  sni.loop();
 
+/*
   if (!sncFirstInit && snc.initialised()) {
     mqtt.baseTopic = "sn_esp32/" + snc.getSerialNo() + "/";
     sncFirstInit = true;
@@ -555,9 +362,10 @@ void loop() {
   if (ui.initialised) { 
     ui.server->handleClient(); 
   }
+*/
 
   if (WiFi.status() == WL_CONNECTED) {
-    if (snc.initialised()){
+    if (sni.isInitialised()){
       if (!mqttClient.connected()) {
         long now=millis();
         if (now - mqttLastConnect > 5000) {
@@ -577,7 +385,7 @@ void loop() {
         if (!autoDiscoveryPublished) {
           mqttHaAutoDiscovery();
           autoDiscoveryPublished = true;
-          snc.forceUpdate();
+//          snc.forceUpdate();
         }
         led.setInterval(2000);
       }
