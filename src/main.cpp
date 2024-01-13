@@ -3,11 +3,11 @@
 #if defined(ESP8266)
   #include <ESP8266WiFi.h>
   #include <ESP8266WebServer.h>
-  #include <ESP8266mDNS.h>
+
 #elif defined(ESP32)
   #include <WiFi.h>
   #include <WebServer.h>
-  #include <ESPmDNS.h>
+
 #endif
 
 #include <WiFiClient.h>
@@ -15,15 +15,24 @@
 #include <RemoteDebug.h>
 #include <PubSubClient.h>
 #include <LittleFS.h>
-#include <FS.h>
-
+//#include <FS.h>
+#include <ArduinoJson.h>
+#include <array>
 
 #include "Blinker.h"
 
 #include "WebUI.h"
 
 #include "SpaNetInterface.h"
-#include "autoDiscovery.h"
+
+class MQTT {
+  public:
+    String server;
+    String port;
+    String baseTopic;
+};
+
+MQTT mqtt;
 
 #define NUM(a) (sizeof(a) / sizeof(*a)) //number of elements in an array
 
@@ -36,19 +45,30 @@
 
 const int TRIGGER_PIN = PIN_D0;
 
-RemoteDebug Debug;
+
+#ifndef DEBUG_ENABLED
+    #define DEBUG_ENABLED
+    RemoteDebug Debug;
+#endif
+
+SpaNetInterface sni;
+
 Blinker led(LED_BUILTIN);
 WiFiClient wifi;
 PubSubClient mqttClient(wifi);
 
-// **TODO** WebUI ui(&snc);
-SpaNetInterface sni;
-
-// End MQTT
+WebUI ui(&sni);
 
 
 
 bool saveConfig = false;
+long mqttLastConnect = 0;
+long wifiLastConnect = millis();
+long bootTime = millis();
+long statusLastPublish = millis();
+bool autoDiscoveryPublished = false;
+String mqttBase = "";
+String spaSerialNumber = "";
 
 void saveConfigCallback(){
   saveConfig = true;
@@ -57,12 +77,14 @@ void saveConfigCallback(){
 // We check the button on D0 every loop, to allow people to restart the system 
 void checkButton(){
   if(digitalRead(TRIGGER_PIN) == LOW) {
-    delay(100);
+    debugI("Initial buttong press detected");
+    delay(100); // wait and then test again to ensure that it is a held button not a press
     if(digitalRead(TRIGGER_PIN) == LOW) {
+      debugI("Button press detected. Starting Portal");
 
-//      if (ui.initialised) {
-//        ui.server->stop();
-//      }
+      if (ui.initialised) {
+        ui.server->stop();
+      }
       
       WiFiManager wm;
       WiFiManagerParameter custom_mqtt_server("server", "MQTT server", mqtt.server.c_str(), 40);
@@ -72,7 +94,7 @@ void checkButton(){
       wm.setBreakAfterConfig(true);
       wm.setSaveConfigCallback(saveConfigCallback);
       
-      debugI("Button Pressed, Starting Portal");
+
       wm.startConfigPortal();
       debugI("Exiting Portal");
 
@@ -166,10 +188,32 @@ String buildLightsJSON() {
   serializeJsonPretty(json, buffer);
   return buffer;
 }
-
+*/
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
   String t = String(topic);
-  
+
+  String p = "";
+  for (int x = 0; x < length; x++) {
+    p += char(*payload);
+    payload++;
+  }
+
+  debugD("MQTT subscribe received '%s' with payload '%s'",topic,p.c_str());
+
+  String property = t.substring(t.lastIndexOf("/")+1);
+
+  debugI("Received update for %s to %s",property.c_str(),p.c_str());
+
+  if (property == "temperature") {
+    sni.setSTMP(int(p.toFloat()*10));
+  } else if (property == "mode") {
+    sni.setHPMP(p);
+  } else {
+    debugE("Unhandeled property - %s",property.c_str());
+  }
+
+
+/*
   int start = t.lastIndexOf("/", t.lastIndexOf("/") - 1) + 1; //get second last "/"
   String item = t.substring(start, t.lastIndexOf("/"));
 
@@ -209,9 +253,11 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     } else if (p == "off") {
       snc.setHeatPumpMode(SpaNetController::heat_pump_modes(SpaNetController::off));
     }
-  } 
+  } */ 
 }
 
+
+/*
 void mqttPublishStatus(SpaNetController *s) {
   char ON[] = "ON";
   char OFF[] = "OFF";
@@ -222,13 +268,13 @@ void mqttPublishStatus(SpaNetController *s) {
   // This gets called each time the spa does a successful poll
   // it takes as a pearemeter a pointer to the calling instance.
 
-  mqttClient.publish((mqtt.baseTopic + "voltage/value").c_str(), String(s->getVolts()).c_str());
-  mqttClient.publish((mqtt.baseTopic + "current/value").c_str(), String(s->getAmps()).c_str());
-  mqttClient.publish((mqtt.baseTopic + "hpump_amb_temp/value").c_str(), String(s->getHpumpAmbTemp()).c_str());
-  mqttClient.publish((mqtt.baseTopic + "hpump_con_temp/value").c_str(), String(s->getHpumpConTemp()).c_str());
-  mqttClient.publish((mqtt.baseTopic + "heater_temp/value").c_str(), String(s->getHeaterTemp()).c_str());
-  mqttClient.publish((mqtt.baseTopic + "lights/value").c_str(), buildLightsJSON().c_str());
-  mqttClient.publish((mqtt.baseTopic + "heat_pump_mode/value").c_str(), String(snc.getHeatPumpMode()).c_str());
+  mqttClient.publish((mqttBase + "voltage/value").c_str(), String(s->getVolts()).c_str());
+  mqttClient.publish((mqttBase + "current/value").c_str(), String(s->getAmps()).c_str());
+  mqttClient.publish((mqttBase + "hpump_amb_temp/value").c_str(), String(s->getHpumpAmbTemp()).c_str());
+  mqttClient.publish((mqttBase + "hpump_con_temp/value").c_str(), String(s->getHpumpConTemp()).c_str());
+  mqttClient.publish((mqttBase + "heater_temp/value").c_str(), String(s->getHeaterTemp()).c_str());
+  mqttClient.publish((mqttBase + "lights/value").c_str(), buildLightsJSON().c_str());
+  mqttClient.publish((mqttBase + "heat_pump_mode/value").c_str(), String(snc.getHeatPumpMode()).c_str());
 
   String hpModeStr="unknown";
 
@@ -246,8 +292,8 @@ void mqttPublishStatus(SpaNetController *s) {
       hpModeStr = "off";
       break;
   }
-  mqttClient.publish((mqtt.baseTopic + "heat_pump_mode_txt/value").c_str(), hpModeStr.c_str());
-  mqttClient.publish((mqtt.baseTopic + "water_temp_set_point/value").c_str(), String(snc.getWaterTempSetPoint()).c_str());
+  mqttClient.publish((mqttBase + "heat_pump_mode_txt/value").c_str(), hpModeStr.c_str());
+  mqttClient.publish((mqttBase + "water_temp_set_point/value").c_str(), String(snc.getWaterTempSetPoint()).c_str());
   
   if (snc.isAuxHeatingEnabled()) {
     resp = ON;
@@ -255,26 +301,273 @@ void mqttPublishStatus(SpaNetController *s) {
     resp = OFF;
   }
 
-  mqttClient.publish((mqtt.baseTopic + "resitive_heating/value").c_str(), String(snc.isAuxHeatingEnabled()).c_str());
-  mqttClient.publish((mqtt.baseTopic + "water_temp/value").c_str(), String(s->getWaterTemp()).c_str());
-  mqttClient.publish((mqtt.baseTopic + "heating_active/value").c_str(), String(snc.isHeatingOn()).c_str());
-  mqttClient.publish((mqtt.baseTopic + "uv_ozone_active/value").c_str(), String(snc.isUVOn()).c_str());
-  mqttClient.publish((mqtt.baseTopic + "sanatise_running/value").c_str(), String(snc.isSanatiseRunning()).c_str());
-  mqttClient.publish((mqtt.baseTopic + "status/value").c_str(), snc.getStatus());
+  mqttClient.publish((mqttBase + "resitive_heating/value").c_str(), String(snc.isAuxHeatingEnabled()).c_str());
+  mqttClient.publish((mqttBase + "water_temp/value").c_str(), String(s->getWaterTemp()).c_str());
+  mqttClient.publish((mqttBase + "heating_active/value").c_str(), String(snc.isHeatingOn()).c_str());
+  mqttClient.publish((mqttBase + "uv_ozone_active/value").c_str(), String(snc.isUVOn()).c_str());
+  mqttClient.publish((mqttBase + "sanatise_running/value").c_str(), String(snc.isSanatiseRunning()).c_str());
+  mqttClient.publish((mqttBase + "status/value").c_str(), snc.getStatus());
 
-  mqttClient.publish((mqtt.baseTopic + "total_energy/value").c_str(), String(s->getTotalEnergy()).c_str());
-  mqttClient.publish((mqtt.baseTopic + "energy_today/value").c_str(), String(s->getEnergyToday()).c_str());
-  mqttClient.publish((mqtt.baseTopic + "power_consumption/value").c_str(), String(s->getPower()).c_str());
+  mqttClient.publish((mqttBase + "total_energy/value").c_str(), String(s->getTotalEnergy()).c_str());
+  mqttClient.publish((mqttBase + "energy_today/value").c_str(), String(s->getEnergyToday()).c_str());
+  mqttClient.publish((mqttBase + "power_consumption/value").c_str(), String(s->getPower()).c_str());
   
 
   for (int x = 0; x < 5;x++) {
     String pump = "pump" + String(x+1) + "_operating_mode";
     int mode = snc.getPump(x)->getOperatingMode();
-    mqttClient.publish((mqtt.baseTopic + pump + "/value").c_str(), String(mode).c_str());
-    mqttClient.publish((mqtt.baseTopic + pump + "_text/value").c_str(), Pump::pump_modes[mode]);
+    mqttClient.publish((mqttBase + pump + "/value").c_str(), String(mode).c_str());
+    mqttClient.publish((mqttBase + pump + "_text/value").c_str(), Pump::pump_modes[mode]);
   }
 }
 */
+
+#pragma region Auto Discovery
+
+/// @brief Publish a Sensor via MQTT auto discovery
+/// @param deviceClass Sensor, etc
+/// @param stateTopic Mqtt topic to read state information from.
+/// @param unitOfMeasurement V, W, A, mV, etc
+/// @param valueTemplate HA value template to parse topic payload to derive value
+/// @param uniqueID Spa serial number + sensor id eg 123456-789012_temperature
+/// @param deviceName Spa name eg MySpa
+/// @param deviceIdentifier Spa serial number eg 123456-789012
+void sensorADPublish(String name, String deviceClass, String stateTopic, String unitOfMeasurement, String valueTemplate, String uniqueID, String deviceName, String deviceIdentifier ) {
+
+/*
+{ 
+   "device_class":"temperature",
+   "state_topic":"homeassistant/sensor/sensorBedroom/state",
+   "unit_of_measurement":"°C",
+   "value_template":"{{ value_json.temperature}}",
+   "unique_id":"temp01ae",
+   "device":{
+      "identifiers":[
+         "bedroom01ae"
+      ],
+      "name":"Bedroom"
+   }
+}"
+*/
+
+  StaticJsonDocument<512> json;
+
+  json["name"]=name;
+  json["device_class"] = deviceClass;
+  json["state_topic"] = stateTopic;
+  json["unit_of_measurement"] = unitOfMeasurement;
+  json["value_template"] = valueTemplate;
+  json["unique_id"] = uniqueID;
+  JsonObject device = json.createNestedObject("device");
+  device["name"] = deviceName;
+  JsonArray identifiers = device.createNestedArray("identifiers");
+  identifiers.add(deviceIdentifier);
+
+  // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
+  String discoveryTopic = "homeassistant/sensor/"+uniqueID+"/config";
+  String output = "";
+  serializeJson(json,output);
+  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
+
+}
+
+/// @brief Publish a Binary Sensor via MQTT auto discovery
+/// @param deviceClass Sensor, etc
+/// @param stateTopic Mqtt topic to read state information from.
+/// @param valueTemplate HA value template to parse topic payload to derive value
+/// @param uniqueID Spa serial number + sensor id eg 123456-789012_temperature
+/// @param deviceName Spa name eg MySpa
+/// @param deviceIdentifier Spa serial number eg 123456-789012
+void binarySensorADPublish (String name, String deviceClass, String stateTopic, String valueTemplate, String uniqueID, String deviceName, String deviceIdentifier) {
+/*
+{
+  "name":null,
+  "device_class":"motion",
+  "state_topic":"homeassistant/binary_sensor/garden/state",
+  "unique_id":"motion01ad",
+  "device":{
+    "identifiers":[
+        "01ad"
+    ],
+    "name":"Garden"
+  }
+}*/
+
+  StaticJsonDocument<512> json;
+
+  if (deviceClass != "") { json["device_class"] = deviceClass; }
+  json["name"]=name;
+  json["state_topic"] = stateTopic;
+  json["value_template"] = valueTemplate;
+  json["unique_id"] = uniqueID;
+  JsonObject device = json.createNestedObject("device");
+  device["name"] = deviceName;
+  JsonArray identifiers = device.createNestedArray("identifiers");
+  identifiers.add(deviceIdentifier);
+
+  // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
+  String discoveryTopic = "homeassistant/binary_sensor/"+spaSerialNumber+"/"+uniqueID+"/config";
+  String output = "";
+  serializeJson(json,output);
+  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
+
+}
+
+
+void climateADPublish(String name, String uniqueID, String deviceName, String deviceIdentifier ) {
+
+/*
+{ 
+   "device_class":"temperature",
+   "state_topic":"homeassistant/sensor/sensorBedroom/state",
+   "unit_of_measurement":"°C",
+   "value_template":"{{ value_json.temperature}}",
+   "unique_id":"temp01ae",
+   "device":{
+      "identifiers":[
+         "bedroom01ae"
+      ],
+      "name":"Bedroom"
+   }
+}"
+*/
+
+  StaticJsonDocument<512> json;
+
+  json["name"]=name;
+
+  json["current_temperature_topic"]="sn_esp32/"+spaSerialNumber+"/state";;
+  json["current_temperature_template"]="{{ value_json.watertemperature }}";
+
+  JsonObject device = json.createNestedObject("device");
+  device["name"] = deviceName;
+  JsonArray identifiers = device.createNestedArray("identifiers");
+  identifiers.add(deviceIdentifier);
+  
+  String commandBase = "sn_esp32/"+spaSerialNumber+"/set/";
+
+  json["initial"]=36;
+  json["max_temp"]=41;
+  json["min_temp"]=10;
+  JsonArray modes = json.createNestedArray("modes");
+  modes.add("auto");
+  modes.add("heat");
+  modes.add("cool");
+  modes.add("off");
+  json["mode_command_topic"]=commandBase+"mode";
+  json["mode_state_template"]="{{ value_json.heatermode }}";
+  json["mode_state_topic"]="sn_esp32/"+spaSerialNumber+"/state";
+  json["temperature_command_topic"]=commandBase+"temperature";
+  json["temperature_state_template"]="{{ value_json.temperaturesetpoint }}";
+  json["temperature_state_topic"]="sn_esp32/"+spaSerialNumber+"/state";
+  json["temperature_unit"]="C";
+  json["temp_step"]=0.2;
+
+  json["unique_id"] = uniqueID;
+  
+  // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
+  String discoveryTopic = "homeassistant/climate/"+uniqueID+"/config";
+  String output = "";
+  serializeJson(json,output);
+  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
+
+}
+
+
+void mqttHaAutoDiscovery() {
+  String spaName = "MySpa"; //TODO - This needs to be a settable parameter.
+
+
+  debugI("Publishing Home Assistant auto discovery");
+
+  sensorADPublish("Water Temperature", "temperature","sn_esp32/"+spaSerialNumber+"/state","°C","{{ value_json.watertemperature }}",spaSerialNumber+"-Temperature", spaName, spaSerialNumber);
+  sensorADPublish("Mains Voltage", "voltage","sn_esp32/"+spaSerialNumber+"/state","V","{{ value_json.voltage }}",spaSerialNumber+"-MainsVoltage", spaName, spaSerialNumber);
+  sensorADPublish("Mains Current", "current","sn_esp32/"+spaSerialNumber+"/state","A","{{ value_json.current }}",spaSerialNumber+"-MainsCurrent", spaName, spaSerialNumber);
+  sensorADPublish("Total Energy","energy","sn_esp32/"+spaSerialNumber+"/state","kWh","{{ value_json.totalenergy }}",spaSerialNumber+"-TotalEnergy", spaName, spaSerialNumber);
+  sensorADPublish("Heatpump Ambient Temperature","temperature","sn_esp32/"+spaSerialNumber+"/state","°C","{{ value_json.hpambtemp }}",spaSerialNumber+"-HPAmbTemp", spaName, spaSerialNumber);
+  sensorADPublish("Heatpump Condensor Temperature","temperature","sn_esp32/"+spaSerialNumber+"/state","°C","{{ value_json.hpcondtemp }}",spaSerialNumber+"-HPCondTemp", spaName, spaSerialNumber);
+
+  binarySensorADPublish("Heating Active","","sn_esp32/"+spaSerialNumber+"/state","{{ value_json.heatingactive }}",spaSerialNumber+"-HeatingActive", spaName, spaSerialNumber);
+  binarySensorADPublish("Ozone Active","","sn_esp32/"+spaSerialNumber+"/state","{{ value_json.ozoneactive }}",spaSerialNumber+"-OzoneActive", spaName, spaSerialNumber);
+  
+  climateADPublish("Heating",spaSerialNumber+"-Heating", spaName, spaSerialNumber);
+
+  
+ /*                             
+  String output,topic;
+
+  DynamicJsonDocument haTemplate(1024);
+
+  debugI("Publishing Home Assistant auto discovery");
+
+  JsonObject device = haTemplate.createNestedObject("device");
+
+  device["identifiers"]=spaSerialNumber;
+  device["name"]=spaName;
+
+  haTemplate["availability_topic"]=mqttBase+"available";
+
+  mqttSensorADPublish(haTemplate, "voltage", "Supply Voltage", "voltage", "v");
+  mqttSensorADPublish(haTemplate, "current", "Supply Current", "current", "A");
+  mqttBinarySensorADPublish(haTemplate, "heating_active", "Heating Active", "");
+  mqttBinarySensorADPublish(haTemplate, "uv_ozone_active", "UV/Ozone Active", "");
+  mqttBinarySensorADPublish(haTemplate, "sanatise_running", "Sanatise Cycle Running", "");
+  mqttSensorADPublish(haTemplate, "hpump_amb_temp", "Heatpump Ambient Temperature", "temperature","°C");
+  mqttSensorADPublish(haTemplate, "hpump_con_temp", "Heatpump Condensor Temperature", "temperature", "°C");
+  mqttSensorADPublish(haTemplate, "water_temp", "Water Temperature", "temperature", "°C");  //Publish this as a sensor as well as HVAC so as to allow eaiser trending
+  mqttLightsADPublish(haTemplate, "lights", "Lights");
+  mqttClimateADPublish(haTemplate);
+
+  mqttSensorADPublish(haTemplate, "total_energy", "Total Energy", "energy", "total_increasing", "kWh");
+  mqttSensorADPublish(haTemplate, "energy_today", "Energy Today", "energy", "total_increasing", "kWh");
+  mqttSensorADPublish(haTemplate, "power_consumption", "Power Consumption", "power", "W");
+  
+  
+  mqttSwitchADPublish(haTemplate,"resitive_heating","Aux Resitive Heating");
+
+
+
+  for (int x = 0; x < 5; x++) {
+    Pump *pump = snc.getPump(x);
+    if (pump->isInstalled()) {
+      String id = "pump" + String(x+1) + "_operating_mode";
+      String name = "Pump " + String(x+1);
+      if (!pump->isAutoModeSupported()){
+        mqttSwitchADPublish(haTemplate, id, name);  // Pumps should not be published as switches, rather fans, so to support mutispeed pumps.
+      } else {
+        mqttPumpSelectADPublish(haTemplate, id, name);
+      }
+    }
+  }
+*/
+}
+
+#pragma endregion
+
+
+void mqttPublishStatus() {
+
+  StaticJsonDocument<1024> json;
+
+  json["watertemperature"] = String(sni.getWTMP() / 10) + "." + String(sni.getWTMP() % 10); //avoids stupid rounding errors
+  json["voltage"]=String(sni.getMainsVoltage());
+  json["current"]=String(sni.getMainsCurrent() / 10) + "." + String(sni.getMainsCurrent() % 10);
+  json["heatingactive"]=sni.getRB_TP_Heater()? "ON": "OFF";
+  json["ozoneactive"]=sni.getRB_TP_Ozone()? "ON": "OFF";
+  json["totalenergy"]=String(sni.getPower_kWh() / 100) + "." + String(sni.getPower_kWh() % 100);
+  json["hpambtemp"]=String(sni.getHP_Ambient());
+  json["hpcondtemp"]=String(sni.getHP_Condensor());
+  json["temperaturesetpoint"]=String(sni.getSTMP() / 10) + "." + String(sni.getSTMP() % 10);
+  json["heatermode"]=sni.HPMPStrings[sni.getHPMP()];
+
+  String output = "";
+  serializeJson(json,output);
+
+  mqttClient.publish(("sn_esp32/"+spaSerialNumber+"/state").c_str(),output.c_str());
+
+}
+
+
 
 void setup() {
   pinMode(TRIGGER_PIN, INPUT_PULLUP);
@@ -295,33 +588,35 @@ void setup() {
   debugA("Starting...");
 
   debugI("Mounting FS");
-  if (LittleFS.begin()){
-    debugI("Mounted FS");
-    debugI("Reading config file");
-    File configFile = LittleFS.open("/config.json","r");
-    if (configFile) {
-      debugI("Reading config file");
-      size_t size = configFile.size();
-      // Allocate a buffer to store contents of the file.
-      std::unique_ptr<char[]> buf(new char[size]);
-      configFile.readBytes(buf.get(), size);
 
-      DynamicJsonDocument json(1024);
-      auto deserializeError = deserializeJson(json, buf.get());
-      serializeJson(json, Serial);
-      if ( ! deserializeError ) {
-        debugI("Parsed JSON");
-        mqtt.server = json["mqtt_server"].as<String>();
-        mqtt.port = json["mqtt_port"].as<String>();
-      } else {
-        debugW("Failed to parse config file");
-      }
-      configFile.close();
-    }
-  } else {
-    debugW("Failed to mount file system");
+  if (!LittleFS.begin()) {
+    debugW("Failed to mount file system, formatting");
+    LittleFS.format();
+    LittleFS.begin();
   }
-  
+
+  debugI("Reading config file");
+  File configFile = LittleFS.open("/config.json","r");
+  if (configFile) {
+    size_t size = configFile.size();
+    // Allocate a buffer to store contents of the file.
+    std::unique_ptr<char[]> buf(new char[size]);
+    configFile.readBytes(buf.get(), size);
+
+    DynamicJsonDocument json(1024);
+    auto deserializeError = deserializeJson(json, buf.get());
+    serializeJson(json, Serial);
+    if ( ! deserializeError ) {
+      debugI("Parsed JSON");
+      mqtt.server = json["mqtt_server"].as<String>();
+      mqtt.port = json["mqtt_port"].as<String>();
+    } else {
+      debugW("Failed to parse config file");
+    }
+    configFile.close();
+  }
+
+
   if (mqtt.server == "") { 
     mqtt.server = "mqtt"; 
   }
@@ -329,78 +624,91 @@ void setup() {
     mqtt.port = "1883"; 
   }
 
-  // Get the serial numbers from the spare and use these as a unique identifier
-  String snum = sni.getSerialNo1()+"-"+sni.getSerialNo2();
-
-//  mqtt.baseTopic = "sn_esp32/" + snum + "/"; 
-
   mqttClient.setServer(mqtt.server.c_str(),mqtt.port.toInt());
-//  mqttClient.setCallback(mqttCallback);
+  mqttClient.setCallback(mqttCallback);
   mqttClient.setBufferSize(2048);
-//  snc.subscribeUpdate(mqttPublishStatus);
+
+  ui.begin();
+
 }
 
-long mqttLastConnect = 0;
-long wifiLastConnect = millis();
-long bootTime = millis();
-bool autoDiscoveryPublished = false;
-bool sncFirstInit = false;
+
 
 void loop() {  
-  checkButton();
-  led.tick();
+
 
   sni.loop();
-
-/*
-  if (!sncFirstInit && snc.initialised()) {
-    mqtt.baseTopic = "sn_esp32/" + snc.getSerialNo() + "/";
-    sncFirstInit = true;
-    ui.begin();
-  }
+  checkButton();
+  led.tick();
+  mqttClient.loop();
+  
+  Debug.handle();
 
   if (ui.initialised) { 
     ui.server->handleClient(); 
   }
-*/
 
-  if (WiFi.status() == WL_CONNECTED) {
-    if (sni.isInitialised()){
-      if (!mqttClient.connected()) {
-        long now=millis();
-        if (now - mqttLastConnect > 5000) {
-          led.setInterval(500);
-          debugW("MQTT not connected, attempting connection to %s:%s",mqtt.server.c_str(),mqtt.port.c_str());
-          mqttLastConnect = now;
-          if (mqttClient.connect("sn_esp32", (mqtt.baseTopic+"available").c_str(),2,true,"offline")) {
-            debugI("MQTT connected");
-            mqttClient.subscribe((mqtt.baseTopic+"+/set").c_str());
-            mqttClient.publish((mqtt.baseTopic+"available").c_str(),"online",true);
-            autoDiscoveryPublished = false;
-          } else {
-            debugW("MQTT connection failed");
-          }
-        }
-      } else {
-        if (!autoDiscoveryPublished) {
-          mqttHaAutoDiscovery();
-          autoDiscoveryPublished = true;
-//          snc.forceUpdate();
-        }
-        led.setInterval(2000);
-      }
+  if (millis()-bootTime<5000) {debugI("waiting...");}
+
+  if (sni.isInitialised() && millis()-bootTime>5000 ) {
+    if ( spaSerialNumber=="" ) {
+      debugI("Initialising...");
+  
+      spaSerialNumber = sni.getSerialNo1()+"-"+sni.getSerialNo2();
+      debugI("Spa serial number is %s",spaSerialNumber.c_str());
+
+      mqttBase = String("sn_esp32/") + spaSerialNumber + String("/");
+      debugI("MQTT base topic is %s",mqttBase.c_str());
+
     }
-  } else {
-    led.setInterval(100);
-    long now = millis();
-    if (now-wifiLastConnect > 10000) {
-      wifiLastConnect = now;
-      WiFi.reconnect();
+
+    if (WiFi.status() == WL_CONNECTED) {
+      if (mqttBase!=""){
+        if (!mqttClient.connected()) {  // MQTT broker reconnect if not connected
+          long now=millis();
+          if (now - mqttLastConnect > 5000) {
+            led.setInterval(500);
+            debugW("MQTT not connected, attempting connection to %s:%s",mqtt.server.c_str(),mqtt.port.c_str());
+            mqttLastConnect = now;
+
+            if (mqttClient.connect("sn_esp32", (mqttBase+"available").c_str(),2,true,"offline")) {
+              debugI("MQTT connected");
+    
+              String subTopic = mqttBase+"set/#";
+              debugI("Subscribing to topic %s", subTopic.c_str());
+              mqttClient.subscribe(subTopic.c_str());
+
+              mqttClient.publish((mqttBase+"available").c_str(),"online",true);
+              autoDiscoveryPublished = false;
+            } else {
+              debugW("MQTT connection failed");
+            }
+
+          }
+        } else {
+          if (!autoDiscoveryPublished) {  // This is the setup area, gets called once when communication with Spa and MQTT broker have been established.
+            debugI("Publish autodiscovery information");
+            mqttHaAutoDiscovery();
+            autoDiscoveryPublished = true;
+            sni.setUpdateCallback(mqttPublishStatus);
+            mqttPublishStatus();
+          }
+          led.setInterval(2000);
+
+        }
+      }
+    } else { //wifi not connected
+      led.setInterval(100);
+      long now = millis();
+      if (now-wifiLastConnect > 10000) {
+        debugI("Wifi reconnecting...");
+        wifiLastConnect = now;
+        WiFi.reconnect();
+      }
     }
   }
 
-  Debug.handle();
-  mqttClient.loop();
+  
 
-  delay(1);
+
 }
