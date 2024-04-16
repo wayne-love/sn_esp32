@@ -32,6 +32,8 @@ class SpaNetInterface : public SpaNetProperties {
 
         void updateMeasures();
 
+
+
         /// @brief Sends command to SpaNet controller.  Result must be read by some other method.
         /// Used for the 'RF' command so that we can do a optomised read of the return array.
         /// @param cmd - cmd to be executed.
@@ -46,6 +48,9 @@ class SpaNetInterface : public SpaNetProperties {
         /// @brief Updates the attributes by sending the RF command and parsing the result.
         void updateStatus();
 
+        void flushSerialReadBuffer();
+
+
         /// @brief Stores millis time at which next update should occur
         unsigned long _nextUpdateDue = 0;
 
@@ -54,7 +59,10 @@ class SpaNetInterface : public SpaNetProperties {
         /// @brief If the result registers have been modified locally, need to do a fress pull from the controller
         bool _resultRegistersDirty = true;
 
+   
         void (*updateCallback)() = nullptr;
+
+        long _lastWaitMessage = millis();
 
 
 
@@ -94,6 +102,36 @@ class SpaNetInterface : public SpaNetProperties {
         /// @return Returns True if succesful
         bool setHPMP(int mode);
         bool setHPMP(String mode);
+
+        /// @brief Set the operating mode for pump 1
+        /// @param mode 0 = off, 1 = on, 4 = auto (if supported)
+        /// @return True if successful
+        bool setRB_TP_Pump1(int mode);
+
+        /// @brief Set the operating mode for pump 2
+        /// @param mode 0 = off, 1 = on, 4 = auto (if supported)
+        /// @return True if successful
+        bool setRB_TP_Pump2(int mode);
+
+        /// @brief Set the operating mode for pump 3
+        /// @param mode 0 = off, 1 = on, 4 = auto (if supported)
+        /// @return True if successful
+        bool setRB_TP_Pump3(int mode);
+
+        /// @brief Set the operating mode for pump 4
+        /// @param mode 0 = off, 1 = on, 4 = auto (if supported)
+        /// @return True if successful
+        bool setRB_TP_Pump4(int mode);
+
+        /// @brief Set the operating mode for pump 5
+        /// @param mode 0 = off, 1 = on, 4 = auto (if supported)
+        /// @return True if successful
+        bool setRB_TP_Pump5(int mode);
+
+        /// @brief Set aux element operating mode
+        /// @param mode 0 = off, 1 = on
+        /// @return True if successful
+        bool setHELE(int mode);
 };
 
 

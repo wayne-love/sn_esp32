@@ -15,14 +15,21 @@ SpaNetInterface::~SpaNetInterface() {}
 
 
 
-void SpaNetInterface::sendCommand(String cmd) {
-    debugV("Flushing serial stream -");
-    while (port.available() > 0) { 
+void SpaNetInterface::flushSerialReadBuffer() {
+    int x = 0;
+
+    debugD("Flushing serial stream...");
+    while (port.available() > 0 && x++<5120) { 
         debugV("%i,",port.read());
     }
-    debugV("-");
+}
 
-    debugV("Sending - %s",cmd.c_str());
+
+void SpaNetInterface::sendCommand(String cmd) {
+
+    flushSerialReadBuffer();
+
+    debugD("Sending - %s",cmd.c_str());
     port.print('\n');
     port.flush();
     delay(50); // **TODO** is this needed?
@@ -31,9 +38,9 @@ void SpaNetInterface::sendCommand(String cmd) {
 
     long timeout = millis() + 1000; // wait up to 1 sec for a response
 
-    debugV("Start waiting for a response");
+    debugD("Start waiting for a response");
     while (port.available()==0 and millis()<timeout) {}
-    debugV("Finish waiting");
+    debugD("Finish waiting");
 
     _resultRegistersDirty = true; // we're trying to write to the registers so we can assume that they will now be dirty
 }
@@ -45,6 +52,67 @@ String SpaNetInterface::sendCommandReturnResult(String cmd) {
     debugV("Read - %s",result.c_str());
     return result;
 }
+
+bool SpaNetInterface::setRB_TP_Pump1(int mode){
+    debugD("setRB_TP_Pump1 - %i",mode);
+    String result = sendCommandReturnResult("S22:"+String(mode));
+    if (result == "S22-OK") {
+        update_RB_TP_Pump1(String(mode));
+        return true;
+    }
+    return false;
+}
+
+bool SpaNetInterface::setRB_TP_Pump2(int mode){
+    debugD("setRB_TP_Pump2 - %i",mode);
+    String result = sendCommandReturnResult("S23:"+String(mode));
+    if (result == "S23-OK") {
+        update_RB_TP_Pump2(String(mode));
+        return true;
+    }
+    return false;
+}
+
+bool SpaNetInterface::setRB_TP_Pump3(int mode){
+    debugD("setRB_TP_Pump3 - %i",mode);
+    String result = sendCommandReturnResult("S24:"+String(mode));
+    if (result == "S24-OK") {
+        update_RB_TP_Pump3(String(mode));
+        return true;
+    }
+    return false;
+}
+
+bool SpaNetInterface::setRB_TP_Pump4(int mode){
+    debugD("setRB_TP_Pump4 - %i",mode);
+    String result = sendCommandReturnResult("S25:"+String(mode));
+    if (result == "S25-OK") {
+        update_RB_TP_Pump4(String(mode));
+        return true;
+    }
+    return false;
+}
+
+bool SpaNetInterface::setRB_TP_Pump5(int mode){
+    debugD("setRB_TP_Pump5 - %i",mode);
+    String result = sendCommandReturnResult("S26:"+String(mode));
+    if (result == "S26-OK") {
+        update_RB_TP_Pump5(String(mode));
+        return true;
+    }
+    return false;
+}
+
+bool SpaNetInterface::setHELE(int mode){
+    debugD("setHELE - %i", mode);
+    String result = sendCommandReturnResult("W98:"+String(mode));
+    if (result == String(mode)) {
+        update_HELE(String(mode));
+        return true;
+    }
+    return false;
+}
+
 
 /// @brief Set the water temperature set point * 10 (380 = 38.0)
 /// @param temp 
@@ -86,7 +154,7 @@ bool SpaNetInterface::readStatus() {
     // along with the other unavoidable delays can cause the status of
     // properties to bounce in certain UI's (apple devices, home assistant, etc)
 
-    debugV("Reading registers -");
+    debugD("Reading registers -");
 
     int field = 0;
     validStatusResponse = false;
@@ -106,12 +174,7 @@ bool SpaNetInterface::readStatus() {
     }
 
     //Flush the remaining data from the buffer as the last field is meaningless
-    //TODO - If there is a lot of noise on the serial line then this could be a endless loop
-    debugV("Flushing serial stream -");
-    while (port.available() > 0) { 
-        debugV("%i,",port.read());
-    }
-    debugV("-");
+    flushSerialReadBuffer();
 
     if (field != 289) {
         debugE("Throwing exception - null string");
@@ -132,10 +195,12 @@ bool SpaNetInterface::isInitialised() {
 
 
 void SpaNetInterface::updateStatus() {
+    debugD("Update status called");
     sendCommand("RF");
 
     _nextUpdateDue = millis() + FAILEDREADFREQUENCY;    
     if (readStatus()) {
+        debugD("readStatus returned true");
         _nextUpdateDue = millis() + UPDATEFREQUENCY;
         _initialised = true;
         if (updateCallback != nullptr) { updateCallback(); }
@@ -144,6 +209,11 @@ void SpaNetInterface::updateStatus() {
 
 
 void SpaNetInterface::loop(){
+    if ( _lastWaitMessage + 1000 < millis()) {
+        debugD("Waiting...");
+        _lastWaitMessage = millis();
+    }
+
     if (_resultRegistersDirty) {
         _nextUpdateDue = millis() + 200;  // if we need to read the registers, pause a bit to see if there are more commands coming.
         _resultRegistersDirty = false;
@@ -252,7 +322,7 @@ void SpaNetInterface::updateMeasures() {
     update_RB_TP_Pump2(statusResponseRaw[111]);
     update_RB_TP_Pump3(statusResponseRaw[112]);
     update_RB_TP_Pump4(statusResponseRaw[113]);
-    update_RB_TP_Pump4(statusResponseRaw[114]);
+    update_RB_TP_Pump5(statusResponseRaw[114]);
     //RB_TP_Blower.updateValue(statusResponseRaw[101]);
     //RB_TP_Light.updateValue(statusResponseRaw[102]);
     update_RB_TP_Auto(statusResponseRaw[105]);

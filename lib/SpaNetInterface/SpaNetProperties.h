@@ -1520,31 +1520,31 @@ public:
     String getPump1InstallState() { return Pump1InstallState.getValue(); }
     void setPump1InstallStateCallback(void (*callback)(String)) { Pump1InstallState.setCallback(callback); }
 
-    String getPump2InstallState() { return Pump1InstallState.getValue(); }
+    String getPump2InstallState() { return Pump2InstallState.getValue(); }
     void setPump2InstallStateCallback(void (*callback)(String)) { Pump2InstallState.setCallback(callback); }
 
-    String getPump3InstallState() { return Pump1InstallState.getValue(); }
+    String getPump3InstallState() { return Pump3InstallState.getValue(); }
     void setPump3InstallStateCallback(void (*callback)(String)) { Pump3InstallState.setCallback(callback); }
 
-    String getPump4InstallState() { return Pump1InstallState.getValue(); }
+    String getPump4InstallState() { return Pump4InstallState.getValue(); }
     void setPump4InstallStateCallback(void (*callback)(String)) { Pump4InstallState.setCallback(callback); }
 
-    String getPump5InstallState() { return Pump1InstallState.getValue(); }
+    String getPump5InstallState() { return Pump5InstallState.getValue(); }
     void setPump5InstallStateCallback(void (*callback)(String)) { Pump5InstallState.setCallback(callback); }
 
     bool getPump1OkToRun() { return Pump1OkToRun.getValue(); }
     void setPump1OkToRunCallback(void (*callback)(bool)) { Pump1OkToRun.setCallback(callback); }
 
-    bool getPump2OkToRun() { return Pump1OkToRun.getValue(); }
+    bool getPump2OkToRun() { return Pump2OkToRun.getValue(); }
     void setPump2OkToRunCallback(void (*callback)(bool)) { Pump2OkToRun.setCallback(callback); }
 
-    bool getPump3OkToRun() { return Pump1OkToRun.getValue(); }
+    bool getPump3OkToRun() { return Pump3OkToRun.getValue(); }
     void setPump3OkToRunCallback(void (*callback)(bool)) { Pump3OkToRun.setCallback(callback); }
 
-    bool getPump4OkToRun() { return Pump1OkToRun.getValue(); }
+    bool getPump4OkToRun() { return Pump4OkToRun.getValue(); }
     void setPump4OkToRunCallback(void (*callback)(bool)) { Pump4OkToRun.setCallback(callback); }
 
-    bool getPump5OkToRun() { return Pump1OkToRun.getValue(); }
+    bool getPump5OkToRun() { return Pump5OkToRun.getValue(); }
     void setPump5OkToRunCallback(void (*callback)(bool)) { Pump5OkToRun.setCallback(callback); }
 
     int getLockMode() { return LockMode.getValue(); }

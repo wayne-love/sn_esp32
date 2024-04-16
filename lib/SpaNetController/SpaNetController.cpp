@@ -129,7 +129,8 @@ void SpaNetController::queueCommand(String command) {
 }
 
 bool SpaNetController::setWaterTempSetPoint(float temp){
-  // Should do some error checking here to ensure that we arnt tryting to freeze the spa
+  if (temp < 10 || temp > 40) { return false;}  //TODO - Confirm that 40 is the actual top.
+  
   String cmd = "W40:" + String(int(temp * 10));
   queueCommand(cmd);
   return true;
