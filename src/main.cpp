@@ -369,7 +369,6 @@ void sensorADPublish(String name, String deviceClass, String stateTopic, String 
 }
 
 
-
 /// @brief Publish a Binary Sensor via MQTT auto discovery
 /// @param deviceClass Sensor, etc
 /// @param stateTopic Mqtt topic to read state information from.
@@ -589,7 +588,8 @@ void mqttHaAutoDiscovery() {
   sensorADPublish("Total Energy","energy",mqttState,"Wh","{{ value_json.totalenergy }}","total_increasing","TotalEnergy", spaName, spaSerialNumber);
   sensorADPublish("Heatpump Ambient Temperature","temperature",mqttState,"°C","{{ value_json.hpambtemp }}","measurement","HPAmbTemp", spaName, spaSerialNumber);
   sensorADPublish("Heatpump Condensor Temperature","temperature",mqttState,"°C","{{ value_json.hpcondtemp }}","measurement","HPCondTemp", spaName, spaSerialNumber);
-
+  sensorADPublish("Status","enum",mqttState,"","{{ value_json.status }}","measurement","Status", spaName, spaSerialNumber);
+  
   binarySensorADPublish("Heating Active","",mqttState,"{{ value_json.heatingactive }}","HeatingActive", spaName, spaSerialNumber);
   binarySensorADPublish("Ozone Active","",mqttState,"{{ value_json.ozoneactive }}","OzoneActive", spaName, spaSerialNumber);
   
@@ -618,6 +618,10 @@ void mqttHaAutoDiscovery() {
   switchADPublish("Aux Heat Element","",mqttState,"{{ value_json.auxheat }}","auxheat",spaName,spaSerialNumber);
   
   switchADPublish("Blower","",mqttState,"{{ value_json.blower }}","blower",spaName, spaSerialNumber);
+
+
+
+
   
   //selectADPublish("Blower Mode", {"VariSpeed","Ramp"}, mqttState, "{{ value_json.blowermode }}", "blowermode", spaName, spaSerialNumber);
 
@@ -698,6 +702,8 @@ void mqttPublishStatus() {
   json["pump5"]=sni.getRB_TP_Pump5()==0? "OFF" : "ON"; // we're ignoring auto here
 
   json["auxheat"]=sni.getHELE()==0? "OFF" : "ON";
+
+  json["status"]=sni.getStatus();
 
   String output = "";
   serializeJson(json,output);
