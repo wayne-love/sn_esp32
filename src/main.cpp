@@ -317,6 +317,7 @@ void mqttPublishStatus(SpaNetController *s) {
 #pragma region Auto Discovery
 
 /// @brief Publish a Sensor via MQTT auto discovery
+/// @param name Sensor name
 /// @param deviceClass Sensor, etc
 /// @param stateTopic Mqtt topic to read state information from.
 /// @param unitOfMeasurement V, W, A, mV, etc
@@ -346,11 +347,11 @@ void sensorADPublish(String name, String deviceClass, String stateTopic, String 
   String uniqueID = spaSerialNumber + "-" + propertyId;
 
   json["name"]=name;
-  json["device_class"] = deviceClass;
+  if (deviceClass != "") { json["device_class"] = deviceClass; }
   json["state_topic"] = stateTopic;
-  json["unit_of_measurement"] = unitOfMeasurement;
+  if (unitOfMeasurement != "") { json["unit_of_measurement"] = unitOfMeasurement; }
   json["value_template"] = valueTemplate;
-  json["state_class"] = stateClass;
+  if (stateClass != "") { json["state_class"] = stateClass; }
   json["unique_id"] = uniqueID;
   JsonObject device = json.createNestedObject("device");
   device["name"] = deviceName;
@@ -526,7 +527,7 @@ void switchADPublish (String name, String deviceClass, String stateTopic, String
 
 }
 
-/// @brief Publish a swtich by MQTT auto discovery
+/// @brief Publish a select control by MQTT auto discovery
 /// @param name Name to display
 /// @param deviceClass outlet = power outlet, switch (or "") = generic switch
 /// @param stateTopic Mqtt topic to read state information from.
@@ -588,7 +589,7 @@ void mqttHaAutoDiscovery() {
   sensorADPublish("Total Energy","energy",mqttState,"Wh","{{ value_json.totalenergy }}","total_increasing","TotalEnergy", spaName, spaSerialNumber);
   sensorADPublish("Heatpump Ambient Temperature","temperature",mqttState,"°C","{{ value_json.hpambtemp }}","measurement","HPAmbTemp", spaName, spaSerialNumber);
   sensorADPublish("Heatpump Condensor Temperature","temperature",mqttState,"°C","{{ value_json.hpcondtemp }}","measurement","HPCondTemp", spaName, spaSerialNumber);
-  sensorADPublish("Status","enum",mqttState,"","{{ value_json.status }}","measurement","Status", spaName, spaSerialNumber);
+  sensorADPublish("Status","",mqttState,"","{{ value_json.status }}","","Status", spaName, spaSerialNumber);
   
   binarySensorADPublish("Heating Active","",mqttState,"{{ value_json.heatingactive }}","HeatingActive", spaName, spaSerialNumber);
   binarySensorADPublish("Ozone Active","",mqttState,"{{ value_json.ozoneactive }}","OzoneActive", spaName, spaSerialNumber);
@@ -700,6 +701,8 @@ void mqttPublishStatus() {
   json["pump3"]=sni.getRB_TP_Pump3()==0? "OFF" : "ON"; // we're ignoring auto here
   json["pump4"]=sni.getRB_TP_Pump4()==0? "OFF" : "ON"; // we're ignoring auto here
   json["pump5"]=sni.getRB_TP_Pump5()==0? "OFF" : "ON"; // we're ignoring auto here
+
+// TODO : need to return blower vlaue
 
   json["auxheat"]=sni.getHELE()==0? "OFF" : "ON";
 
