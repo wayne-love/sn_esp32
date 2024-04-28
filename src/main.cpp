@@ -318,6 +318,7 @@ void mqttPublishStatus(SpaNetController *s) {
 
 /// @brief Publish a Sensor via MQTT auto discovery
 /// @param name Sensor name
+/// @param entityCategory https://developers.home-assistant.io/blog/2021/10/26/config-entity?_highlight=diagnostic#entity-categories (empty string accepted)
 /// @param deviceClass Sensor, etc (empty string accepted)
 /// @param stateTopic Mqtt topic to read state information from.
 /// @param unitOfMeasurement V, W, A, mV, etc (empty string accepted)
@@ -326,7 +327,7 @@ void mqttPublishStatus(SpaNetController *s) {
 /// @param propertId Unique ID of the property
 /// @param deviceName Spa name eg MySpa
 /// @param deviceIdentifier Spa serial number eg 123456-789012
-void sensorADPublish(String name, String deviceClass, String stateTopic, String unitOfMeasurement, String valueTemplate, String stateClass, String propertyId, String deviceName, String deviceIdentifier ) {
+void sensorADPublish(String name, String entityCategory, String deviceClass, String stateTopic, String unitOfMeasurement, String valueTemplate, String stateClass, String propertyId, String deviceName, String deviceIdentifier ) {
 
 /*
 { 
@@ -348,6 +349,7 @@ void sensorADPublish(String name, String deviceClass, String stateTopic, String 
   String uniqueID = spaSerialNumber + "-" + propertyId;
 
   json["name"]=name;
+  if (entityCategory != "") {json["entity_category"] = entityCategory; }
   if (deviceClass != "") { json["device_class"] = deviceClass; }
   json["state_topic"] = stateTopic;
   if (unitOfMeasurement != "") { json["unit_of_measurement"] = unitOfMeasurement; }
@@ -588,13 +590,13 @@ void mqttHaAutoDiscovery() {
 
   debugI("Publishing Home Assistant auto discovery");
 
-  sensorADPublish("Water Temperature", "temperature",mqttState,"°C","{{ value_json.watertemperature }}","measurement","Temperature", spaName, spaSerialNumber);
-  sensorADPublish("Mains Voltage", "voltage",mqttState,"V","{{ value_json.voltage }}","measurement","MainsVoltage", spaName, spaSerialNumber);
-  sensorADPublish("Mains Current", "current",mqttState,"A","{{ value_json.current }}","measurement","MainsCurrent", spaName, spaSerialNumber);
-  sensorADPublish("Total Energy","energy",mqttState,"Wh","{{ value_json.totalenergy }}","total_increasing","TotalEnergy", spaName, spaSerialNumber);
-  sensorADPublish("Heatpump Ambient Temperature","temperature",mqttState,"°C","{{ value_json.hpambtemp }}","measurement","HPAmbTemp", spaName, spaSerialNumber);
-  sensorADPublish("Heatpump Condensor Temperature","temperature",mqttState,"°C","{{ value_json.hpcondtemp }}","measurement","HPCondTemp", spaName, spaSerialNumber);
-  sensorADPublish("Status","",mqttState,"","{{ value_json.status }}","","Status", spaName, spaSerialNumber);
+  sensorADPublish("Water Temperature","","temperature",mqttState,"°C","{{ value_json.watertemperature }}","measurement","Temperature", spaName, spaSerialNumber);
+  sensorADPublish("Mains Voltage","diagnostic","voltage",mqttState,"V","{{ value_json.voltage }}","measurement","MainsVoltage", spaName, spaSerialNumber);
+  sensorADPublish("Mains Current","diagnostic","current",mqttState,"A","{{ value_json.current }}","measurement","MainsCurrent", spaName, spaSerialNumber);
+  sensorADPublish("Total Energy","","energy",mqttState,"Wh","{{ value_json.totalenergy }}","total_increasing","TotalEnergy", spaName, spaSerialNumber);
+  sensorADPublish("Heatpump Ambient Temperature","","temperature",mqttState,"°C","{{ value_json.hpambtemp }}","measurement","HPAmbTemp", spaName, spaSerialNumber);
+  sensorADPublish("Heatpump Condensor Temperature","","temperature",mqttState,"°C","{{ value_json.hpcondtemp }}","measurement","HPCondTemp", spaName, spaSerialNumber);
+  sensorADPublish("Status","","",mqttState,"","{{ value_json.status }}","","Status", spaName, spaSerialNumber);
   
   binarySensorADPublish("Heating Active","",mqttState,"{{ value_json.heatingactive }}","HeatingActive", spaName, spaSerialNumber);
   binarySensorADPublish("Ozone Active","",mqttState,"{{ value_json.ozoneactive }}","OzoneActive", spaName, spaSerialNumber);
@@ -623,65 +625,9 @@ void mqttHaAutoDiscovery() {
 
   switchADPublish("Aux Heat Element","",mqttState,"{{ value_json.auxheat }}","auxheat",spaName,spaSerialNumber);
   
-  switchADPublish("Blower","",mqttState,"{{ value_json.blower }}","blower",spaName, spaSerialNumber);
-
-
-
-
-  
+  //switchADPublish("Blower","",mqttState,"{{ value_json.blower }}","blower",spaName, spaSerialNumber);
   //selectADPublish("Blower Mode", {"VariSpeed","Ramp"}, mqttState, "{{ value_json.blowermode }}", "blowermode", spaName, spaSerialNumber);
 
-  
-
-
-
- /*                             
-  String output,topic;
-
-  DynamicJsonDocument haTemplate(1024);
-
-  debugI("Publishing Home Assistant auto discovery");
-
-  JsonObject device = haTemplate.createNestedObject("device");
-
-  device["identifiers"]=spaSerialNumber;
-  device["name"]=spaName;
-
-  haTemplate["availability_topic"]=mqttBase+"available";
-
-  mqttSensorADPublish(haTemplate, "voltage", "Supply Voltage", "voltage", "v");
-  mqttSensorADPublish(haTemplate, "current", "Supply Current", "current", "A");
-  mqttBinarySensorADPublish(haTemplate, "heating_active", "Heating Active", "");
-  mqttBinarySensorADPublish(haTemplate, "uv_ozone_active", "UV/Ozone Active", "");
-  mqttBinarySensorADPublish(haTemplate, "sanatise_running", "Sanatise Cycle Running", "");
-  mqttSensorADPublish(haTemplate, "hpump_amb_temp", "Heatpump Ambient Temperature", "temperature","°C");
-  mqttSensorADPublish(haTemplate, "hpump_con_temp", "Heatpump Condensor Temperature", "temperature", "°C");
-  mqttSensorADPublish(haTemplate, "water_temp", "Water Temperature", "temperature", "°C");  //Publish this as a sensor as well as HVAC so as to allow eaiser trending
-  mqttLightsADPublish(haTemplate, "lights", "Lights");
-  mqttClimateADPublish(haTemplate);
-
-  mqttSensorADPublish(haTemplate, "total_energy", "Total Energy", "energy", "total_increasing", "kWh");
-  mqttSensorADPublish(haTemplate, "energy_today", "Energy Today", "energy", "total_increasing", "kWh");
-  mqttSensorADPublish(haTemplate, "power_consumption", "Power Consumption", "power", "W");
-  
-  
-  mqttSwitchADPublish(haTemplate,"resitive_heating","Aux Resitive Heating");
-
-
-
-  for (int x = 0; x < 5; x++) {
-    Pump *pump = snc.getPump(x);
-    if (pump->isInstalled()) {
-      String id = "pump" + String(x+1) + "_operating_mode";
-      String name = "Pump " + String(x+1);
-      if (!pump->isAutoModeSupported()){
-        mqttSwitchADPublish(haTemplate, id, name);  // Pumps should not be published as switches, rather fans, so to support mutispeed pumps.
-      } else {
-        mqttPumpSelectADPublish(haTemplate, id, name);
-      }
-    }
-  }
-*/
 }
 
 #pragma endregion
