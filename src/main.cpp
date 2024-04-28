@@ -318,11 +318,12 @@ void mqttPublishStatus(SpaNetController *s) {
 
 /// @brief Publish a Sensor via MQTT auto discovery
 /// @param name Sensor name
-/// @param deviceClass Sensor, etc
+/// @param deviceClass Sensor, etc (empty string accepted)
 /// @param stateTopic Mqtt topic to read state information from.
-/// @param unitOfMeasurement V, W, A, mV, etc
+/// @param unitOfMeasurement V, W, A, mV, etc (empty string accepted)
 /// @param valueTemplate HA value template to parse topic payload to derive value
-/// @param uniqueID Spa serial number + sensor id eg 123456-789012_temperature
+/// @param stateClass https://developers.home-assistant.io/docs/core/entity/sensor/#long-term-statistics (empty string accepted)
+/// @param propertId Unique ID of the property
 /// @param deviceName Spa name eg MySpa
 /// @param deviceIdentifier Spa serial number eg 123456-789012
 void sensorADPublish(String name, String deviceClass, String stateTopic, String unitOfMeasurement, String valueTemplate, String stateClass, String propertyId, String deviceName, String deviceIdentifier ) {
@@ -371,11 +372,11 @@ void sensorADPublish(String name, String deviceClass, String stateTopic, String 
 
 
 /// @brief Publish a Binary Sensor via MQTT auto discovery
+/// @param name Sensor name
 /// @param deviceClass Sensor, etc
 /// @param stateTopic Mqtt topic to read state information from.
 /// @param valueTemplate HA value template to parse topic payload to derive value
-/// @param stateClass State class for the sensor (measurment, total, total_increasing)
-/// @param uniqueID Spa serial number + sensor id eg 123456-789012_temperature
+/// @param propertId Unique ID of the property
 /// @param deviceName Spa name eg MySpa
 /// @param deviceIdentifier Spa serial number eg 123456-789012
 void binarySensorADPublish (String name, String deviceClass, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier) {
@@ -417,7 +418,11 @@ void binarySensorADPublish (String name, String deviceClass, String stateTopic, 
 
 }
 
-
+/// @brief Publish a Climate control via MQTT auto discovery
+/// @param name Sensor name
+/// @param propertId Unique ID of the property
+/// @param deviceName Spa name eg MySpa
+/// @param deviceIdentifier Spa serial number eg 123456-789012
 void climateADPublish(String name, String propertyId, String deviceName, String deviceIdentifier ) {
 
 /*
@@ -529,7 +534,7 @@ void switchADPublish (String name, String deviceClass, String stateTopic, String
 
 /// @brief Publish a select control by MQTT auto discovery
 /// @param name Name to display
-/// @param deviceClass outlet = power outlet, switch (or "") = generic switch
+/// @param options List of options
 /// @param stateTopic Mqtt topic to read state information from.
 /// @param valueTemplate HA value template to parse topic payload to derive value
 /// @param propertyId string appended to spa serial number to create a unique id eg 123456-789012_pump1
