@@ -20,6 +20,7 @@ class SpaNetInterface : public SpaNetProperties {
         /// @brief Each field of the RF cmd response as seperate elements.
         String statusResponseRaw[290];
 
+
         /// @brief Does the status response array contain valid information?
         bool validStatusResponse = false;
 
@@ -77,6 +78,9 @@ class SpaNetInterface : public SpaNetProperties {
         SpaNetInterface();
 
         ~SpaNetInterface();
+
+        /// @brief Complete RF command response in a single string
+        Property<String> statusResponse;
 
         /// @brief To be called by loop function of main sketch.  Does regular updates, etc.
         void loop();

@@ -68,7 +68,7 @@ long bootTime = millis();
 long statusLastPublish = millis();
 bool autoDiscoveryPublished = false;
 String mqttBase = "";
-String mqttState = "";
+String mqttStatusTopic = "";
 String mqttSet = "";
 String mqttAvailability = "";
 String spaSerialNumber = "";
@@ -448,7 +448,7 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
 
   if (name != "") { json["name"]=name; }
 
-  json["current_temperature_topic"]=mqttState;;
+  json["current_temperature_topic"]=mqttStatusTopic;;
   json["current_temperature_template"]="{{ value_json.watertemperature }}";
 
   JsonObject device = json.createNestedObject("device");
@@ -466,10 +466,10 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
   modes.add("off");  // this just turns the HP off, not the heating
   json["mode_command_topic"]=mqttSet+"/mode";
   json["mode_state_template"]="{{ value_json.heatermode }}";
-  json["mode_state_topic"]=mqttState;
+  json["mode_state_topic"]=mqttStatusTopic;
   json["temperature_command_topic"]=mqttSet+"/temperature";
   json["temperature_state_template"]="{{ value_json.temperaturesetpoint }}";
-  json["temperature_state_topic"]=mqttState;
+  json["temperature_state_topic"]=mqttStatusTopic;
   json["temperature_unit"]="C";
   json["temp_step"]=0.2;
 
@@ -590,40 +590,40 @@ void mqttHaAutoDiscovery() {
 
   debugI("Publishing Home Assistant auto discovery");
 
-  sensorADPublish("Water Temperature","","temperature",mqttState,"°C","{{ value_json.watertemperature }}","measurement","Temperature", spaName, spaSerialNumber);
-  sensorADPublish("Mains Voltage","diagnostic","voltage",mqttState,"V","{{ value_json.voltage }}","measurement","MainsVoltage", spaName, spaSerialNumber);
-  sensorADPublish("Mains Current","diagnostic","current",mqttState,"A","{{ value_json.current }}","measurement","MainsCurrent", spaName, spaSerialNumber);
-  sensorADPublish("Total Energy","","energy",mqttState,"Wh","{{ value_json.totalenergy }}","total_increasing","TotalEnergy", spaName, spaSerialNumber);
-  sensorADPublish("Heatpump Ambient Temperature","","temperature",mqttState,"°C","{{ value_json.hpambtemp }}","measurement","HPAmbTemp", spaName, spaSerialNumber);
-  sensorADPublish("Heatpump Condensor Temperature","","temperature",mqttState,"°C","{{ value_json.hpcondtemp }}","measurement","HPCondTemp", spaName, spaSerialNumber);
-  sensorADPublish("Status","","",mqttState,"","{{ value_json.status }}","","Status", spaName, spaSerialNumber);
+  sensorADPublish("Water Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.watertemperature }}","measurement","Temperature", spaName, spaSerialNumber);
+  sensorADPublish("Mains Voltage","diagnostic","voltage",mqttStatusTopic,"V","{{ value_json.voltage }}","measurement","MainsVoltage", spaName, spaSerialNumber);
+  sensorADPublish("Mains Current","diagnostic","current",mqttStatusTopic,"A","{{ value_json.current }}","measurement","MainsCurrent", spaName, spaSerialNumber);
+  sensorADPublish("Total Energy","","energy",mqttStatusTopic,"Wh","{{ value_json.totalenergy }}","total_increasing","TotalEnergy", spaName, spaSerialNumber);
+  sensorADPublish("Heatpump Ambient Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.hpambtemp }}","measurement","HPAmbTemp", spaName, spaSerialNumber);
+  sensorADPublish("Heatpump Condensor Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.hpcondtemp }}","measurement","HPCondTemp", spaName, spaSerialNumber);
+  sensorADPublish("Status","","",mqttStatusTopic,"","{{ value_json.status }}","","Status", spaName, spaSerialNumber);
   
-  binarySensorADPublish("Heating Active","",mqttState,"{{ value_json.heatingactive }}","HeatingActive", spaName, spaSerialNumber);
-  binarySensorADPublish("Ozone Active","",mqttState,"{{ value_json.ozoneactive }}","OzoneActive", spaName, spaSerialNumber);
+  binarySensorADPublish("Heating Active","",mqttStatusTopic,"{{ value_json.heatingactive }}","HeatingActive", spaName, spaSerialNumber);
+  binarySensorADPublish("Ozone Active","",mqttStatusTopic,"{{ value_json.ozoneactive }}","OzoneActive", spaName, spaSerialNumber);
   
   climateADPublish(spaName,"Heating", spaName, spaSerialNumber);
 
   if (sni.getPump1InstallState().startsWith("1") && !(sni.getPump1InstallState().endsWith("4"))) {
-     switchADPublish("Pump 1","",mqttState,"{{ value_json.pump1 }}","pump1",spaName,spaSerialNumber);
+     switchADPublish("Pump 1","",mqttStatusTopic,"{{ value_json.pump1 }}","pump1",spaName,spaSerialNumber);
   }
 
   if (sni.getPump2InstallState().startsWith("1") && !(sni.getPump2InstallState().endsWith("4"))) {
-    switchADPublish("Pump 2","",mqttState,"{{ value_json.pump2 }}","pump2",spaName,spaSerialNumber);
+    switchADPublish("Pump 2","",mqttStatusTopic,"{{ value_json.pump2 }}","pump2",spaName,spaSerialNumber);
   } 
 
   if (sni.getPump3InstallState().startsWith("1") && !(sni.getPump3InstallState().endsWith("4"))) {
-    switchADPublish("Pump 3","",mqttState,"{{ value_json.pump3 }}","pump3",spaName,spaSerialNumber);
+    switchADPublish("Pump 3","",mqttStatusTopic,"{{ value_json.pump3 }}","pump3",spaName,spaSerialNumber);
   } 
 
   if (sni.getPump4InstallState().startsWith("1") && !(sni.getPump4InstallState().endsWith("4"))) {
-    switchADPublish("Pump 4","",mqttState,"{{ value_json.pump4 }}","pump4",spaName,spaSerialNumber);
+    switchADPublish("Pump 4","",mqttStatusTopic,"{{ value_json.pump4 }}","pump4",spaName,spaSerialNumber);
   } 
 
   if (sni.getPump5InstallState().startsWith("1") && !(sni.getPump5InstallState().endsWith("4"))) {
-    switchADPublish("Pump 5","",mqttState,"{{ value_json.pump5 }}","pump5",spaName,spaSerialNumber);
+    switchADPublish("Pump 5","",mqttStatusTopic,"{{ value_json.pump5 }}","pump5",spaName,spaSerialNumber);
   }   
 
-  switchADPublish("Aux Heat Element","",mqttState,"{{ value_json.auxheat }}","auxheat",spaName,spaSerialNumber);
+  switchADPublish("Aux Heat Element","",mqttStatusTopic,"{{ value_json.auxheat }}","auxheat",spaName,spaSerialNumber);
   
   //switchADPublish("Blower","",mqttState,"{{ value_json.blower }}","blower",spaName, spaSerialNumber);
   //selectADPublish("Blower Mode", {"VariSpeed","Ramp"}, mqttState, "{{ value_json.blowermode }}", "blowermode", spaName, spaSerialNumber);
@@ -631,6 +631,12 @@ void mqttHaAutoDiscovery() {
 }
 
 #pragma endregion
+
+void mqttPublishStatusString(String s){
+
+  mqttClient.publish(String(mqttBase+"rfResponse").c_str(),s.c_str());
+
+}
 
 void mqttPublishStatus() {
 
@@ -662,7 +668,7 @@ void mqttPublishStatus() {
   String output = "";
   serializeJson(json,output);
 
-  mqttClient.publish(mqttState.c_str(),output.c_str());
+  mqttClient.publish(mqttStatusTopic.c_str(),output.c_str());
 
 }
 
@@ -768,7 +774,7 @@ void loop() {
           debugI("Spa serial number is %s",spaSerialNumber.c_str());
 
           mqttBase = String("sn_esp32/") + spaSerialNumber + String("/");
-          mqttState = mqttBase + "status";
+          mqttStatusTopic = mqttBase + "status";
           mqttSet = mqttBase + "set";
           mqttAvailability = mqttBase+"available";
           debugI("MQTT base topic is %s",mqttBase.c_str());
@@ -801,6 +807,9 @@ void loop() {
             autoDiscoveryPublished = true;
             sni.setUpdateCallback(mqttPublishStatus);
             mqttPublishStatus();
+
+            sni.statusResponse.setCallback(mqttPublishStatusString);
+
           }
           led.setInterval(2000);
         }

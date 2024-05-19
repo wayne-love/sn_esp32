@@ -158,12 +158,14 @@ bool SpaNetInterface::readStatus() {
 
     int field = 0;
     validStatusResponse = false;
+    String statusResponseTmp = "";
 
     while (field < 289)
     {
         statusResponseRaw[field] = port.readStringUntil(',');
         debugV("(%i,%s)",field,statusResponseRaw[field]);
 
+        statusResponseTmp = statusResponseTmp + statusResponseRaw[field]+",";
 
         if (statusResponseRaw[field].isEmpty()) { // If we get a empty field then we've had a bad read.
             debugE("Throwing exception - null string");
@@ -176,8 +178,10 @@ bool SpaNetInterface::readStatus() {
     //Flush the remaining data from the buffer as the last field is meaningless
     flushSerialReadBuffer();
 
+    statusResponse.update_Value(statusResponseTmp);
+
     if (field != 289) {
-        debugE("Throwing exception - null string");
+        debugE("Throwing exception - %i fields read expecting 289",field);
         return false;
     }
 
