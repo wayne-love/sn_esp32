@@ -591,8 +591,11 @@ void mqttHaAutoDiscovery() {
   debugI("Publishing Home Assistant auto discovery");
 
   sensorADPublish("Water Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.watertemperature }}","measurement","Temperature", spaName, spaSerialNumber);
+  sensorADPublish("Heater Temperature","diagnostic","temperature",mqttStatusTopic,"°C","{{ value_json.heatertemperature }}","measurement","HeaterTemperature", spaName, spaSerialNumber);
+  sensorADPublish("Case Temperature","diagnostic","temperature",mqttStatusTopic,"°C","{{ value_json.casetemperature }}","measurement","WaterTemperature", spaName, spaSerialNumber);
   sensorADPublish("Mains Voltage","diagnostic","voltage",mqttStatusTopic,"V","{{ value_json.voltage }}","measurement","MainsVoltage", spaName, spaSerialNumber);
   sensorADPublish("Mains Current","diagnostic","current",mqttStatusTopic,"A","{{ value_json.current }}","measurement","MainsCurrent", spaName, spaSerialNumber);
+  sensorADPublish("Power","","energy",mqttStatusTopic,"W","{{ value_json.power }}","measurement","Power", spaName, spaSerialNumber);
   sensorADPublish("Total Energy","","energy",mqttStatusTopic,"Wh","{{ value_json.totalenergy }}","total_increasing","TotalEnergy", spaName, spaSerialNumber);
   sensorADPublish("Heatpump Ambient Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.hpambtemp }}","measurement","HPAmbTemp", spaName, spaSerialNumber);
   sensorADPublish("Heatpump Condensor Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.hpcondtemp }}","measurement","HPCondTemp", spaName, spaSerialNumber);
@@ -632,6 +635,8 @@ void mqttHaAutoDiscovery() {
 
 #pragma endregion
 
+#pragma region MQTT Publish
+
 void mqttPublishStatusString(String s){
 
   mqttClient.publish(String(mqttBase+"rfResponse").c_str(),s.c_str());
@@ -643,8 +648,11 @@ void mqttPublishStatus() {
   StaticJsonDocument<1024> json;
 
   json["watertemperature"] = String(sni.getWTMP() / 10) + "." + String(sni.getWTMP() % 10); //avoids stupid rounding errors
+  json["heatertemperature"] = String(sni.getHeaterTemperature() / 10) + "." + String(sni.getHeaterTemperature() % 10); //avoids stupid rounding errors
+  json["casetemperature"] = String(sni.getCaseTemperature()); //avoids stupid rounding errors
   json["voltage"]=String(sni.getMainsVoltage());
   json["current"]=String(sni.getMainsCurrent() / 10) + "." + String(sni.getMainsCurrent() % 10);
+  json["power"]=String(sni.getPower() / 10) + "." + String(sni.getPower() % 10);
   json["heatingactive"]=sni.getRB_TP_Heater()? "ON": "OFF";
   json["ozoneactive"]=sni.getRB_TP_Ozone()? "ON": "OFF";
   json["totalenergy"]=String(sni.getPower_kWh() * 10); // convert to kWh to Wh.
@@ -672,7 +680,7 @@ void mqttPublishStatus() {
 
 }
 
-
+#pragma endregion
 
 void setup() {
   pinMode(TRIGGER_PIN, INPUT_PULLUP);

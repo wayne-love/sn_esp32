@@ -174,8 +174,8 @@ Property<bool> HV_2;
     Property<int> AdtPoolHys;
     /// @brief  Heater temperature adaptive hysteresis
     Property<int> AdtHeaterHys;
-    // (W)
-    Property<int> Power;
+    /// @brief Power consumtion * 10
+    Property<int> Power; 
     Property<int> Power_kWh;
     // (kWh)
     Property<int> Power_Today;
