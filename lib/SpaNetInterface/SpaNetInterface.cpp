@@ -199,6 +199,9 @@ bool SpaNetInterface::isInitialised() {
 
 
 void SpaNetInterface::updateStatus() {
+
+    flushSerialReadBuffer();
+    
     debugD("Update status called");
     sendCommand("RF");
 
