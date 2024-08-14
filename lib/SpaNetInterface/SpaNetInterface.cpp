@@ -1,13 +1,31 @@
 #include "SpaNetInterface.h"
 
+#define BAUD_RATE 38400
+
+#if defined(ESP8266)
+    #define RX_PIN 13 //goes to rx on spanet pin5
+    #define TX_PIN 15 //goes to tx on spanet pin6
+    HardwareSerial spaSerial = Serial;
+#elif defined(ESP32)
+    #define RX_PIN 16 //goes to rx on spanet pin5
+    #define TX_PIN 17 //goes to tx on spanet pin6
+    HardwareSerial spaSerial = Serial2;
+#endif
+
 SpaNetInterface::SpaNetInterface(Stream &p) : port(p) {
 }
 
-SpaNetInterface::SpaNetInterface() : port(Serial2) {
-    Serial2.setRxBufferSize(1024);  //required for unit testing
-    Serial2.setTxBufferSize(1024);  //required for unit testing
-    Serial2.begin(38400, SERIAL_8N1, 16, 17);
-    Serial2.setTimeout(250);
+SpaNetInterface::SpaNetInterface() : port(spaSerial) {
+    #if defined(ESP8266)
+        spaSerial.setRxBufferSize(1024);  //required for unit testing
+        spaSerial.begin(BAUD_RATE);
+        spaSerial.pins(TX_PIN, RX_PIN);
+    #elif defined(ESP32)
+        spaSerial.setRxBufferSize(1024);  //required for unit testing
+        spaSerial.setTxBufferSize(1024);  //required for unit testing
+        spaSerial.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
+    #endif
+    spaSerial.setTimeout(250);
 }
 
 SpaNetInterface::~SpaNetInterface() {}
