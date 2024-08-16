@@ -25,14 +25,6 @@
 
 #include "SpaNetInterface.h"
 
-class MQTT {
-  public:
-    String server;
-    String port;
-    String baseTopic;
-};
-
-MQTT mqtt;
 
 //#define NUM(a) (sizeof(a) / sizeof(*a)) //number of elements in an array
 
@@ -67,10 +59,17 @@ long wifiLastConnect = millis();
 long bootTime = millis();
 long statusLastPublish = millis();
 bool autoDiscoveryPublished = false;
+
+String mqttServer = "";
+String mqttPort = "";
+String mqttUserName = "";
+String mqttPassword = "";
+
 String mqttBase = "";
 String mqttStatusTopic = "";
 String mqttSet = "";
 String mqttAvailability = "";
+
 String spaSerialNumber = "";
 
 void saveConfigCallback(){
@@ -90,10 +89,14 @@ void checkButton(){
       }
       
       WiFiManager wm;
-      WiFiManagerParameter custom_mqtt_server("server", "MQTT server", mqtt.server.c_str(), 40);
-      WiFiManagerParameter custom_mqtt_port("port", "MQTT port", mqtt.port.c_str(), 6);
+      WiFiManagerParameter custom_mqtt_server("server", "MQTT server", mqttServer.c_str(), 40);
+      WiFiManagerParameter custom_mqtt_port("port", "MQTT port", mqttPort.c_str(), 6);
+      WiFiManagerParameter custom_mqtt_username("username", "MQTT Username", mqttUserName.c_str(), 20 );
+      WiFiManagerParameter custom_mqtt_password("password", "MQTT Password", mqttPassword.c_str(), 40 );
       wm.addParameter(&custom_mqtt_server);
       wm.addParameter(&custom_mqtt_port);
+      wm.addParameter(&custom_mqtt_username);
+      wm.addParameter(&custom_mqtt_password);
       wm.setBreakAfterConfig(true);
       wm.setSaveConfigCallback(saveConfigCallback);
       
@@ -102,13 +105,17 @@ void checkButton(){
       debugI("Exiting Portal");
 
       if (saveConfig) {
-        mqtt.server= String(custom_mqtt_server.getValue());
-        mqtt.port= String(custom_mqtt_port.getValue());
+        mqttServer = String(custom_mqtt_server.getValue());
+        mqttPort = String(custom_mqtt_port.getValue());
+        mqttUserName = String(custom_mqtt_username.getValue());
+        mqttPassword = String(custom_mqtt_password.getValue());
 
         debugI("Updating config file");
         DynamicJsonDocument json(1024);
-        json["mqtt_server"] = mqtt.server;
-        json["mqtt_port"] = mqtt.port;
+        json["mqtt_server"] = mqttServer;
+        json["mqtt_port"] = mqttPort;
+        json["mqtt_password"] = mqttPassword;
+        json["mqtt_username"] = mqttUserName;
 
         File configFile = LittleFS.open("/config.json","w");
         if (!configFile) {
@@ -721,8 +728,10 @@ void setup() {
     serializeJson(json, Serial);
     if ( ! deserializeError ) {
       debugI("Parsed JSON");
-      mqtt.server = json["mqtt_server"].as<String>();
-      mqtt.port = json["mqtt_port"].as<String>();
+      mqttServer = json["mqtt_server"].as<String>();
+      mqttPort = json["mqtt_port"].as<String>();
+      mqttUserName = json["mqtt_username"].as<String>();
+      mqttPassword = json["mqtt_password"].as<String>();
     } else {
       debugW("Failed to parse config file");
     }
@@ -730,14 +739,14 @@ void setup() {
   }
 
 
-  if (mqtt.server == "") { 
-    mqtt.server = "mqtt"; 
+  if (mqttServer == "") { 
+    mqttServer = "mqtt"; 
   }
-  if (mqtt.port == "") { 
-    mqtt.port = "1883"; 
+  if (mqttPort == "") { 
+    mqttPort = "1883"; 
   }
 
-  mqttClient.setServer(mqtt.server.c_str(),mqtt.port.toInt());
+  mqttClient.setServer(mqttServer.c_str(),mqttPort.toInt());
   mqttClient.setCallback(mqttCallback);
   mqttClient.setBufferSize(2048);
 
@@ -791,10 +800,11 @@ void loop() {
           long now=millis();
           if (now - mqttLastConnect > 1000) {
             led.setInterval(500);
-            debugW("MQTT not connected, attempting connection to %s:%s",mqtt.server.c_str(),mqtt.port.c_str());
+            debugW("MQTT not connected, attempting connection to %s:%s",mqttServer.c_str(),mqttPort.c_str());
             mqttLastConnect = now;
 
-            if (mqttClient.connect("sn_esp32", mqttAvailability.c_str(),2,true,"offline")) {
+
+            if (mqttClient.connect("sn_esp32", mqttUserName.c_str(), mqttPassword.c_str(), mqttAvailability.c_str(),2,true,"offline")) {
               debugI("MQTT connected");
     
               String subTopic = mqttBase+"set/#";
