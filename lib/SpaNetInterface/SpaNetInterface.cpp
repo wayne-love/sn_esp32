@@ -18,10 +18,11 @@ SpaNetInterface::~SpaNetInterface() {}
 void SpaNetInterface::flushSerialReadBuffer() {
     int x = 0;
 
-    debugD("Flushing serial stream...");
+    debugD("Flushing serial stream - %i bytes in the buffer", port.available());
     while (port.available() > 0 && x++<5120) { 
         debugV("%i,",port.read());
     }
+    debugD("Flushed serial stream - %i bytes in the buffer", port.available());
 }
 
 
@@ -201,7 +202,7 @@ bool SpaNetInterface::isInitialised() {
 void SpaNetInterface::updateStatus() {
 
     flushSerialReadBuffer();
-    
+
     debugD("Update status called");
     sendCommand("RF");
 
