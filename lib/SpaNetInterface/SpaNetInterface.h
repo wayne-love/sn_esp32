@@ -17,9 +17,27 @@ extern RemoteDebug Debug;
 class SpaNetInterface : public SpaNetProperties {
     private:
 
-        /// @brief Each field of the RF cmd response as seperate elements.
-        String statusResponseRaw[290];
+        /// @brief Minimum number of fields in status response for it to be considered valid.
+        int statusResponseRawMin = 288;
 
+        /// @brief Maximum number of fields in status response.
+        int statusResponseRawMax = 350;
+
+        /// @brief Each field of the RF cmd response as seperate elements.
+        String statusResponseRaw[350];
+
+        int R2;
+        int R3;
+        int R4;
+        int R5;
+        int R6;
+        int R7;
+        int R9;
+        int RA;
+        int RB;
+        int RC;
+        int RE;
+        int RG;
 
         /// @brief Does the status response array contain valid information?
         bool validStatusResponse = false;
