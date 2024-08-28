@@ -17,27 +17,30 @@ extern RemoteDebug Debug;
 class SpaNetInterface : public SpaNetProperties {
     private:
 
-        /// @brief Minimum number of fields in status response for it to be considered valid.
-        int statusResponseRawMin = 288;
+        /// @brief Number of fields that we can expect to read, initially set to 100 but updated once we determine the variant of the controller we are running.
+        int statusResponseExpectedFields = 100;
 
-        /// @brief Maximum number of fields in status response.
-        int statusResponseRawMax = 350;
 
+        /// @brief Number of fields expected to be returned for a SV3
+        const int statusResponseCount_SV3 = 289;
+        /// @brief Number of fields expected to be returned for a SVM2
+        const int statusResponseCount_SVM2 = 295;
+        
         /// @brief Each field of the RF cmd response as seperate elements.
-        String statusResponseRaw[350];
+        String statusResponseRaw[295];
 
-        int R2;
-        int R3;
-        int R4;
-        int R5;
-        int R6;
-        int R7;
-        int R9;
-        int RA;
-        int RB;
-        int RC;
-        int RE;
-        int RG;
+        int R2=-1;
+        int R3=-1;
+        int R4=-1;
+        int R5=-1;
+        int R6=-1;
+        int R7=-1;
+        int R9=-1;
+        int RA=-1;
+        int RB=-1;
+        int RC=-1;
+        int RE=-1;
+        int RG=-1;
 
         /// @brief Does the status response array contain valid information?
         bool validStatusResponse = false;
@@ -73,6 +76,7 @@ class SpaNetInterface : public SpaNetProperties {
         /// @brief Stores millis time at which next update should occur
         unsigned long _nextUpdateDue = 0;
 
+        /// @brief False until first successful read of the registers.
         bool _initialised = false;
 
         /// @brief If the result registers have been modified locally, need to do a fress pull from the controller

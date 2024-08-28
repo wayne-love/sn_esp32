@@ -179,16 +179,13 @@ bool SpaNetInterface::readStatus() {
     validStatusResponse = false;
     String statusResponseTmp = "";
 
-    while (field < statusResponseRawMax)
+    while (field < statusResponseExpectedFields)
     {
         statusResponseRaw[field] = port.readStringUntil(',');
         debugV("(%i,%s)",field,statusResponseRaw[field]);
 
         statusResponseTmp = statusResponseTmp + statusResponseRaw[field]+",";
 
-        if (statusResponseRaw[field].isEmpty() && field > statusResponseRawMin) {
-            break;
-        }
         if (statusResponseRaw[field].isEmpty()) { // If we get a empty field then we've had a bad read.
             debugE("Throwing exception - null string");
             return false;
@@ -198,18 +195,38 @@ bool SpaNetInterface::readStatus() {
             return false;
         }
 
-        if (statusResponseRaw[field] == "R2") R2 = field;
-        if (statusResponseRaw[field] == "R3") R3 = field;
-        if (statusResponseRaw[field] == "R4") R4 = field;
-        if (statusResponseRaw[field] == "R5") R5 = field;
-        if (statusResponseRaw[field] == "R6") R6 = field;
-        if (statusResponseRaw[field] == "R7") R7 = field;
-        if (statusResponseRaw[field] == "R9") R9 = field;
-        if (statusResponseRaw[field] == "RA") RA = field;
-        if (statusResponseRaw[field] == "RB") RB = field;
-        if (statusResponseRaw[field] == "RC") RC = field;
-        if (statusResponseRaw[field] == "RE") RE = field;
-        if (statusResponseRaw[field] == "RG") RG = field;
+
+        if (!_initialised) { // We only have to set these on the first read, they never change after that.
+            if (statusResponseRaw[field] == "R2") R2 = field;
+            else if (statusResponseRaw[field] == "R3") R3 = field;
+            else if (statusResponseRaw[field] == "R4") R4 = field;
+            else if (statusResponseRaw[field] == "R5") R5 = field;
+            else if (statusResponseRaw[field] == "R6") R6 = field;
+            else if (statusResponseRaw[field] == "R7") R7 = field;
+            else if (statusResponseRaw[field] == "R9") R9 = field;
+            else if (statusResponseRaw[field] == "RA") RA = field;
+            else if (statusResponseRaw[field] == "RB") RB = field;
+            else if (statusResponseRaw[field] == "RC") RC = field;
+            else if (statusResponseRaw[field] == "RE") RE = field;
+            else if (statusResponseRaw[field] == "RG") RG = field;
+
+            if (R3 > -1 && field == R3+7) {
+                if (statusResponseRaw[field] == "SV3") {
+                    debugI("SV3 variant detected");
+                    statusResponseExpectedFields = statusResponseCount_SV3;
+                    
+                }
+                else if (statusResponseRaw[field] == "SVM2") {
+                    debugI("SVM2 variant detected");
+                    statusResponseExpectedFields = statusResponseCount_SV3;
+                    
+                }
+                else {
+                    debugE("Unknown variant detected");
+                }
+            }
+        }
+
 
         field++;
     }
@@ -219,8 +236,8 @@ bool SpaNetInterface::readStatus() {
 
     statusResponse.update_Value(statusResponseTmp);
 
-    if (field < statusResponseRawMin) {
-        debugE("Throwing exception - %i fields read expecting at least %i",field, statusResponseRawMin);
+    if (field < statusResponseExpectedFields) {
+        debugE("Throwing exception - %i fields read expecting at least %i",field, statusResponseExpectedFields);
         return false;
     }
 

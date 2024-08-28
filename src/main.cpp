@@ -15,7 +15,6 @@
 #include <RemoteDebug.h>
 #include <PubSubClient.h>
 #include <LittleFS.h>
-//#include <FS.h>
 #include <ArduinoJson.h>
 #include <vector>
 
@@ -25,8 +24,6 @@
 
 #include "SpaNetInterface.h"
 
-
-//#define NUM(a) (sizeof(a) / sizeof(*a)) //number of elements in an array
 
 #if defined(ESP8266)
   #define EN_PIN D0 //Note: D0 seems to latch LOW when the USB cable is connected. Change to D1 if needed.
