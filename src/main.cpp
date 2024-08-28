@@ -29,13 +29,13 @@
 //#define NUM(a) (sizeof(a) / sizeof(*a)) //number of elements in an array
 
 #if defined(ESP8266)
-  #define PIN_D0 D0
+  #define EN_PIN D0 //Note: D0 seems to latch LOW when the USB cable is connected. Change to D1 if needed.
 #elif defined(ESP32)
-  #define PIN_D0 0
+  #define EN_PIN 0
   const int LED_BUILTIN = 2;
 #endif
 
-const int TRIGGER_PIN = PIN_D0;
+const int TRIGGER_PIN = EN_PIN;
 
 
 #ifndef DEBUG_ENABLED
@@ -692,8 +692,10 @@ void mqttPublishStatus() {
 void setup() {
   pinMode(TRIGGER_PIN, INPUT_PULLUP);
 
+#if defined(ESP32)
   Serial.begin(115200);
   Serial.setDebugOutput(true);
+#endif
 
   delay(200);
 
@@ -703,7 +705,9 @@ void setup() {
   Debug.begin(WiFi.getHostname());
   Debug.setResetCmdEnabled(true);
   Debug.showProfiler(true);
+#if defined(ESP32)
   Debug.setSerialEnabled(true);
+#endif
 
   debugA("Starting...");
 
