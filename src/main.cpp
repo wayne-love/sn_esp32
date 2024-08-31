@@ -17,6 +17,8 @@
 #include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <vector>
+#include <Time.h>
+#include <TimeLib.h>
 
 #include "Blinker.h"
 
@@ -227,6 +229,16 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     sni.setRB_TP_Pump5(p=="OFF"?0:1);
   } else if (property == "auxheat") {
     sni.setHELE(p=="OFF"?0:1);
+  } else if (property == "datetime") {
+    tmElements_t tm;
+    tm.Year=CalendarYrToTm(p.substring(0,4).toInt());
+    tm.Month=p.substring(5,7).toInt();
+    tm.Day=p.substring(8,10).toInt();
+    tm.Hour=p.substring(11,13).toInt();
+    tm.Minute=p.substring(14,16).toInt();
+    tm.Second=p.substring(17).toInt();
+    sni.setSpaTime(makeTime(tm));
+
   } else {
     debugE("Unhandled property - %s",property.c_str());
   }
@@ -588,6 +600,68 @@ void selectADPublish (String name, std::vector<String> options, String stateTopi
 }
 
 
+/// @brief Publish a swtich by MQTT auto discovery
+/// @param name Name to display
+/// @param stateTopic Mqtt topic to read state information from.
+/// @param valueTemplate HA value template to parse topic payload to derive value
+/// @param propertyId string appended to spa serial number to create a unique id eg 123456-789012_pump1
+/// @param deviceName Name of the spa
+/// @param deviceIdentifier identifier of the spa (serial number)
+/// @param category one of either "", "config" or "diagnostic"
+/// @param regex Regex that the text must confirm to
+void textADPublish (String name, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier, String category, String regex) {
+/*{
+  "availability": {
+      "topic": "sn_esp32/21110001-20000337/available"
+  },
+  "command_topic": "sn_esp32/21110001-20000337/set/datetime",
+  "device": {
+      "identifiers": [
+          "21110001-20000337"
+      ],
+      "name": "MySpa"
+  },
+	"entity_category": "config",
+	"pattern": "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}",
+  "name": "Date Time",
+  "state_topic": "sn_esp32/21110001-20000337/status",
+  "unique_id": "21110001-20000337-datetime",
+  "value_template": "{{ value_json.datetime }}"
+}*/
+  StaticJsonDocument<512> json;
+
+  JsonObject availability = json.createNestedObject("availability");
+  availability["topic"] =mqttAvailability;
+
+  json["command_topic"] = mqttSet + "/" + propertyId;
+
+  JsonObject device = json.createNestedObject("device");
+  device["name"] = deviceName;
+  JsonArray identifiers = device.createNestedArray("identifiers");
+  identifiers.add(deviceIdentifier);
+
+  if (category != "") json["entity_category"] = category;
+  
+  if (regex != "") json["pattern"] = regex;
+
+  json["name"]=name;
+
+  json["state_topic"] = stateTopic;
+
+  json["unique_id"] = spaSerialNumber + "-" + propertyId;
+
+  json["value_template"] = valueTemplate;
+
+  // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
+  String discoveryTopic = "homeassistant/switch/" + spaSerialNumber + "/" + spaSerialNumber + "-" + propertyId + "/config";
+  String output = "";
+  serializeJson(json,output);
+  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
+
+}
+
+
+
 void mqttHaAutoDiscovery() {
   String spaName = "MySpa"; //TODO - This needs to be a settable parameter.
 
@@ -631,6 +705,8 @@ void mqttHaAutoDiscovery() {
   }   
 
   switchADPublish("Aux Heat Element","",mqttStatusTopic,"{{ value_json.auxheat }}","auxheat",spaName,spaSerialNumber);
+
+  textADPublish("Date Time",mqttStatusTopic,"{{ value_json.dattime }}", "datetime", spaName, spaSerialNumber, "config", "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
   
   //switchADPublish("Blower","",mqttState,"{{ value_json.blower }}","blower",spaName, spaSerialNumber);
   //selectADPublish("Blower Mode", {"VariSpeed","Ramp"}, mqttState, "{{ value_json.blowermode }}", "blowermode", spaName, spaSerialNumber);
@@ -670,6 +746,21 @@ void mqttPublishStatus() {
   json["pump3"]=sni.getRB_TP_Pump3()==0? "OFF" : "ON"; // we're ignoring auto here
   json["pump4"]=sni.getRB_TP_Pump4()==0? "OFF" : "ON"; // we're ignoring auto here
   json["pump5"]=sni.getRB_TP_Pump5()==0? "OFF" : "ON"; // we're ignoring auto here
+
+
+  String y=String(year(sni.getSpaTime()));
+  String m=String(month(sni.getSpaTime()));
+  if (month(sni.getSpaTime())<10) m = "0"+m;
+  String d=String(day(sni.getSpaTime()));
+  if (day(sni.getSpaTime())<10) d = "0"+d;
+  String h=String(hour(sni.getSpaTime()));
+  if (hour(sni.getSpaTime())<10) h = "0"+h;
+  String min=String(minute(sni.getSpaTime()));
+  if (minute(sni.getSpaTime())<10) min = "0"+min;
+  String s=String(second(sni.getSpaTime()));
+  if (second(sni.getSpaTime())<10) s = "0"+s;
+
+  json["datetime"]=y+"-"+m+"-"+d+" "+h+":"+min+":"+s;
 
 // TODO : need to return blower vlaue
 

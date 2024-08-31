@@ -67,6 +67,12 @@ class SpaNetInterface : public SpaNetProperties {
         /// @return String - result string
         String sendCommandReturnResult(String cmd);
 
+        /// @brief Sends the command and checks the result against the expected outcome
+        /// @param cmd command to send
+        /// @param expected expected string response
+        /// @return result
+        bool sendCommandCheckResult(String cmd, String expected);
+
         /// @brief Updates the attributes by sending the RF command and parsing the result.
         void updateStatus();
 
@@ -158,6 +164,11 @@ class SpaNetInterface : public SpaNetProperties {
         /// @param mode 0 = off, 1 = on
         /// @return True if successful
         bool setHELE(int mode);
+
+        /// @brief Sets the clock on the spa
+        /// @param t Time
+        /// @return True if successful
+        bool setSpaTime(time_t t);
 };
 
 

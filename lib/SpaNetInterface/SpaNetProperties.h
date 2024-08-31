@@ -3,7 +3,8 @@
 
 #include <Arduino.h>
 #include <RemoteDebug.h>
-#include <time.h>
+#include <Time.h>
+#include <TimeLib.h>
 #include <array>
 
 
@@ -616,6 +617,7 @@ Property<bool> HV_2;
 protected:
 #pragma region R2
     boolean update_MainsCurrent(String);
+    boolean update_SpaTime(String year, String month, String day, String hour, String minute, String second);
     boolean update_MainsVoltage(String);
     boolean update_CaseTemperature(String);
     boolean update_PortCurrent(String);
@@ -886,10 +888,11 @@ public:
     int getPortCurrent() { return PortCurrent.getValue(); }
     void setPortCurrentCallback(void (*callback)(int)) { PortCurrent.setCallback(callback); }
 
-    // Not implemented
-    //time_t getSpaTime() { return SpaTime.getValue(); }
-    //void setSpaTimeCallback(void (*callback)(time_t)) { SpaTime.setCallback(callback); }
-    //
+    /// @brief Gets the current time from the spa clock
+    /// @return 
+    time_t getSpaTime() { return SpaTime.getValue(); }
+    void setSpaTimeCallback(void (*callback)(time_t)) { SpaTime.setCallback(callback); }
+    
 
     /// @brief Get current heater temperature multiplied by 10 (245 = 24.5 actual)
     /// @return 

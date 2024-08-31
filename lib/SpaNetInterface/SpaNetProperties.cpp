@@ -22,6 +22,21 @@ boolean SpaNetProperties::update_MainsCurrent(String s){
     return true;
 }
 
+boolean SpaNetProperties::update_SpaTime(String year, String month, String day, String hour, String minute, String second){
+
+    tmElements_t tm;
+    tm.Year=CalendarYrToTm(year.toInt());
+    tm.Month=month.toInt();
+    tm.Day=day.toInt();
+    tm.Hour=hour.toInt();
+    tm.Minute=minute.toInt();
+    tm.Second=second.toInt();
+
+    SpaTime.update_Value(makeTime(tm));
+
+    return true;
+}
+
 boolean SpaNetProperties::update_MainsVoltage(String s){
     if (!isNumber(s)) {
         return false;

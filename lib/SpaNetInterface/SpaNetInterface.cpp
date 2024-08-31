@@ -66,16 +66,23 @@ void SpaNetInterface::sendCommand(String cmd) {
 
 String SpaNetInterface::sendCommandReturnResult(String cmd) {
     sendCommand(cmd);
-    String result = port.readStringUntil('\n');
+    String result = port.readStringUntil('\r');
     port.read(); // get rid of the trailing LF char
     debugV("Read - %s",result.c_str());
     return result;
 }
 
+bool SpaNetInterface::sendCommandCheckResult(String cmd, String expected){
+    String result = sendCommandReturnResult(cmd);
+    bool outcome = result == expected;
+    if (!outcome) debugW("Sent comment %s, expected %s, got %s",cmd.c_str(),expected.c_str(),result.c_str());
+    return outcome;
+}
+
 bool SpaNetInterface::setRB_TP_Pump1(int mode){
     debugD("setRB_TP_Pump1 - %i",mode);
-    String result = sendCommandReturnResult("S22:"+String(mode));
-    if (result == "S22-OK") {
+
+    if (sendCommandCheckResult("S22:"+String(mode),"S22-OK")) {
         update_RB_TP_Pump1(String(mode));
         return true;
     }
@@ -84,8 +91,8 @@ bool SpaNetInterface::setRB_TP_Pump1(int mode){
 
 bool SpaNetInterface::setRB_TP_Pump2(int mode){
     debugD("setRB_TP_Pump2 - %i",mode);
-    String result = sendCommandReturnResult("S23:"+String(mode));
-    if (result == "S23-OK") {
+
+    if (sendCommandCheckResult("S23:"+String(mode),"S23-OK")) {
         update_RB_TP_Pump2(String(mode));
         return true;
     }
@@ -94,8 +101,8 @@ bool SpaNetInterface::setRB_TP_Pump2(int mode){
 
 bool SpaNetInterface::setRB_TP_Pump3(int mode){
     debugD("setRB_TP_Pump3 - %i",mode);
-    String result = sendCommandReturnResult("S24:"+String(mode));
-    if (result == "S24-OK") {
+
+    if (sendCommandCheckResult("S24:"+String(mode),"S24-OK")) {
         update_RB_TP_Pump3(String(mode));
         return true;
     }
@@ -104,8 +111,8 @@ bool SpaNetInterface::setRB_TP_Pump3(int mode){
 
 bool SpaNetInterface::setRB_TP_Pump4(int mode){
     debugD("setRB_TP_Pump4 - %i",mode);
-    String result = sendCommandReturnResult("S25:"+String(mode));
-    if (result == "S25-OK") {
+
+    if (sendCommandCheckResult("S25:"+String(mode),"S25-OK")) {
         update_RB_TP_Pump4(String(mode));
         return true;
     }
@@ -114,8 +121,8 @@ bool SpaNetInterface::setRB_TP_Pump4(int mode){
 
 bool SpaNetInterface::setRB_TP_Pump5(int mode){
     debugD("setRB_TP_Pump5 - %i",mode);
-    String result = sendCommandReturnResult("S26:"+String(mode));
-    if (result == "S26-OK") {
+
+    if (sendCommandCheckResult("S26:"+String(mode),"S26-OK")) {
         update_RB_TP_Pump5(String(mode));
         return true;
     }
@@ -124,8 +131,8 @@ bool SpaNetInterface::setRB_TP_Pump5(int mode){
 
 bool SpaNetInterface::setHELE(int mode){
     debugD("setHELE - %i", mode);
-    String result = sendCommandReturnResult("W98:"+String(mode));
-    if (result == String(mode)) {
+
+    if (sendCommandCheckResult("W98:"+String(mode),String(mode))) {
         update_HELE(String(mode));
         return true;
     }
@@ -137,10 +144,12 @@ bool SpaNetInterface::setHELE(int mode){
 /// @param temp 
 /// @return 
 bool SpaNetInterface::setSTMP(int temp){
-    debugD("setSTMP - %s", String(temp));
-    String result = sendCommandReturnResult("W40:" + String(temp));
-    if (String(temp).compareTo(result)) {
-        update_STMP(result);
+    debugD("setSTMP - %i", temp);
+
+    String stemp = String(temp);
+
+    if (sendCommandCheckResult("W40:" + stemp,stemp)) {
+        update_STMP(stemp);
         return true;
     }
     return false;
@@ -148,9 +157,11 @@ bool SpaNetInterface::setSTMP(int temp){
 
 bool SpaNetInterface::setHPMP(int mode){
     debugD("setHPMP - %i", mode);
-    String result = sendCommandReturnResult(String("W99:")+mode);
-    if (result.toInt() == mode) {
-        update_HPMP(result);
+
+    String smode = String(mode);
+
+    if (sendCommandCheckResult("W99:"+smode,smode)) {
+        update_HPMP(smode);
         return true;
     }
     return false;
@@ -164,6 +175,34 @@ bool SpaNetInterface::setHPMP(String mode){
         }
     }
     return false;
+}
+
+bool SpaNetInterface::setSpaTime(time_t t){
+    debugD("setSpaTime");
+
+    String tmp;
+    bool outcome;
+
+    tmp = String(year(t));
+    outcome = sendCommandCheckResult("S01:"+tmp, tmp);
+
+    tmp = String(month(t));
+    outcome = outcome && sendCommandCheckResult("S02:"+tmp,tmp);
+
+    tmp = String(day(t));
+    outcome = outcome && sendCommandCheckResult("S03:"+tmp,tmp);
+    
+    tmp = String(hour(t));
+    outcome = outcome && sendCommandCheckResult("S04:"+tmp,tmp);
+    
+    tmp = String(minute(t));
+    outcome = outcome && sendCommandCheckResult("S05:"+tmp,tmp);
+    
+    tmp = String(second(t));
+    outcome = outcome && sendCommandCheckResult("S06:"+tmp,tmp);
+    
+    return outcome;
+
 }
 
 bool SpaNetInterface::readStatus() {
@@ -304,7 +343,7 @@ void SpaNetInterface::updateMeasures() {
     update_MainsVoltage(statusResponseRaw[R2+2]);
     update_CaseTemperature(statusResponseRaw[R2+3]);
     update_PortCurrent(statusResponseRaw[R2+4]);
-    // Not implemented - update_SpaTime(statusResponseRaw[R2+11]+"-"+statusResponseRaw[R2+10]+"-"+statusResponseRaw[R2+9]+" "+statusResponseRaw[R2+8]+":"+statusResponseRaw[R2+7]+":"+statusResponseRaw[R2+6]);
+    update_SpaTime(statusResponseRaw[R2+11], statusResponseRaw[R2+10], statusResponseRaw[R2+9], statusResponseRaw[R2+6], statusResponseRaw[R2+7], statusResponseRaw[R2+8]);
     update_HeaterTemperature(statusResponseRaw[R2+12]);
     update_PoolTemperature(statusResponseRaw[R2+13]);
     update_WaterPresent(statusResponseRaw[R2+14]);
