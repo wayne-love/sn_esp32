@@ -706,7 +706,7 @@ void mqttHaAutoDiscovery() {
 
   switchADPublish("Aux Heat Element","",mqttStatusTopic,"{{ value_json.auxheat }}","auxheat",spaName,spaSerialNumber);
 
-  textADPublish("Date Time",mqttStatusTopic,"{{ value_json.dattime }}", "datetime", spaName, spaSerialNumber, "config", "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
+  textADPublish("Date Time",mqttStatusTopic,"{{ value_json.datetime }}", "datetime", spaName, spaSerialNumber, "config", "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
   
   //switchADPublish("Blower","",mqttState,"{{ value_json.blower }}","blower",spaName, spaSerialNumber);
   //selectADPublish("Blower Mode", {"VariSpeed","Ramp"}, mqttState, "{{ value_json.blowermode }}", "blowermode", spaName, spaSerialNumber);
