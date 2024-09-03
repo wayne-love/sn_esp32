@@ -135,6 +135,28 @@ class SpaNetInterface : public SpaNetProperties {
         bool setHPMP(int mode);
         bool setHPMP(String mode);
 
+        /// @brief Set light mode (0 = white, 1 = colour, 2 = step, 3 = fade, 4 = party)
+        /// @param mode
+        /// @return Returns True if succesful
+        bool setColorMode(int mode);
+        bool setColorMode(String mode);
+
+        /// @brief Set light brightness (min 1, max 5)
+        /// @param mode
+        /// @return Returns True if succesful
+        bool setLBRTValue(int mode);
+
+        /// @brief Set light effect speed (min 1, max 5)
+        /// @param mode
+        /// @return Returns True if succesful
+        bool setLSPDValue(int mode);
+        bool setLSPDValue(String mode);
+
+        /// @brief Set light colour (min 0, max 31)
+        /// @param mode
+        /// @return Returns True if succesful
+        bool setCurrClr(int mode);
+
         /// @brief Set the operating mode for pump 1
         /// @param mode 0 = off, 1 = on, 4 = auto (if supported)
         /// @return True if successful
@@ -159,6 +181,8 @@ class SpaNetInterface : public SpaNetProperties {
         /// @param mode 0 = off, 1 = on, 4 = auto (if supported)
         /// @return True if successful
         bool setRB_TP_Pump5(int mode);
+
+        bool setRB_TP_Light(int mode);
 
         /// @brief Set aux element operating mode
         /// @param mode 0 = off, 1 = on
