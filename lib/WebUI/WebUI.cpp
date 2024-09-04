@@ -19,7 +19,10 @@ void WebUI::begin() {
     server->on("/", HTTP_GET, [&]() {
         server->sendHeader("Connection", "close");
         char buffer[1024];
-        sprintf(buffer, indexPageTemplate);
+        SpaNetInterface &sni = *_spa;
+        float current_temp = (sni.getWTMP() / 10);
+        String status = sni.getStatus();
+        sprintf(buffer, indexPageTemplate, current_temp, status);
         server->send(200, "text/html", buffer);
     });
 
