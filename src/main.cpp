@@ -573,7 +573,7 @@ void selectADPublish (String name, std::vector<String> options, String stateTopi
    }
 }*/
 
-  StaticJsonDocument<512> json;
+  StaticJsonDocument<1024> json;
 
   json["name"]=name;
   json["state_topic"] = stateTopic;
@@ -592,9 +592,10 @@ void selectADPublish (String name, std::vector<String> options, String stateTopi
   for (auto o : options) opts.add(o);
   
   // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
-  String discoveryTopic = "homeassistant/switch/" + spaSerialNumber + "/" + spaSerialNumber + "-" + propertyId + "/config";
+  String discoveryTopic = "homeassistant/select/" + spaSerialNumber + "/" + spaSerialNumber + "-" + propertyId + "/config";
   String output = "";
   serializeJson(json,output);
+  debugV("json: %s", output.c_str());
   mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
 
 }
@@ -653,7 +654,7 @@ void textADPublish (String name, String stateTopic, String valueTemplate, String
   json["value_template"] = valueTemplate;
 
   // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
-  String discoveryTopic = "homeassistant/switch/" + spaSerialNumber + "/" + spaSerialNumber + "-" + propertyId + "/config";
+  String discoveryTopic = "homeassistant/text/" + spaSerialNumber + "/" + spaSerialNumber + "-" + propertyId + "/config";
   String output = "";
   serializeJson(json,output);
   mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);

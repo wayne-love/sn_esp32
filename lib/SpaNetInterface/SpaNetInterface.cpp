@@ -38,7 +38,8 @@ void SpaNetInterface::flushSerialReadBuffer() {
 
     debugD("Flushing serial stream - %i bytes in the buffer", port.available());
     while (port.available() > 0 && x++<5120) { 
-        debugV("%i,",port.read());
+        int bytes = port.read();
+        debugV("%i,",bytes);
     }
     debugD("Flushed serial stream - %i bytes in the buffer", port.available());
 }
