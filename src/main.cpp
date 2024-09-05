@@ -654,7 +654,7 @@ void textADPublish (String name, String stateTopic, String valueTemplate, String
   json["value_template"] = valueTemplate;
 
   // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
-  String discoveryTopic = "homeassistant/switch/" + spaSerialNumber + "/" + spaSerialNumber + "-" + propertyId + "/config";
+  String discoveryTopic = "homeassistant/text/" + spaSerialNumber + "/" + spaSerialNumber + "-" + propertyId + "/config";
   String output = "";
   serializeJson(json,output);
   mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
