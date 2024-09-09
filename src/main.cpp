@@ -68,6 +68,7 @@ String mqttBase = "";
 String mqttStatusTopic = "";
 String mqttSet = "";
 String mqttAvailability = "";
+String mqttLightsTopic = "";
 
 String spaSerialNumber = "";
 
@@ -140,63 +141,6 @@ bool parseBool(String val){
     return false;
   }
 }
-
-bool strEquals(const char* str, const char* expected) {
-  return strcmp(str, expected) == 0;
-}
-
-void parseLightsJSON(String jString){
-  DynamicJsonDocument json(1024);
-
-  deserializeJson(json, jString);
-
-  snc.lights.setIsOn(strEquals(json["state"], "ON"));
-  if (json.containsKey("effect")) {
-    const char *effect = json["effect"];
-    snc.lights.setMode(effect);
-  }
-
-  if (json.containsKey("brightness")) {
-    byte value = json["brightness"];
-    if (value == 255) {
-      value = 254;
-    }
-    value = (value / 51) + 1; // Map from 0 to 254 to 1 to 5
-    snc.lights.setBrightness(value);
-  }
-
-  if (json.containsKey("color")) {
-    int value = json["color"]["h"];
-    snc.lights.setColour(SpaNetController::Light::colour_map[value/15]);
-  }
-}
-
-String buildLightsJSON() {
-  DynamicJsonDocument json(1024);
-
-  if (snc.lights.isOn()) {
-    json["state"] = "ON";
-  } else {
-    json["state"] = "OFF";
-  }
-
-  json["effect"] = snc.lights.getMode();
-  json["brightness"] = int(snc.lights.getBrightness() * 51);
-  int hue;
-  for (int count = 0; count < NUM(SpaNetController::Light::colour_map); count++){
-    if (SpaNetController::Light::colour_map[count] == snc.lights.getColour()) {
-      hue = count * 15;
-    }
-  }
-
-  json["color"]["h"] = hue;
-  json["color"]["s"] = 100;
-  json["color_mode"] = "hs";
-
-  String buffer;
-  serializeJsonPretty(json, buffer);
-  return buffer;
-}
 */
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
   String t = String(topic);
@@ -238,6 +182,29 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     tm.Minute=p.substring(14,16).toInt();
     tm.Second=p.substring(17).toInt();
     sni.setSpaTime(makeTime(tm));
+
+  } else if (property == "lightsspeed") {
+    sni.setLSPDValue(p);
+  } else if (property == "lights") {
+    DynamicJsonDocument json(1024);
+    deserializeJson(json, p);
+    sni.setRB_TP_Light(json["state"]=="ON"?1:0);
+    if (json.containsKey("effect")) {
+      const char *effect = json["effect"];
+      sni.setColorMode(String(effect));
+    }
+    if (json.containsKey("brightness")) {
+      byte value = json["brightness"];
+      if (value == 255) {
+        value = 254;
+      }
+      value = (value / 51) + 1; // Map from 0 to 254 to 1 to 5
+      sni.setLBRTValue(value);
+    }
+    if (json.containsKey("color")) {
+      int value = json["color"]["h"];
+      sni.setCurrClr(sni.colorMap[value/15]);
+    }
 
   } else {
     debugE("Unhandled property - %s",property.c_str());
@@ -661,7 +628,60 @@ void textADPublish (String name, String stateTopic, String valueTemplate, String
 
 }
 
+/// @brief Publish a swtich by MQTT auto discovery
+/// @param name Name to display
+/// @param deviceClass outlet = power outlet, switch (or "") = generic switch
+/// @param stateTopic Mqtt topic to read state information from.
+/// @param valueTemplate HA value template to parse topic payload to derive value
+/// @param propertyId string appended to spa serial number to create a unique id eg 123456-789012_pump1
+/// @param deviceName Name of the spa
+/// @param deviceIdentifier identifier of the spa (serial number)
+void lightADPublish (String name, String deviceClass, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier) {
+/*
+{
+   "name":"Irrigation",
+   "command_topic":"homeassistant/switch/irrigation/set",
+   "state_topic":"homeassistant/switch/irrigation/state",
+   "unique_id":"irr01ad",
+   "device":{
+      "identifiers":[
+         "garden01ad"
+      ],
+      "name":"Garden"
+   }
+}*/
 
+  StaticJsonDocument<1024> json;
+
+  if (deviceClass != "") { json["device_class"] = deviceClass; }
+  json["name"]=name;
+  json["schema"] = "json";
+  json["state_topic"] = stateTopic;
+  json["state_value_template"] = valueTemplate;
+  json["command_topic"] = mqttSet + "/" + propertyId;
+  json["unique_id"] = spaSerialNumber + "-" + propertyId;
+  JsonObject device = json.createNestedObject("device");
+  device["name"] = deviceName;
+  JsonArray identifiers = device.createNestedArray("identifiers");
+  identifiers.add(deviceIdentifier);
+
+  JsonObject availability = json.createNestedObject("availability");
+  availability["topic"] =mqttAvailability;
+
+  json["brightness"] = true;
+  json["effect"] = true;
+  JsonArray effect_list = json.createNestedArray("effect_list");
+  for (auto effect: sni.colorModeStrings) effect_list.add(effect);
+  JsonArray color_modes = json.createNestedArray("supported_color_modes");
+  color_modes.add("hs");
+
+  // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
+  String discoveryTopic = "homeassistant/light/" + spaSerialNumber + "/" + spaSerialNumber + "-" + propertyId + "/config";
+  String output = "";
+  serializeJson(json,output);
+  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
+
+}
 
 void mqttHaAutoDiscovery() {
   String spaName = "MySpa"; //TODO - This needs to be a settable parameter.
@@ -706,6 +726,8 @@ void mqttHaAutoDiscovery() {
   }   
 
   switchADPublish("Aux Heat Element","",mqttStatusTopic,"{{ value_json.auxheat }}","auxheat",spaName,spaSerialNumber);
+  lightADPublish("Lights","",mqttLightsTopic,"","lights",spaName,spaSerialNumber);
+  selectADPublish("Lights Speed",{"1","2","3","4","5"},mqttStatusTopic,"{{ value_json.lightsspeed }}","lightsspeed",spaName, spaSerialNumber);
 
   textADPublish("Date Time",mqttStatusTopic,"{{ value_json.datetime }}", "datetime", spaName, spaSerialNumber, "config", "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
   
@@ -768,12 +790,39 @@ void mqttPublishStatus() {
   json["auxheat"]=sni.getHELE()==0? "OFF" : "ON";
 
   json["status"]=sni.getStatus();
+  json["lightsspeed"]=sni.getLSPDValue();
 
   String output = "";
   serializeJson(json,output);
 
   mqttClient.publish(mqttStatusTopic.c_str(),output.c_str());
 
+  json.clear();
+  json["state"]=sni.getRB_TP_Light()? "ON": "OFF";
+
+  json["effect"] = sni.colorModeStrings[sni.getColorMode()];
+  json["brightness"] = int(sni.getLBRTValue() * 51);
+
+  // 0 = white, if white, then set the hue and saturation to white so the light displays correctly in HA.
+  if (sni.getColorMode() == 0) {
+    json["color"]["h"] = 0;
+    json["color"]["s"] = 0;
+  } else {
+    int hue = 4;
+    for (int count = 0; count < sizeof(sni.colorMap); count++){
+      if (sni.colorMap[count] == sni.getCurrClr()) {
+        hue = count * 15;
+      }
+    }
+    json["color"]["h"] = hue;
+    json["color"]["s"] = 100;
+  }
+  json["color_mode"] = "hs";
+
+  output = "";
+  serializeJson(json,output);
+
+  mqttClient.publish(mqttLightsTopic.c_str(),output.c_str());
 }
 
 #pragma endregion
@@ -887,6 +936,7 @@ void loop() {
           mqttStatusTopic = mqttBase + "status";
           mqttSet = mqttBase + "set";
           mqttAvailability = mqttBase+"available";
+          mqttLightsTopic = mqttBase + "lights";
           debugI("MQTT base topic is %s",mqttBase.c_str());
         }
         if (!mqttClient.connected()) {  // MQTT broker reconnect if not connected

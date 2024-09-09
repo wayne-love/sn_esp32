@@ -130,6 +130,19 @@ bool SpaNetInterface::setRB_TP_Pump5(int mode){
     return false;
 }
 
+bool SpaNetInterface::setRB_TP_Light(int mode){
+    debugD("setRB_TP_Light - %i",mode);
+    if (mode != getRB_TP_Light()) {
+        String result = sendCommandReturnResult("W14");
+        if (result == "W14") {
+            update_RB_TP_Light(String(mode));
+            return true;
+        }
+        return false;
+    }
+    return true;
+}
+
 bool SpaNetInterface::setHELE(int mode){
     debugD("setHELE - %i", mode);
 
@@ -174,6 +187,73 @@ bool SpaNetInterface::setHPMP(String mode){
         if (HPMPStrings[x] == mode) {
             return setHPMP(x);
         }
+    }
+    return false;
+}
+
+bool SpaNetInterface::setColorMode(int mode){
+    debugD("setColorMode - %i", mode);
+
+    String smode = String(mode);
+
+    if (sendCommandCheckResult("S07:"+smode,smode)) {
+        update_ColorMode(smode);
+        return true;
+    }
+    return false;
+}
+
+bool SpaNetInterface::setColorMode(String mode){
+    debugD("setColorMode - %s", mode.c_str());
+    for (int x=0; x<colorModeStrings.size(); x++) {
+        if (colorModeStrings[x] == mode) {
+            return setColorMode(x);
+        }
+    }
+    return false;
+}
+
+bool SpaNetInterface::setLBRTValue(int mode){
+    debugD("setLBRTValue - %i", mode);
+
+    String smode = String(mode);
+
+    if (sendCommandCheckResult("S08:"+smode,smode)) {
+        update_LBRTValue(smode);
+        return true;
+    }
+    return false;
+}
+
+bool SpaNetInterface::setLSPDValue(int mode){
+    debugD("setLSPDValue - %i", mode);
+
+    String smode = String(mode);
+
+    if (sendCommandCheckResult("S09:"+smode,smode)) {
+        update_LSPDValue(smode);
+        return true;
+    }
+    return false;
+}
+
+bool SpaNetInterface::setLSPDValue(String mode){
+    debugD("setLSPDValue - %s", mode.c_str());
+    int x = atoi(mode.c_str());
+    if (x > 0 && x < 6) {
+        return setLSPDValue(x);
+    }
+    return false;
+}
+
+bool SpaNetInterface::setCurrClr(int mode){
+    debugD("setCurrClr - %i", mode);
+
+    String smode = String(mode);
+
+    if (sendCommandCheckResult("S10:"+smode,smode)) {
+        update_CurrClr(smode);
+        return true;
     }
     return false;
 }
@@ -426,7 +506,7 @@ void SpaNetInterface::updateMeasures() {
     update_RB_TP_Ozone(statusResponseRaw[R5 + 11]);
     update_RB_TP_Heater(statusResponseRaw[R5 + 12]);
     update_RB_TP_Auto(statusResponseRaw[R5 + 13]);
-    //RB_TP_Light.updateValue(statusResponseRaw[R5 + 14]);
+    update_RB_TP_Light(statusResponseRaw[R5 + 14]);
     update_WTMP(statusResponseRaw[R5 + 15]);
     update_CleanCycle(statusResponseRaw[R5 + 16]);
     update_RB_TP_Pump1(statusResponseRaw[R5 + 18]);

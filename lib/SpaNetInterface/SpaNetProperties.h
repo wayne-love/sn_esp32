@@ -1165,9 +1165,11 @@ public:
 
     int getCurrClr() { return CurrClr.getValue(); }
     void setCurrClrCallback(void (*callback)(int)) { CurrClr.setCallback(callback); }
+    const std::array <byte, 25> colorMap = {0, 4, 4, 19, 13, 25, 25, 16, 10, 7, 2, 8, 5, 3, 6, 6, 21, 21, 21, 18, 18, 9, 9, 1, 1};
 
     int getColorMode() { return ColorMode.getValue(); }
     void setColorModeCallback(void (*callback)(int)) { ColorMode.setCallback(callback); }
+    const std::array <String, 5> colorModeStrings = {"White","Color","Fade","Step","Party"};
 
     int getLSPDValue() { return LSPDValue.getValue(); }
     void setLSPDValueCallback(void (*callback)(int)) { LSPDValue.setCallback(callback); }
