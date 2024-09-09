@@ -1,4 +1,4 @@
-#include "SpaNetProperties.h"
+#include "SpaProperties.h"
 
 
 inline boolean isNumber(String s) {
@@ -13,7 +13,7 @@ inline boolean isNumber(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_MainsCurrent(String s){
+boolean SpaProperties::update_MainsCurrent(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -22,7 +22,7 @@ boolean SpaNetProperties::update_MainsCurrent(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_SpaTime(String year, String month, String day, String hour, String minute, String second){
+boolean SpaProperties::update_SpaTime(String year, String month, String day, String hour, String minute, String second){
 
     tmElements_t tm;
     tm.Year=CalendarYrToTm(year.toInt());
@@ -37,7 +37,7 @@ boolean SpaNetProperties::update_SpaTime(String year, String month, String day, 
     return true;
 }
 
-boolean SpaNetProperties::update_MainsVoltage(String s){
+boolean SpaProperties::update_MainsVoltage(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -46,7 +46,7 @@ boolean SpaNetProperties::update_MainsVoltage(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_CaseTemperature(String s){
+boolean SpaProperties::update_CaseTemperature(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -55,7 +55,7 @@ boolean SpaNetProperties::update_CaseTemperature(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_PortCurrent(String s){
+boolean SpaProperties::update_PortCurrent(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -64,7 +64,7 @@ boolean SpaNetProperties::update_PortCurrent(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HeaterTemperature(String s){
+boolean SpaProperties::update_HeaterTemperature(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -73,7 +73,7 @@ boolean SpaNetProperties::update_HeaterTemperature(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_PoolTemperature(String s){
+boolean SpaProperties::update_PoolTemperature(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -82,7 +82,7 @@ boolean SpaNetProperties::update_PoolTemperature(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_WaterPresent(String s) {
+boolean SpaProperties::update_WaterPresent(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -91,7 +91,7 @@ boolean SpaNetProperties::update_WaterPresent(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_AwakeMinutesRemaining(String s){
+boolean SpaProperties::update_AwakeMinutesRemaining(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -100,7 +100,7 @@ boolean SpaNetProperties::update_AwakeMinutesRemaining(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_FiltPumpRunTimeTotal(String s){
+boolean SpaProperties::update_FiltPumpRunTimeTotal(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -109,7 +109,7 @@ boolean SpaNetProperties::update_FiltPumpRunTimeTotal(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_FiltPumpReqMins(String s){
+boolean SpaProperties::update_FiltPumpReqMins(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -118,7 +118,7 @@ boolean SpaNetProperties::update_FiltPumpReqMins(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_LoadTimeOut(String s){
+boolean SpaProperties::update_LoadTimeOut(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -127,7 +127,7 @@ boolean SpaNetProperties::update_LoadTimeOut(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HourMeter(String s){
+boolean SpaProperties::update_HourMeter(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -136,7 +136,7 @@ boolean SpaNetProperties::update_HourMeter(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Relay1(String s){
+boolean SpaProperties::update_Relay1(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -145,7 +145,7 @@ boolean SpaNetProperties::update_Relay1(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Relay2(String s){
+boolean SpaProperties::update_Relay2(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -154,7 +154,7 @@ boolean SpaNetProperties::update_Relay2(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Relay3(String s){
+boolean SpaProperties::update_Relay3(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -163,7 +163,7 @@ boolean SpaNetProperties::update_Relay3(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Relay4(String s){
+boolean SpaProperties::update_Relay4(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -172,7 +172,7 @@ boolean SpaNetProperties::update_Relay4(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Relay5(String s){
+boolean SpaProperties::update_Relay5(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -181,7 +181,7 @@ boolean SpaNetProperties::update_Relay5(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Relay6(String s){
+boolean SpaProperties::update_Relay6(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -190,7 +190,7 @@ boolean SpaNetProperties::update_Relay6(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Relay7(String s){
+boolean SpaProperties::update_Relay7(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -199,7 +199,7 @@ boolean SpaNetProperties::update_Relay7(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Relay8(String s){
+boolean SpaProperties::update_Relay8(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -208,7 +208,7 @@ boolean SpaNetProperties::update_Relay8(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Relay9(String s){
+boolean SpaProperties::update_Relay9(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -217,7 +217,7 @@ boolean SpaNetProperties::update_Relay9(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_CLMT(String s){
+boolean SpaProperties::update_CLMT(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -226,7 +226,7 @@ boolean SpaNetProperties::update_CLMT(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_PHSE(String s){
+boolean SpaProperties::update_PHSE(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -235,7 +235,7 @@ boolean SpaNetProperties::update_PHSE(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_LLM1(String s){
+boolean SpaProperties::update_LLM1(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -244,7 +244,7 @@ boolean SpaNetProperties::update_LLM1(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_LLM2(String s){
+boolean SpaProperties::update_LLM2(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -253,7 +253,7 @@ boolean SpaNetProperties::update_LLM2(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_LLM3(String s){
+boolean SpaProperties::update_LLM3(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -262,27 +262,27 @@ boolean SpaNetProperties::update_LLM3(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_SVER(String s){
+boolean SpaProperties::update_SVER(String s){
     SVER.update_Value(s);
     return true;
 }
 
-boolean SpaNetProperties::update_Model(String s){
+boolean SpaProperties::update_Model(String s){
     Model.update_Value(s);
     return true;
 }
 
-boolean SpaNetProperties::update_SerialNo1(String s){
+boolean SpaProperties::update_SerialNo1(String s){
     SerialNo1.update_Value(s);
     return true;
 }
 
-boolean SpaNetProperties::update_SerialNo2(String s){
+boolean SpaProperties::update_SerialNo2(String s){
     SerialNo2.update_Value(s);
     return true;
 }
 
-boolean SpaNetProperties::update_D1(String s) {
+boolean SpaProperties::update_D1(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -291,7 +291,7 @@ boolean SpaNetProperties::update_D1(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_D2(String s) {
+boolean SpaProperties::update_D2(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -300,7 +300,7 @@ boolean SpaNetProperties::update_D2(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_D3(String s) {
+boolean SpaProperties::update_D3(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -309,7 +309,7 @@ boolean SpaNetProperties::update_D3(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_D4(String s) {
+boolean SpaProperties::update_D4(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -318,7 +318,7 @@ boolean SpaNetProperties::update_D4(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_D5(String s) {
+boolean SpaProperties::update_D5(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -327,7 +327,7 @@ boolean SpaNetProperties::update_D5(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_D6(String s) {
+boolean SpaProperties::update_D6(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -336,12 +336,12 @@ boolean SpaNetProperties::update_D6(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_Pump(String s){
+boolean SpaProperties::update_Pump(String s){
     Pump.update_Value(s);
     return true;
 }
 
-boolean SpaNetProperties::update_LS(String s){
+boolean SpaProperties::update_LS(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -350,7 +350,7 @@ boolean SpaNetProperties::update_LS(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HV(String s) {
+boolean SpaProperties::update_HV(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -359,7 +359,7 @@ boolean SpaNetProperties::update_HV(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_SnpMR(String s){
+boolean SpaProperties::update_SnpMR(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -368,12 +368,12 @@ boolean SpaNetProperties::update_SnpMR(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Status(String s){
+boolean SpaProperties::update_Status(String s){
     Status.update_Value(s);
     return true;
 }
 
-boolean SpaNetProperties::update_PrimeCount(String s){
+boolean SpaProperties::update_PrimeCount(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -382,7 +382,7 @@ boolean SpaNetProperties::update_PrimeCount(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_EC(String s){
+boolean SpaProperties::update_EC(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -391,7 +391,7 @@ boolean SpaNetProperties::update_EC(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HAMB(String s){
+boolean SpaProperties::update_HAMB(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -400,7 +400,7 @@ boolean SpaNetProperties::update_HAMB(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HCON(String s){
+boolean SpaProperties::update_HCON(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -409,12 +409,12 @@ boolean SpaNetProperties::update_HCON(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Mode(String s){
+boolean SpaProperties::update_Mode(String s){
     Mode.update_Value(s);
     return true;
 }
 
-boolean SpaNetProperties::update_Ser1_Timer(String s){
+boolean SpaProperties::update_Ser1_Timer(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -423,7 +423,7 @@ boolean SpaNetProperties::update_Ser1_Timer(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Ser2_Timer(String s){
+boolean SpaProperties::update_Ser2_Timer(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -432,7 +432,7 @@ boolean SpaNetProperties::update_Ser2_Timer(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Ser3_Timer(String s){
+boolean SpaProperties::update_Ser3_Timer(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -441,7 +441,7 @@ boolean SpaNetProperties::update_Ser3_Timer(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HeatMode(String s){
+boolean SpaProperties::update_HeatMode(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -450,7 +450,7 @@ boolean SpaNetProperties::update_HeatMode(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_PumpIdleTimer(String s){
+boolean SpaProperties::update_PumpIdleTimer(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -459,7 +459,7 @@ boolean SpaNetProperties::update_PumpIdleTimer(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_PumpRunTimer(String s){
+boolean SpaProperties::update_PumpRunTimer(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -468,7 +468,7 @@ boolean SpaNetProperties::update_PumpRunTimer(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_AdtPoolHys(String s){
+boolean SpaProperties::update_AdtPoolHys(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -477,7 +477,7 @@ boolean SpaNetProperties::update_AdtPoolHys(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_AdtHeaterHys(String s){
+boolean SpaProperties::update_AdtHeaterHys(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -486,7 +486,7 @@ boolean SpaNetProperties::update_AdtHeaterHys(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Power(String s){
+boolean SpaProperties::update_Power(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -495,7 +495,7 @@ boolean SpaNetProperties::update_Power(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Power_kWh(String s){
+boolean SpaProperties::update_Power_kWh(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -504,7 +504,7 @@ boolean SpaNetProperties::update_Power_kWh(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Power_Today(String s){
+boolean SpaProperties::update_Power_Today(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -513,7 +513,7 @@ boolean SpaNetProperties::update_Power_Today(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Power_Yesterday(String s){
+boolean SpaProperties::update_Power_Yesterday(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -522,7 +522,7 @@ boolean SpaNetProperties::update_Power_Yesterday(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_ThermalCutOut(String s){
+boolean SpaProperties::update_ThermalCutOut(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -531,7 +531,7 @@ boolean SpaNetProperties::update_ThermalCutOut(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Test_D1(String s){
+boolean SpaProperties::update_Test_D1(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -540,7 +540,7 @@ boolean SpaNetProperties::update_Test_D1(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Test_D2(String s){
+boolean SpaProperties::update_Test_D2(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -549,7 +549,7 @@ boolean SpaNetProperties::update_Test_D2(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Test_D3(String s){
+boolean SpaProperties::update_Test_D3(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -558,7 +558,7 @@ boolean SpaNetProperties::update_Test_D3(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_ElementHeatSourceOffset(String s){
+boolean SpaProperties::update_ElementHeatSourceOffset(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -567,7 +567,7 @@ boolean SpaNetProperties::update_ElementHeatSourceOffset(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Frequency(String s){
+boolean SpaProperties::update_Frequency(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -576,7 +576,7 @@ boolean SpaNetProperties::update_Frequency(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HPHeatSourceOffset_Heat(String s){
+boolean SpaProperties::update_HPHeatSourceOffset_Heat(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -585,7 +585,7 @@ boolean SpaNetProperties::update_HPHeatSourceOffset_Heat(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HPHeatSourceOffset_Cool(String s){
+boolean SpaProperties::update_HPHeatSourceOffset_Cool(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -594,7 +594,7 @@ boolean SpaNetProperties::update_HPHeatSourceOffset_Cool(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HeatSourceOffTime(String s){
+boolean SpaProperties::update_HeatSourceOffTime(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -603,7 +603,7 @@ boolean SpaNetProperties::update_HeatSourceOffTime(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Vari_Speed(String s){
+boolean SpaProperties::update_Vari_Speed(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -612,7 +612,7 @@ boolean SpaNetProperties::update_Vari_Speed(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Vari_Percent(String s){
+boolean SpaProperties::update_Vari_Percent(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -621,7 +621,7 @@ boolean SpaNetProperties::update_Vari_Percent(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Vari_Mode(String s){
+boolean SpaProperties::update_Vari_Mode(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -630,7 +630,7 @@ boolean SpaNetProperties::update_Vari_Mode(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_RB_TP_Pump1(String s){
+boolean SpaProperties::update_RB_TP_Pump1(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -639,7 +639,7 @@ boolean SpaNetProperties::update_RB_TP_Pump1(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_RB_TP_Pump2(String s){
+boolean SpaProperties::update_RB_TP_Pump2(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -648,7 +648,7 @@ boolean SpaNetProperties::update_RB_TP_Pump2(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_RB_TP_Pump3(String s){
+boolean SpaProperties::update_RB_TP_Pump3(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -657,7 +657,7 @@ boolean SpaNetProperties::update_RB_TP_Pump3(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_RB_TP_Pump4(String s){
+boolean SpaProperties::update_RB_TP_Pump4(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -666,7 +666,7 @@ boolean SpaNetProperties::update_RB_TP_Pump4(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_RB_TP_Pump5(String s){
+boolean SpaProperties::update_RB_TP_Pump5(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -675,7 +675,7 @@ boolean SpaNetProperties::update_RB_TP_Pump5(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_RB_TP_Blower(String s){
+boolean SpaProperties::update_RB_TP_Blower(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -684,7 +684,7 @@ boolean SpaNetProperties::update_RB_TP_Blower(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_RB_TP_Light(String s){
+boolean SpaProperties::update_RB_TP_Light(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -693,7 +693,7 @@ boolean SpaNetProperties::update_RB_TP_Light(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_RB_TP_Auto(String s) {
+boolean SpaProperties::update_RB_TP_Auto(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -702,7 +702,7 @@ boolean SpaNetProperties::update_RB_TP_Auto(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_RB_TP_Heater(String s) {
+boolean SpaProperties::update_RB_TP_Heater(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -711,7 +711,7 @@ boolean SpaNetProperties::update_RB_TP_Heater(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_RB_TP_Ozone(String s) {
+boolean SpaProperties::update_RB_TP_Ozone(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -720,7 +720,7 @@ boolean SpaNetProperties::update_RB_TP_Ozone(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_RB_TP_Sleep(String s) {
+boolean SpaProperties::update_RB_TP_Sleep(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -729,7 +729,7 @@ boolean SpaNetProperties::update_RB_TP_Sleep(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_WTMP(String s){
+boolean SpaProperties::update_WTMP(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -738,7 +738,7 @@ boolean SpaNetProperties::update_WTMP(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_CleanCycle(String s) {
+boolean SpaProperties::update_CleanCycle(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -747,7 +747,7 @@ boolean SpaNetProperties::update_CleanCycle(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_VARIValue(String s){
+boolean SpaProperties::update_VARIValue(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -756,7 +756,7 @@ boolean SpaNetProperties::update_VARIValue(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_LBRTValue(String s){
+boolean SpaProperties::update_LBRTValue(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -765,7 +765,7 @@ boolean SpaNetProperties::update_LBRTValue(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_CurrClr(String s){
+boolean SpaProperties::update_CurrClr(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -774,7 +774,7 @@ boolean SpaNetProperties::update_CurrClr(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_ColorMode(String s){
+boolean SpaProperties::update_ColorMode(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -783,7 +783,7 @@ boolean SpaNetProperties::update_ColorMode(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_LSPDValue(String s){
+boolean SpaProperties::update_LSPDValue(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -792,7 +792,7 @@ boolean SpaNetProperties::update_LSPDValue(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_FiltSetHrs(String s){
+boolean SpaProperties::update_FiltSetHrs(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -801,7 +801,7 @@ boolean SpaNetProperties::update_FiltSetHrs(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_FiltBlockHrs(String s){
+boolean SpaProperties::update_FiltBlockHrs(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -810,7 +810,7 @@ boolean SpaNetProperties::update_FiltBlockHrs(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_STMP(String s){
+boolean SpaProperties::update_STMP(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -819,7 +819,7 @@ boolean SpaNetProperties::update_STMP(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_L_24HOURS(String s){
+boolean SpaProperties::update_L_24HOURS(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -828,7 +828,7 @@ boolean SpaNetProperties::update_L_24HOURS(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_PSAV_LVL(String s){
+boolean SpaProperties::update_PSAV_LVL(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -837,7 +837,7 @@ boolean SpaNetProperties::update_PSAV_LVL(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_PSAV_BGN(String s){
+boolean SpaProperties::update_PSAV_BGN(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -846,7 +846,7 @@ boolean SpaNetProperties::update_PSAV_BGN(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_PSAV_END(String s){
+boolean SpaProperties::update_PSAV_END(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -855,7 +855,7 @@ boolean SpaNetProperties::update_PSAV_END(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_L_1SNZ_DAY(String s){
+boolean SpaProperties::update_L_1SNZ_DAY(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -864,7 +864,7 @@ boolean SpaNetProperties::update_L_1SNZ_DAY(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_L_2SNZ_DAY(String s){
+boolean SpaProperties::update_L_2SNZ_DAY(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -873,7 +873,7 @@ boolean SpaNetProperties::update_L_2SNZ_DAY(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_L_1SNZ_BGN(String s){
+boolean SpaProperties::update_L_1SNZ_BGN(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -882,7 +882,7 @@ boolean SpaNetProperties::update_L_1SNZ_BGN(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_L_2SNZ_BGN(String s){
+boolean SpaProperties::update_L_2SNZ_BGN(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -891,7 +891,7 @@ boolean SpaNetProperties::update_L_2SNZ_BGN(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_L_1SNZ_END(String s){
+boolean SpaProperties::update_L_1SNZ_END(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -900,7 +900,7 @@ boolean SpaNetProperties::update_L_1SNZ_END(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_L_2SNZ_END(String s){
+boolean SpaProperties::update_L_2SNZ_END(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -909,7 +909,7 @@ boolean SpaNetProperties::update_L_2SNZ_END(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_DefaultScrn(String s){
+boolean SpaProperties::update_DefaultScrn(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -918,7 +918,7 @@ boolean SpaNetProperties::update_DefaultScrn(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_TOUT(String s){
+boolean SpaProperties::update_TOUT(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -927,7 +927,7 @@ boolean SpaNetProperties::update_TOUT(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_VPMP(String s) {
+boolean SpaProperties::update_VPMP(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -936,7 +936,7 @@ boolean SpaNetProperties::update_VPMP(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_HIFI(String s) {
+boolean SpaProperties::update_HIFI(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -945,7 +945,7 @@ boolean SpaNetProperties::update_HIFI(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_BRND(String s){
+boolean SpaProperties::update_BRND(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -954,7 +954,7 @@ boolean SpaNetProperties::update_BRND(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_PRME(String s){
+boolean SpaProperties::update_PRME(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -963,7 +963,7 @@ boolean SpaNetProperties::update_PRME(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_ELMT(String s){
+boolean SpaProperties::update_ELMT(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -972,7 +972,7 @@ boolean SpaNetProperties::update_ELMT(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_TYPE(String s){
+boolean SpaProperties::update_TYPE(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -981,7 +981,7 @@ boolean SpaNetProperties::update_TYPE(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_GAS(String s){
+boolean SpaProperties::update_GAS(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -990,7 +990,7 @@ boolean SpaNetProperties::update_GAS(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_WCLNTime(String s){
+boolean SpaProperties::update_WCLNTime(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -999,7 +999,7 @@ boolean SpaNetProperties::update_WCLNTime(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_TemperatureUnits(String s) {
+boolean SpaProperties::update_TemperatureUnits(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1008,7 +1008,7 @@ boolean SpaNetProperties::update_TemperatureUnits(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_OzoneOff(String s) {
+boolean SpaProperties::update_OzoneOff(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1017,7 +1017,7 @@ boolean SpaNetProperties::update_OzoneOff(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_Ozone24(String s) {
+boolean SpaProperties::update_Ozone24(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1026,7 +1026,7 @@ boolean SpaNetProperties::update_Ozone24(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_Circ24(String s) {
+boolean SpaProperties::update_Circ24(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1035,7 +1035,7 @@ boolean SpaNetProperties::update_Circ24(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_CJET(String s) {
+boolean SpaProperties::update_CJET(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1044,7 +1044,7 @@ boolean SpaNetProperties::update_CJET(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_VELE(String s) {
+boolean SpaProperties::update_VELE(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1053,7 +1053,7 @@ boolean SpaNetProperties::update_VELE(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_V_Max(String s){
+boolean SpaProperties::update_V_Max(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1062,7 +1062,7 @@ boolean SpaNetProperties::update_V_Max(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_V_Min(String s){
+boolean SpaProperties::update_V_Min(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1071,7 +1071,7 @@ boolean SpaNetProperties::update_V_Min(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_V_Max_24(String s){
+boolean SpaProperties::update_V_Max_24(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1080,7 +1080,7 @@ boolean SpaNetProperties::update_V_Max_24(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_V_Min_24(String s){
+boolean SpaProperties::update_V_Min_24(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1089,7 +1089,7 @@ boolean SpaNetProperties::update_V_Min_24(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_CurrentZero(String s){
+boolean SpaProperties::update_CurrentZero(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1098,7 +1098,7 @@ boolean SpaNetProperties::update_CurrentZero(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_CurrentAdjust(String s){
+boolean SpaProperties::update_CurrentAdjust(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1107,7 +1107,7 @@ boolean SpaNetProperties::update_CurrentAdjust(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_VoltageAdjust(String s){
+boolean SpaProperties::update_VoltageAdjust(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1116,7 +1116,7 @@ boolean SpaNetProperties::update_VoltageAdjust(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Ser1(String s){
+boolean SpaProperties::update_Ser1(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1125,7 +1125,7 @@ boolean SpaNetProperties::update_Ser1(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Ser2(String s){
+boolean SpaProperties::update_Ser2(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1134,7 +1134,7 @@ boolean SpaNetProperties::update_Ser2(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Ser3(String s){
+boolean SpaProperties::update_Ser3(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1143,7 +1143,7 @@ boolean SpaNetProperties::update_Ser3(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_VMAX(String s){
+boolean SpaProperties::update_VMAX(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1152,7 +1152,7 @@ boolean SpaNetProperties::update_VMAX(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_AHYS(String s){
+boolean SpaProperties::update_AHYS(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1161,7 +1161,7 @@ boolean SpaNetProperties::update_AHYS(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HUSE(String s){
+boolean SpaProperties::update_HUSE(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1170,7 +1170,7 @@ boolean SpaNetProperties::update_HUSE(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HELE(String s) {
+boolean SpaProperties::update_HELE(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1179,7 +1179,7 @@ boolean SpaNetProperties::update_HELE(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_HPMP(String s){
+boolean SpaProperties::update_HPMP(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1188,7 +1188,7 @@ boolean SpaNetProperties::update_HPMP(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_PMIN(String s){
+boolean SpaProperties::update_PMIN(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1197,7 +1197,7 @@ boolean SpaNetProperties::update_PMIN(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_PFLT(String s){
+boolean SpaProperties::update_PFLT(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1206,7 +1206,7 @@ boolean SpaNetProperties::update_PFLT(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_PHTR(String s){
+boolean SpaProperties::update_PHTR(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1215,7 +1215,7 @@ boolean SpaNetProperties::update_PHTR(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_PMAX(String s){
+boolean SpaProperties::update_PMAX(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1224,7 +1224,7 @@ boolean SpaNetProperties::update_PMAX(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F1_HR(String s){
+boolean SpaProperties::update_F1_HR(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1233,7 +1233,7 @@ boolean SpaNetProperties::update_F1_HR(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F1_Time(String s){
+boolean SpaProperties::update_F1_Time(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1242,7 +1242,7 @@ boolean SpaNetProperties::update_F1_Time(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F1_ER(String s){
+boolean SpaProperties::update_F1_ER(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1251,7 +1251,7 @@ boolean SpaNetProperties::update_F1_ER(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F1_I(String s){
+boolean SpaProperties::update_F1_I(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1260,7 +1260,7 @@ boolean SpaNetProperties::update_F1_I(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F1_V(String s){
+boolean SpaProperties::update_F1_V(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1269,7 +1269,7 @@ boolean SpaNetProperties::update_F1_V(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F1_PT(String s){
+boolean SpaProperties::update_F1_PT(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1278,7 +1278,7 @@ boolean SpaNetProperties::update_F1_PT(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F1_HT(String s){
+boolean SpaProperties::update_F1_HT(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1287,7 +1287,7 @@ boolean SpaNetProperties::update_F1_HT(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F1_CT(String s){
+boolean SpaProperties::update_F1_CT(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1296,7 +1296,7 @@ boolean SpaNetProperties::update_F1_CT(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F1_ST(String s){
+boolean SpaProperties::update_F1_ST(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1305,7 +1305,7 @@ boolean SpaNetProperties::update_F1_ST(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F1_PU(String s){
+boolean SpaProperties::update_F1_PU(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1314,7 +1314,7 @@ boolean SpaNetProperties::update_F1_PU(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F1_VE(String s) {
+boolean SpaProperties::update_F1_VE(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1323,7 +1323,7 @@ boolean SpaNetProperties::update_F1_VE(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_F2_HR(String s){
+boolean SpaProperties::update_F2_HR(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1332,7 +1332,7 @@ boolean SpaNetProperties::update_F2_HR(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F2_Time(String s){
+boolean SpaProperties::update_F2_Time(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1341,7 +1341,7 @@ boolean SpaNetProperties::update_F2_Time(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F2_ER(String s){
+boolean SpaProperties::update_F2_ER(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1350,7 +1350,7 @@ boolean SpaNetProperties::update_F2_ER(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F2_I(String s){
+boolean SpaProperties::update_F2_I(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1359,7 +1359,7 @@ boolean SpaNetProperties::update_F2_I(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F2_V(String s){
+boolean SpaProperties::update_F2_V(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1368,7 +1368,7 @@ boolean SpaNetProperties::update_F2_V(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F2_PT(String s){
+boolean SpaProperties::update_F2_PT(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1377,7 +1377,7 @@ boolean SpaNetProperties::update_F2_PT(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F2_HT(String s){
+boolean SpaProperties::update_F2_HT(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1386,7 +1386,7 @@ boolean SpaNetProperties::update_F2_HT(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F2_CT(String s){
+boolean SpaProperties::update_F2_CT(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1395,7 +1395,7 @@ boolean SpaNetProperties::update_F2_CT(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F2_ST(String s){
+boolean SpaProperties::update_F2_ST(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1404,7 +1404,7 @@ boolean SpaNetProperties::update_F2_ST(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F2_PU(String s){
+boolean SpaProperties::update_F2_PU(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1413,7 +1413,7 @@ boolean SpaNetProperties::update_F2_PU(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F2_VE(String s) {
+boolean SpaProperties::update_F2_VE(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1422,7 +1422,7 @@ boolean SpaNetProperties::update_F2_VE(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_F3_HR(String s){
+boolean SpaProperties::update_F3_HR(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1431,7 +1431,7 @@ boolean SpaNetProperties::update_F3_HR(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F3_Time(String s){
+boolean SpaProperties::update_F3_Time(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1440,7 +1440,7 @@ boolean SpaNetProperties::update_F3_Time(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F3_ER(String s){
+boolean SpaProperties::update_F3_ER(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1449,7 +1449,7 @@ boolean SpaNetProperties::update_F3_ER(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F3_I(String s){
+boolean SpaProperties::update_F3_I(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1458,7 +1458,7 @@ boolean SpaNetProperties::update_F3_I(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F3_V(String s){
+boolean SpaProperties::update_F3_V(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1467,7 +1467,7 @@ boolean SpaNetProperties::update_F3_V(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F3_PT(String s){
+boolean SpaProperties::update_F3_PT(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1476,7 +1476,7 @@ boolean SpaNetProperties::update_F3_PT(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F3_HT(String s){
+boolean SpaProperties::update_F3_HT(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1485,7 +1485,7 @@ boolean SpaNetProperties::update_F3_HT(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F3_CT(String s){
+boolean SpaProperties::update_F3_CT(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1494,7 +1494,7 @@ boolean SpaNetProperties::update_F3_CT(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F3_ST(String s){
+boolean SpaProperties::update_F3_ST(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1503,7 +1503,7 @@ boolean SpaNetProperties::update_F3_ST(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F3_PU(String s){
+boolean SpaProperties::update_F3_PU(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1512,7 +1512,7 @@ boolean SpaNetProperties::update_F3_PU(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_F3_VE(String s) {
+boolean SpaProperties::update_F3_VE(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1521,7 +1521,7 @@ boolean SpaNetProperties::update_F3_VE(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_Outlet_Blower(String s){
+boolean SpaProperties::update_Outlet_Blower(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1530,7 +1530,7 @@ boolean SpaNetProperties::update_Outlet_Blower(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HP_Present(String s){
+boolean SpaProperties::update_HP_Present(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1539,7 +1539,7 @@ boolean SpaNetProperties::update_HP_Present(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HP_Ambient(String s){
+boolean SpaProperties::update_HP_Ambient(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1549,7 +1549,7 @@ boolean SpaNetProperties::update_HP_Ambient(String s){
 }
 
 
-boolean SpaNetProperties::update_HP_Condensor(String s){
+boolean SpaProperties::update_HP_Condensor(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1558,7 +1558,7 @@ boolean SpaNetProperties::update_HP_Condensor(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HP_Compressor_State(String s) {
+boolean SpaProperties::update_HP_Compressor_State(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1567,7 +1567,7 @@ boolean SpaNetProperties::update_HP_Compressor_State(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_HP_Fan_State(String s) {
+boolean SpaProperties::update_HP_Fan_State(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1576,7 +1576,7 @@ boolean SpaNetProperties::update_HP_Fan_State(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_HP_4W_Valve(String s) {
+boolean SpaProperties::update_HP_4W_Valve(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1585,7 +1585,7 @@ boolean SpaNetProperties::update_HP_4W_Valve(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_HP_Heater_State(String s) {
+boolean SpaProperties::update_HP_Heater_State(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1595,7 +1595,7 @@ boolean SpaNetProperties::update_HP_Heater_State(String s) {
 }
 
 
-boolean SpaNetProperties::update_HP_State(String s){
+boolean SpaProperties::update_HP_State(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1604,7 +1604,7 @@ boolean SpaNetProperties::update_HP_State(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HP_Mode(String s){
+boolean SpaProperties::update_HP_Mode(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1613,7 +1613,7 @@ boolean SpaNetProperties::update_HP_Mode(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HP_Defrost_Timer(String s){
+boolean SpaProperties::update_HP_Defrost_Timer(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1622,7 +1622,7 @@ boolean SpaNetProperties::update_HP_Defrost_Timer(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HP_Comp_Run_Timer(String s){
+boolean SpaProperties::update_HP_Comp_Run_Timer(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1631,7 +1631,7 @@ boolean SpaNetProperties::update_HP_Comp_Run_Timer(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HP_Low_Temp_Timer(String s){
+boolean SpaProperties::update_HP_Low_Temp_Timer(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1640,7 +1640,7 @@ boolean SpaNetProperties::update_HP_Low_Temp_Timer(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HP_Heat_Accum_Timer(String s){
+boolean SpaProperties::update_HP_Heat_Accum_Timer(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1649,7 +1649,7 @@ boolean SpaNetProperties::update_HP_Heat_Accum_Timer(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HP_Sequence_Timer(String s){
+boolean SpaProperties::update_HP_Sequence_Timer(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1658,7 +1658,7 @@ boolean SpaNetProperties::update_HP_Sequence_Timer(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_HP_Warning(String s){
+boolean SpaProperties::update_HP_Warning(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1667,7 +1667,7 @@ boolean SpaNetProperties::update_HP_Warning(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_FrezTmr(String s){
+boolean SpaProperties::update_FrezTmr(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1676,7 +1676,7 @@ boolean SpaNetProperties::update_FrezTmr(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_DBGN(String s){
+boolean SpaProperties::update_DBGN(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1685,7 +1685,7 @@ boolean SpaNetProperties::update_DBGN(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_DEND(String s){
+boolean SpaProperties::update_DEND(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1694,7 +1694,7 @@ boolean SpaNetProperties::update_DEND(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_DCMP(String s){
+boolean SpaProperties::update_DCMP(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1703,7 +1703,7 @@ boolean SpaNetProperties::update_DCMP(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_DMAX(String s){
+boolean SpaProperties::update_DMAX(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1712,7 +1712,7 @@ boolean SpaNetProperties::update_DMAX(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_DELE(String s){
+boolean SpaProperties::update_DELE(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1721,7 +1721,7 @@ boolean SpaNetProperties::update_DELE(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_DPMP(String s){
+boolean SpaProperties::update_DPMP(String s){
     if (!isNumber(s)) {
         return false;
     }
@@ -1730,32 +1730,32 @@ boolean SpaNetProperties::update_DPMP(String s){
     return true;
 }
 
-boolean SpaNetProperties::update_Pump1InstallState(String s){
+boolean SpaProperties::update_Pump1InstallState(String s){
     Pump1InstallState.update_Value(s);
     return true;
 }
 
-boolean SpaNetProperties::update_Pump2InstallState(String s){
+boolean SpaProperties::update_Pump2InstallState(String s){
     Pump2InstallState.update_Value(s);
     return true;
 }
 
-boolean SpaNetProperties::update_Pump3InstallState(String s){
+boolean SpaProperties::update_Pump3InstallState(String s){
     Pump3InstallState.update_Value(s);
     return true;
 }
 
-boolean SpaNetProperties::update_Pump4InstallState(String s){
+boolean SpaProperties::update_Pump4InstallState(String s){
     Pump4InstallState.update_Value(s);
     return true;
 }
 
-boolean SpaNetProperties::update_Pump5InstallState(String s){
+boolean SpaProperties::update_Pump5InstallState(String s){
     Pump5InstallState.update_Value(s);
     return true;
 }
 
-boolean SpaNetProperties::update_Pump1OkToRun(String s) {
+boolean SpaProperties::update_Pump1OkToRun(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1764,7 +1764,7 @@ boolean SpaNetProperties::update_Pump1OkToRun(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_Pump2OkToRun(String s) {
+boolean SpaProperties::update_Pump2OkToRun(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1773,7 +1773,7 @@ boolean SpaNetProperties::update_Pump2OkToRun(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_Pump3OkToRun(String s) {
+boolean SpaProperties::update_Pump3OkToRun(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1782,7 +1782,7 @@ boolean SpaNetProperties::update_Pump3OkToRun(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_Pump4OkToRun(String s) {
+boolean SpaProperties::update_Pump4OkToRun(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1791,7 +1791,7 @@ boolean SpaNetProperties::update_Pump4OkToRun(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_Pump5OkToRun(String s) {
+boolean SpaProperties::update_Pump5OkToRun(String s) {
     if (s!="0" && s!="1") {
         return false;
     }
@@ -1800,7 +1800,7 @@ boolean SpaNetProperties::update_Pump5OkToRun(String s) {
     return true;
 }
 
-boolean SpaNetProperties::update_LockMode(String s) {
+boolean SpaProperties::update_LockMode(String s) {
     if (s!="0" && s!="1") {
         return false;
     }

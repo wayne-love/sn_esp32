@@ -24,7 +24,7 @@
 
 #include "WebUI.h"
 
-#include "SpaNetInterface.h"
+#include "SpaInterface.h"
 
 
 #if defined(ESP8266)
@@ -42,13 +42,13 @@ const int TRIGGER_PIN = EN_PIN;
     RemoteDebug Debug;
 #endif
 
-SpaNetInterface sni;
+SpaInterface si;
 
 Blinker led(LED_BUILTIN);
 WiFiClient wifi;
 PubSubClient mqttClient(wifi);
 
-WebUI ui(&sni);
+WebUI ui(&si);
 
 
 
@@ -158,21 +158,21 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   debugI("Received update for %s to %s",property.c_str(),p.c_str());
 
   if (property == "temperature") {
-    sni.setSTMP(int(p.toFloat()*10));
+    si.setSTMP(int(p.toFloat()*10));
   } else if (property == "mode") {
-    sni.setHPMP(p);
+    si.setHPMP(p);
   } else if (property == "pump1") {
-    sni.setRB_TP_Pump1(p=="OFF"?0:1);
+    si.setRB_TP_Pump1(p=="OFF"?0:1);
   } else if (property == "pump2") {
-    sni.setRB_TP_Pump2(p=="OFF"?0:1);
+    si.setRB_TP_Pump2(p=="OFF"?0:1);
   } else if (property == "pump3") { 
-    sni.setRB_TP_Pump3(p=="OFF"?0:1);
+    si.setRB_TP_Pump3(p=="OFF"?0:1);
   } else if (property == "pump4") {
-    sni.setRB_TP_Pump4(p=="OFF"?0:1);
+    si.setRB_TP_Pump4(p=="OFF"?0:1);
   } else if (property == "pump5") {
-    sni.setRB_TP_Pump5(p=="OFF"?0:1);
+    si.setRB_TP_Pump5(p=="OFF"?0:1);
   } else if (property == "auxheat") {
-    sni.setHELE(p=="OFF"?0:1);
+    si.setHELE(p=="OFF"?0:1);
   } else if (property == "datetime") {
     tmElements_t tm;
     tm.Year=CalendarYrToTm(p.substring(0,4).toInt());
@@ -181,17 +181,17 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     tm.Hour=p.substring(11,13).toInt();
     tm.Minute=p.substring(14,16).toInt();
     tm.Second=p.substring(17).toInt();
-    sni.setSpaTime(makeTime(tm));
+    si.setSpaTime(makeTime(tm));
 
   } else if (property == "lightsspeed") {
-    sni.setLSPDValue(p);
+    si.setLSPDValue(p);
   } else if (property == "lights") {
     DynamicJsonDocument json(1024);
     deserializeJson(json, p);
-    sni.setRB_TP_Light(json["state"]=="ON"?1:0);
+    si.setRB_TP_Light(json["state"]=="ON"?1:0);
     if (json.containsKey("effect")) {
       const char *effect = json["effect"];
-      sni.setColorMode(String(effect));
+      si.setColorMode(String(effect));
     }
     if (json.containsKey("brightness")) {
       byte value = json["brightness"];
@@ -199,11 +199,11 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
         value = 254;
       }
       value = (value / 51) + 1; // Map from 0 to 254 to 1 to 5
-      sni.setLBRTValue(value);
+      si.setLBRTValue(value);
     }
     if (json.containsKey("color")) {
       int value = json["color"]["h"];
-      sni.setCurrClr(sni.colorMap[value/15]);
+      si.setCurrClr(si.colorMap[value/15]);
     }
 
   } else {
@@ -671,7 +671,7 @@ void lightADPublish (String name, String deviceClass, String stateTopic, String 
   json["brightness"] = true;
   json["effect"] = true;
   JsonArray effect_list = json.createNestedArray("effect_list");
-  for (auto effect: sni.colorModeStrings) effect_list.add(effect);
+  for (auto effect: si.colorModeStrings) effect_list.add(effect);
   JsonArray color_modes = json.createNestedArray("supported_color_modes");
   color_modes.add("hs");
 
@@ -705,23 +705,23 @@ void mqttHaAutoDiscovery() {
   
   climateADPublish(spaName,"Heating", spaName, spaSerialNumber);
 
-  if (sni.getPump1InstallState().startsWith("1") && !(sni.getPump1InstallState().endsWith("4"))) {
+  if (si.getPump1InstallState().startsWith("1") && !(si.getPump1InstallState().endsWith("4"))) {
      switchADPublish("Pump 1","",mqttStatusTopic,"{{ value_json.pump1 }}","pump1",spaName,spaSerialNumber);
   }
 
-  if (sni.getPump2InstallState().startsWith("1") && !(sni.getPump2InstallState().endsWith("4"))) {
+  if (si.getPump2InstallState().startsWith("1") && !(si.getPump2InstallState().endsWith("4"))) {
     switchADPublish("Pump 2","",mqttStatusTopic,"{{ value_json.pump2 }}","pump2",spaName,spaSerialNumber);
   } 
 
-  if (sni.getPump3InstallState().startsWith("1") && !(sni.getPump3InstallState().endsWith("4"))) {
+  if (si.getPump3InstallState().startsWith("1") && !(si.getPump3InstallState().endsWith("4"))) {
     switchADPublish("Pump 3","",mqttStatusTopic,"{{ value_json.pump3 }}","pump3",spaName,spaSerialNumber);
   } 
 
-  if (sni.getPump4InstallState().startsWith("1") && !(sni.getPump4InstallState().endsWith("4"))) {
+  if (si.getPump4InstallState().startsWith("1") && !(si.getPump4InstallState().endsWith("4"))) {
     switchADPublish("Pump 4","",mqttStatusTopic,"{{ value_json.pump4 }}","pump4",spaName,spaSerialNumber);
   } 
 
-  if (sni.getPump5InstallState().startsWith("1") && !(sni.getPump5InstallState().endsWith("4"))) {
+  if (si.getPump5InstallState().startsWith("1") && !(si.getPump5InstallState().endsWith("4"))) {
     switchADPublish("Pump 5","",mqttStatusTopic,"{{ value_json.pump5 }}","pump5",spaName,spaSerialNumber);
   }   
 
@@ -750,47 +750,47 @@ void mqttPublishStatus() {
 
   StaticJsonDocument<1024> json;
 
-  json["watertemperature"] = String(sni.getWTMP() / 10) + "." + String(sni.getWTMP() % 10); //avoids stupid rounding errors
-  json["heatertemperature"] = String(sni.getHeaterTemperature() / 10) + "." + String(sni.getHeaterTemperature() % 10); //avoids stupid rounding errors
-  json["casetemperature"] = String(sni.getCaseTemperature()); //avoids stupid rounding errors
-  json["voltage"]=String(sni.getMainsVoltage());
-  json["current"]=String(sni.getMainsCurrent() / 10) + "." + String(sni.getMainsCurrent() % 10);
-  json["power"]=String(sni.getPower() / 10) + "." + String(sni.getPower() % 10);
-  json["heatingactive"]=sni.getRB_TP_Heater()? "ON": "OFF";
-  json["ozoneactive"]=sni.getRB_TP_Ozone()? "ON": "OFF";
-  json["totalenergy"]=String(sni.getPower_kWh() * 10); // convert to kWh to Wh.
-  json["hpambtemp"]=String(sni.getHP_Ambient());
-  json["hpcondtemp"]=String(sni.getHP_Condensor());
-  json["temperaturesetpoint"]=String(sni.getSTMP() / 10) + "." + String(sni.getSTMP() % 10);
-  json["heatermode"]=sni.HPMPStrings[sni.getHPMP()];
+  json["watertemperature"] = String(si.getWTMP() / 10) + "." + String(si.getWTMP() % 10); //avoids stupid rounding errors
+  json["heatertemperature"] = String(si.getHeaterTemperature() / 10) + "." + String(si.getHeaterTemperature() % 10); //avoids stupid rounding errors
+  json["casetemperature"] = String(si.getCaseTemperature()); //avoids stupid rounding errors
+  json["voltage"]=String(si.getMainsVoltage());
+  json["current"]=String(si.getMainsCurrent() / 10) + "." + String(si.getMainsCurrent() % 10);
+  json["power"]=String(si.getPower() / 10) + "." + String(si.getPower() % 10);
+  json["heatingactive"]=si.getRB_TP_Heater()? "ON": "OFF";
+  json["ozoneactive"]=si.getRB_TP_Ozone()? "ON": "OFF";
+  json["totalenergy"]=String(si.getPower_kWh() * 10); // convert to kWh to Wh.
+  json["hpambtemp"]=String(si.getHP_Ambient());
+  json["hpcondtemp"]=String(si.getHP_Condensor());
+  json["temperaturesetpoint"]=String(si.getSTMP() / 10) + "." + String(si.getSTMP() % 10);
+  json["heatermode"]=si.HPMPStrings[si.getHPMP()];
 
-  json["pump1"]=sni.getRB_TP_Pump1()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pump2"]=sni.getRB_TP_Pump2()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pump3"]=sni.getRB_TP_Pump3()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pump4"]=sni.getRB_TP_Pump4()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pump5"]=sni.getRB_TP_Pump5()==0? "OFF" : "ON"; // we're ignoring auto here
+  json["pump1"]=si.getRB_TP_Pump1()==0? "OFF" : "ON"; // we're ignoring auto here
+  json["pump2"]=si.getRB_TP_Pump2()==0? "OFF" : "ON"; // we're ignoring auto here
+  json["pump3"]=si.getRB_TP_Pump3()==0? "OFF" : "ON"; // we're ignoring auto here
+  json["pump4"]=si.getRB_TP_Pump4()==0? "OFF" : "ON"; // we're ignoring auto here
+  json["pump5"]=si.getRB_TP_Pump5()==0? "OFF" : "ON"; // we're ignoring auto here
 
 
-  String y=String(year(sni.getSpaTime()));
-  String m=String(month(sni.getSpaTime()));
-  if (month(sni.getSpaTime())<10) m = "0"+m;
-  String d=String(day(sni.getSpaTime()));
-  if (day(sni.getSpaTime())<10) d = "0"+d;
-  String h=String(hour(sni.getSpaTime()));
-  if (hour(sni.getSpaTime())<10) h = "0"+h;
-  String min=String(minute(sni.getSpaTime()));
-  if (minute(sni.getSpaTime())<10) min = "0"+min;
-  String s=String(second(sni.getSpaTime()));
-  if (second(sni.getSpaTime())<10) s = "0"+s;
+  String y=String(year(si.getSpaTime()));
+  String m=String(month(si.getSpaTime()));
+  if (month(si.getSpaTime())<10) m = "0"+m;
+  String d=String(day(si.getSpaTime()));
+  if (day(si.getSpaTime())<10) d = "0"+d;
+  String h=String(hour(si.getSpaTime()));
+  if (hour(si.getSpaTime())<10) h = "0"+h;
+  String min=String(minute(si.getSpaTime()));
+  if (minute(si.getSpaTime())<10) min = "0"+min;
+  String s=String(second(si.getSpaTime()));
+  if (second(si.getSpaTime())<10) s = "0"+s;
 
   json["datetime"]=y+"-"+m+"-"+d+" "+h+":"+min+":"+s;
 
 // TODO : need to return blower vlaue
 
-  json["auxheat"]=sni.getHELE()==0? "OFF" : "ON";
+  json["auxheat"]=si.getHELE()==0? "OFF" : "ON";
 
-  json["status"]=sni.getStatus();
-  json["lightsspeed"]=sni.getLSPDValue();
+  json["status"]=si.getStatus();
+  json["lightsspeed"]=si.getLSPDValue();
 
   String output = "";
   serializeJson(json,output);
@@ -798,19 +798,19 @@ void mqttPublishStatus() {
   mqttClient.publish(mqttStatusTopic.c_str(),output.c_str());
 
   json.clear();
-  json["state"]=sni.getRB_TP_Light()? "ON": "OFF";
+  json["state"]=si.getRB_TP_Light()? "ON": "OFF";
 
-  json["effect"] = sni.colorModeStrings[sni.getColorMode()];
-  json["brightness"] = int(sni.getLBRTValue() * 51);
+  json["effect"] = si.colorModeStrings[si.getColorMode()];
+  json["brightness"] = int(si.getLBRTValue() * 51);
 
   // 0 = white, if white, then set the hue and saturation to white so the light displays correctly in HA.
-  if (sni.getColorMode() == 0) {
+  if (si.getColorMode() == 0) {
     json["color"]["h"] = 0;
     json["color"]["s"] = 0;
   } else {
     int hue = 4;
-    for (int count = 0; count < sizeof(sni.colorMap); count++){
-      if (sni.colorMap[count] == sni.getCurrClr()) {
+    for (int count = 0; count < sizeof(si.colorMap); count++){
+      if (si.colorMap[count] == si.getCurrClr()) {
         hue = count * 15;
       }
     }
@@ -923,13 +923,13 @@ void loop() {
   } else {
     if (bootTime + 10000 < millis()) {
 
-      sni.loop();
+      si.loop();
 
-      if (sni.isInitialised()) {
+      if (si.isInitialised()) {
         if ( spaSerialNumber=="" ) {
           debugI("Initialising...");
       
-          spaSerialNumber = sni.getSerialNo1()+"-"+sni.getSerialNo2();
+          spaSerialNumber = si.getSerialNo1()+"-"+si.getSerialNo2();
           debugI("Spa serial number is %s",spaSerialNumber.c_str());
 
           mqttBase = String("sn_esp32/") + spaSerialNumber + String("/");
@@ -966,10 +966,10 @@ void loop() {
             debugI("Publish autodiscovery information");
             mqttHaAutoDiscovery();
             autoDiscoveryPublished = true;
-            sni.setUpdateCallback(mqttPublishStatus);
+            si.setUpdateCallback(mqttPublishStatus);
             mqttPublishStatus();
 
-            sni.statusResponse.setCallback(mqttPublishStatusString);
+            si.statusResponse.setCallback(mqttPublishStatusString);
 
           }
           led.setInterval(2000);

@@ -8,7 +8,7 @@
   #include <Update.h>
 #endif
 
-#include "SpaNetInterface.h"
+#include "SpaInterface.h"
 
 class WebUI {
     public:
@@ -20,13 +20,13 @@ class WebUI {
         
         char indexPage[1024] = "\0";
 
-        WebUI(SpaNetInterface *spa);
+        WebUI(SpaInterface *spa);
         void begin();
         bool initialised = false;
 
     private:
         char buffer[1024];
-        SpaNetInterface *_spa;
+        SpaInterface *_spa;
         const char *indexPageTemplate =
             "<!DOCTYPE html>"
             "<html>"

@@ -1,5 +1,5 @@
-#ifndef SPANETPROPERTIES_H
-#define SPANETPROPERTIES_H
+#ifndef SPAPROPERTIES_H
+#define SPAPROPERTIES_H
 
 #include <Arduino.h>
 #include <RemoteDebug.h>
@@ -31,7 +31,7 @@ public:
 };
 
 /// @brief represents the properties of the spa.
-class SpaNetProperties
+class SpaProperties
 {
     
 private:

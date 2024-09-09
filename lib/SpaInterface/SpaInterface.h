@@ -1,11 +1,11 @@
-#ifndef SPANETINTERFACE_H
-#define SPANETINTERFACE_H
+#ifndef SPAINTERFACE_H
+#define SPAINTERFACE_H
 
 #include <Arduino.h>
 #include <RemoteDebug.h>
 #include <functional>
 #include <stdexcept>
-#include "SpaNetProperties.h"
+#include "SpaProperties.h"
 #include <RemoteDebug.h>
 
 
@@ -14,7 +14,7 @@
 
 extern RemoteDebug Debug;
 
-class SpaNetInterface : public SpaNetProperties {
+class SpaInterface : public SpaProperties {
     private:
 
         /// @brief Number of fields that we can expect to read, initially set to 100 but updated once we determine the variant of the controller we are running.
@@ -100,12 +100,12 @@ class SpaNetInterface : public SpaNetProperties {
         /// useful if you want to link this to a software COM port on a chip similar to a ESP8266.
         /// Needs to be set to 38400/8/N/1
         /// @param p 
-        SpaNetInterface(Stream &p);
+        SpaInterface(Stream &p);
 
         /// @brief Init SNI and use Serial2 for comms.  Serial 2 DOES NOT need to be configured.
-        SpaNetInterface();
+        SpaInterface();
 
-        ~SpaNetInterface();
+        ~SpaInterface();
 
         /// @brief Complete RF command response in a single string
         Property<String> statusResponse;

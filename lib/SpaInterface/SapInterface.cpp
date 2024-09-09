@@ -1,4 +1,4 @@
-#include "SpaNetInterface.h"
+#include "SpaInterface.h"
 
 #define BAUD_RATE 38400
 
@@ -12,10 +12,10 @@
     HardwareSerial spaSerial = Serial2;
 #endif
 
-SpaNetInterface::SpaNetInterface(Stream &p) : port(p) {
+SpaInterface::SpaInterface(Stream &p) : port(p) {
 }
 
-SpaNetInterface::SpaNetInterface() : port(spaSerial) {
+SpaInterface::SpaInterface() : port(spaSerial) {
     #if defined(ESP8266)
         spaSerial.setRxBufferSize(1024);  //required for unit testing
         spaSerial.begin(BAUD_RATE);
@@ -28,12 +28,12 @@ SpaNetInterface::SpaNetInterface() : port(spaSerial) {
     spaSerial.setTimeout(250);
 }
 
-SpaNetInterface::~SpaNetInterface() {}
+SpaInterface::~SpaInterface() {}
 
 
 
 
-void SpaNetInterface::flushSerialReadBuffer() {
+void SpaInterface::flushSerialReadBuffer() {
     int x = 0;
 
     debugD("Flushing serial stream - %i bytes in the buffer", port.available());
@@ -45,7 +45,7 @@ void SpaNetInterface::flushSerialReadBuffer() {
 }
 
 
-void SpaNetInterface::sendCommand(String cmd) {
+void SpaInterface::sendCommand(String cmd) {
 
     flushSerialReadBuffer();
 
@@ -65,7 +65,7 @@ void SpaNetInterface::sendCommand(String cmd) {
     _resultRegistersDirty = true; // we're trying to write to the registers so we can assume that they will now be dirty
 }
 
-String SpaNetInterface::sendCommandReturnResult(String cmd) {
+String SpaInterface::sendCommandReturnResult(String cmd) {
     sendCommand(cmd);
     String result = port.readStringUntil('\r');
     port.read(); // get rid of the trailing LF char
@@ -73,14 +73,14 @@ String SpaNetInterface::sendCommandReturnResult(String cmd) {
     return result;
 }
 
-bool SpaNetInterface::sendCommandCheckResult(String cmd, String expected){
+bool SpaInterface::sendCommandCheckResult(String cmd, String expected){
     String result = sendCommandReturnResult(cmd);
     bool outcome = result == expected;
     if (!outcome) debugW("Sent comment %s, expected %s, got %s",cmd.c_str(),expected.c_str(),result.c_str());
     return outcome;
 }
 
-bool SpaNetInterface::setRB_TP_Pump1(int mode){
+bool SpaInterface::setRB_TP_Pump1(int mode){
     debugD("setRB_TP_Pump1 - %i",mode);
 
     if (sendCommandCheckResult("S22:"+String(mode),"S22-OK")) {
@@ -90,7 +90,7 @@ bool SpaNetInterface::setRB_TP_Pump1(int mode){
     return false;
 }
 
-bool SpaNetInterface::setRB_TP_Pump2(int mode){
+bool SpaInterface::setRB_TP_Pump2(int mode){
     debugD("setRB_TP_Pump2 - %i",mode);
 
     if (sendCommandCheckResult("S23:"+String(mode),"S23-OK")) {
@@ -100,7 +100,7 @@ bool SpaNetInterface::setRB_TP_Pump2(int mode){
     return false;
 }
 
-bool SpaNetInterface::setRB_TP_Pump3(int mode){
+bool SpaInterface::setRB_TP_Pump3(int mode){
     debugD("setRB_TP_Pump3 - %i",mode);
 
     if (sendCommandCheckResult("S24:"+String(mode),"S24-OK")) {
@@ -110,7 +110,7 @@ bool SpaNetInterface::setRB_TP_Pump3(int mode){
     return false;
 }
 
-bool SpaNetInterface::setRB_TP_Pump4(int mode){
+bool SpaInterface::setRB_TP_Pump4(int mode){
     debugD("setRB_TP_Pump4 - %i",mode);
 
     if (sendCommandCheckResult("S25:"+String(mode),"S25-OK")) {
@@ -120,7 +120,7 @@ bool SpaNetInterface::setRB_TP_Pump4(int mode){
     return false;
 }
 
-bool SpaNetInterface::setRB_TP_Pump5(int mode){
+bool SpaInterface::setRB_TP_Pump5(int mode){
     debugD("setRB_TP_Pump5 - %i",mode);
 
     if (sendCommandCheckResult("S26:"+String(mode),"S26-OK")) {
@@ -130,7 +130,7 @@ bool SpaNetInterface::setRB_TP_Pump5(int mode){
     return false;
 }
 
-bool SpaNetInterface::setRB_TP_Light(int mode){
+bool SpaInterface::setRB_TP_Light(int mode){
     debugD("setRB_TP_Light - %i",mode);
     if (mode != getRB_TP_Light()) {
         if (sendCommandCheckResult("W14","W14")) {
@@ -142,7 +142,7 @@ bool SpaNetInterface::setRB_TP_Light(int mode){
     return true;
 }
 
-bool SpaNetInterface::setHELE(int mode){
+bool SpaInterface::setHELE(int mode){
     debugD("setHELE - %i", mode);
 
     if (sendCommandCheckResult("W98:"+String(mode),String(mode))) {
@@ -156,7 +156,7 @@ bool SpaNetInterface::setHELE(int mode){
 /// @brief Set the water temperature set point * 10 (380 = 38.0)
 /// @param temp 
 /// @return 
-bool SpaNetInterface::setSTMP(int temp){
+bool SpaInterface::setSTMP(int temp){
     debugD("setSTMP - %i", temp);
 
     String stemp = String(temp);
@@ -168,7 +168,7 @@ bool SpaNetInterface::setSTMP(int temp){
     return false;
 }
 
-bool SpaNetInterface::setHPMP(int mode){
+bool SpaInterface::setHPMP(int mode){
     debugD("setHPMP - %i", mode);
 
     String smode = String(mode);
@@ -180,7 +180,7 @@ bool SpaNetInterface::setHPMP(int mode){
     return false;
 }
 
-bool SpaNetInterface::setHPMP(String mode){
+bool SpaInterface::setHPMP(String mode){
     debugD("setHPMP - %s", mode.c_str());
     for (int x=0; x<HPMPStrings.size(); x++) {
         if (HPMPStrings[x] == mode) {
@@ -190,7 +190,7 @@ bool SpaNetInterface::setHPMP(String mode){
     return false;
 }
 
-bool SpaNetInterface::setColorMode(int mode){
+bool SpaInterface::setColorMode(int mode){
     debugD("setColorMode - %i", mode);
 
     String smode = String(mode);
@@ -202,7 +202,7 @@ bool SpaNetInterface::setColorMode(int mode){
     return false;
 }
 
-bool SpaNetInterface::setColorMode(String mode){
+bool SpaInterface::setColorMode(String mode){
     debugD("setColorMode - %s", mode.c_str());
     for (int x=0; x<colorModeStrings.size(); x++) {
         if (colorModeStrings[x] == mode) {
@@ -212,7 +212,7 @@ bool SpaNetInterface::setColorMode(String mode){
     return false;
 }
 
-bool SpaNetInterface::setLBRTValue(int mode){
+bool SpaInterface::setLBRTValue(int mode){
     debugD("setLBRTValue - %i", mode);
 
     String smode = String(mode);
@@ -224,7 +224,7 @@ bool SpaNetInterface::setLBRTValue(int mode){
     return false;
 }
 
-bool SpaNetInterface::setLSPDValue(int mode){
+bool SpaInterface::setLSPDValue(int mode){
     debugD("setLSPDValue - %i", mode);
 
     String smode = String(mode);
@@ -236,7 +236,7 @@ bool SpaNetInterface::setLSPDValue(int mode){
     return false;
 }
 
-bool SpaNetInterface::setLSPDValue(String mode){
+bool SpaInterface::setLSPDValue(String mode){
     debugD("setLSPDValue - %s", mode.c_str());
     int x = atoi(mode.c_str());
     if (x > 0 && x < 6) {
@@ -245,7 +245,7 @@ bool SpaNetInterface::setLSPDValue(String mode){
     return false;
 }
 
-bool SpaNetInterface::setCurrClr(int mode){
+bool SpaInterface::setCurrClr(int mode){
     debugD("setCurrClr - %i", mode);
 
     String smode = String(mode);
@@ -257,7 +257,7 @@ bool SpaNetInterface::setCurrClr(int mode){
     return false;
 }
 
-bool SpaNetInterface::setSpaTime(time_t t){
+bool SpaInterface::setSpaTime(time_t t){
     debugD("setSpaTime");
 
     String tmp;
@@ -285,7 +285,7 @@ bool SpaNetInterface::setSpaTime(time_t t){
 
 }
 
-bool SpaNetInterface::readStatus() {
+bool SpaInterface::readStatus() {
 
     // We could just do a port.readString but this will always impose a
     // 250ms (or whatever the timeout is) delay penality.  This in turn,
@@ -368,12 +368,12 @@ bool SpaNetInterface::readStatus() {
     return true;
 }
 
-bool SpaNetInterface::isInitialised() { 
+bool SpaInterface::isInitialised() { 
     return _initialised; 
 }
 
 
-void SpaNetInterface::updateStatus() {
+void SpaInterface::updateStatus() {
 
     flushSerialReadBuffer();
 
@@ -390,7 +390,7 @@ void SpaNetInterface::updateStatus() {
 }
 
 
-void SpaNetInterface::loop(){
+void SpaInterface::loop(){
     if ( _lastWaitMessage + 1000 < millis()) {
         debugD("Waiting...");
         _lastWaitMessage = millis();
@@ -407,17 +407,17 @@ void SpaNetInterface::loop(){
 }
 
 
-void SpaNetInterface::setUpdateCallback(void (*f)()) {
+void SpaInterface::setUpdateCallback(void (*f)()) {
     updateCallback = f;
 }
 
 
-void SpaNetInterface::clearUpdateCallback() {
+void SpaInterface::clearUpdateCallback() {
     updateCallback = nullptr;
 }
 
 
-void SpaNetInterface::updateMeasures() {
+void SpaInterface::updateMeasures() {
     #pragma region R2
     update_MainsCurrent(statusResponseRaw[R2+1]);
     update_MainsVoltage(statusResponseRaw[R2+2]);

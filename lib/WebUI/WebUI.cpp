@@ -4,7 +4,7 @@
     #define UPDATE_SIZE_UNKNOWN 0XFFFFFFFF
 #endif
 
-WebUI::WebUI(SpaNetInterface *spa) {
+WebUI::WebUI(SpaInterface *spa) {
     _spa = spa;
 }
 
@@ -19,9 +19,9 @@ void WebUI::begin() {
     server->on("/", HTTP_GET, [&]() {
         server->sendHeader("Connection", "close");
         char buffer[1024];
-        SpaNetInterface &sni = *_spa;
-        float current_temp = (sni.getWTMP() / 10);
-        String status = sni.getStatus();
+        SpaInterface &si = *_spa;
+        float current_temp = (si.getWTMP() / 10);
+        String status = si.getStatus();
         sprintf(buffer, indexPageTemplate, current_temp, status);
         server->send(200, "text/html", buffer);
     });
