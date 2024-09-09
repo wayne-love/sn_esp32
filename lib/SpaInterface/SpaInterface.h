@@ -128,7 +128,29 @@ class SpaInterface : public SpaProperties {
         /// @param temp Between 5 and 40 in 0.5 increments
         /// @return Returns True if succesful
         bool setSTMP(int temp);
-        
+
+        /// @brief Set snooze day ({128,127,96,31} -> {"Off","Everyday","Weekends","Weekdays"};)
+        /// @param mode
+        /// @return Returns True if succesful
+        bool setL_1SNZ_DAY(int mode);
+
+        /// @brief Set snooze time (provide an integer that uses this calculation HH:mm > HH*265+mm. e.g. 13:47 = 13*256+47 = 3375)
+        /// @param mode
+        /// @return Returns True if succesful
+        bool setL_1SNZ_BGN(int mode);
+        bool setL_1SNZ_END(int mode);
+
+        /// @brief Set snooze day ({128,127,96,31} -> {"Off","Everyday","Weekends","Weekdays"};)
+        /// @param mode
+        /// @return Returns True if succesful
+        bool setL_2SNZ_DAY(int mode);
+
+        /// @brief Set snooze time (provide an integer that uses this calculation HH:mm > HH*265+mm. e.g. 13:47 = 13*256+47 = 3375)
+        /// @param mode
+        /// @return Returns True if succesful
+        bool setL_2SNZ_BGN(int mode);
+        bool setL_2SNZ_END(int mode);
+
         /// @brief Set Heat pump operating mode (0 --> 3, {auto, heat, cool, off})
         /// @param mode 
         /// @return Returns True if succesful
