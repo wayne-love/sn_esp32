@@ -133,8 +133,7 @@ bool SpaNetInterface::setRB_TP_Pump5(int mode){
 bool SpaNetInterface::setRB_TP_Light(int mode){
     debugD("setRB_TP_Light - %i",mode);
     if (mode != getRB_TP_Light()) {
-        String result = sendCommandReturnResult("W14");
-        if (result == "W14") {
+        if (sendCommandCheckResult("W14","W14")) {
             update_RB_TP_Light(String(mode));
             return true;
         }
