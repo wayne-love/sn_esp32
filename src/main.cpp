@@ -159,7 +159,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
   if (property == "temperature") {
     si.setSTMP(int(p.toFloat()*10));
-  } else if (property == "mode") {
+  } else if (property == "heatpumpmode") {
     si.setHPMP(p);
   } else if (property == "pump1") {
     si.setRB_TP_Pump1(p=="OFF"?0:1);
@@ -182,7 +182,6 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     tm.Minute=p.substring(14,16).toInt();
     tm.Second=p.substring(17).toInt();
     si.setSpaTime(makeTime(tm));
-
   } else if (property == "lightsspeed") {
     si.setLSPDValue(p);
   } else if (property == "lights") {
@@ -205,6 +204,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       int value = json["color"]["h"];
       si.setCurrClr(si.colorMap[value/15]);
     }
+
+
 
   } else {
     debugE("Unhandled property - %s",property.c_str());
@@ -442,14 +443,17 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
   json["initial"]=36;
   json["max_temp"]=41;
   json["min_temp"]=10;
+
   JsonArray modes = json.createNestedArray("modes");
   modes.add("auto");
-  modes.add("heat");
-  modes.add("cool");
-  modes.add("off");  // this just turns the HP off, not the heating
-  json["mode_command_topic"]=mqttSet+"/mode";
-  json["mode_state_template"]="{{ value_json.heatermode }}";
+//  modes.add("heat");
+//  modes.add("cool");
+//  modes.add("off");  // this just turns the HP off, not the heating
+//  json["mode_command_topic"]=mqttSet+"/mode";
+//  json["mode_state_template"]="{{ value_json.heatermode }}";
+  json["mode_state_template"]="auto";
   json["mode_state_topic"]=mqttStatusTopic;
+  
   json["temperature_command_topic"]=mqttSet+"/temperature";
   json["temperature_state_template"]="{{ value_json.temperaturesetpoint }}";
   json["temperature_state_topic"]=mqttStatusTopic;
@@ -704,6 +708,7 @@ void mqttHaAutoDiscovery() {
   binarySensorADPublish("Ozone Active","",mqttStatusTopic,"{{ value_json.ozoneactive }}","OzoneActive", spaName, spaSerialNumber);
   
   climateADPublish(spaName,"Heating", spaName, spaSerialNumber);
+  selectADPublish("Heatpump Mode",{"Auto","Heat","Cool","Off"}, mqttStatusTopic, "{{ value_json.heatermode }}","heatpumpmode", spaName, spaSerialNumber);
 
   if (si.getPump1InstallState().startsWith("1") && !(si.getPump1InstallState().endsWith("4"))) {
      switchADPublish("Pump 1","",mqttStatusTopic,"{{ value_json.pump1 }}","pump1",spaName,spaSerialNumber);

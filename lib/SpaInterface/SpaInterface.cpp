@@ -182,6 +182,7 @@ bool SpaInterface::setHPMP(int mode){
 
 bool SpaInterface::setHPMP(String mode){
     debugD("setHPMP - %s", mode.c_str());
+
     for (int x=0; x<HPMPStrings.size(); x++) {
         if (HPMPStrings[x] == mode) {
             return setHPMP(x);

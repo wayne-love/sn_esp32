@@ -1310,7 +1310,7 @@ public:
 
     int getHPMP() { return HPMP.getValue(); }
     void setHPMPCallback(void (*callback)(int)) { HPMP.setCallback(callback); }
-    const std::array <String, 4> HPMPStrings = {"auto","heat","cool","off"};
+    const std::array <String, 4> HPMPStrings = {"Auto","Heat","Cool","Off"};
 
     int getPMIN() { return PMIN.getValue(); }
     void setPMINCallback(void (*callback)(int)) { PMIN.setCallback(callback); }
