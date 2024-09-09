@@ -72,6 +72,52 @@ String mqttLightsTopic = "";
 
 String spaSerialNumber = "";
 
+// Function to convert integer to time in HH:mm format
+String convertToTime(int data) {
+  // Extract hours and minutes from data
+  int hours = (data >> 8) & 0xFF; // High byte for hours
+  int minutes = data & 0xFF;      // Low byte for minutes
+
+  // If minutes are greater than or equal to 100, adjust hours and minutes
+  if (minutes >= 100) {
+    int extraHours = minutes / 100;
+    minutes = minutes % 100;
+    hours += extraHours;
+  }
+
+  // Buffer to hold the formatted time string
+  char timeStr[6]; // hh:mm + null terminator
+
+  // Format the time string
+  sprintf(timeStr, "%02d:%02d", hours, minutes);
+  debugV("data: %i, timeStr %s", data, timeStr);
+
+  return String(timeStr);
+}
+
+// Function to convert HH:mm format string to integer
+int convertToInteger(const char* timeStr) {
+  int hours = 0;
+  int minutes = 0;
+  int data = -1;
+
+  // Check for a null or empty string
+  if (timeStr == nullptr || std::strlen(timeStr) == 0) {
+      return data;
+  }
+
+  // Use sscanf to parse the string into hours and minutes
+  if (sscanf(timeStr, "%d:%d", &hours, &minutes) == 2) {
+    // Validate hours and minutes ranges
+    if (hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60) {
+      data = hours * 256 + minutes;
+    }
+  }
+  debugV("data: %i, timeStr %s", data, timeStr);
+
+  return data;
+}
+
 void saveConfigCallback(){
   saveConfig = true;
 }
@@ -204,9 +250,22 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       int value = json["color"]["h"];
       si.setCurrClr(si.colorMap[value/15]);
     }
-
-
-
+  } else if (property == "sleeptimer1state" || property == "sleeptimer2state") {
+    for (int count = 0; count < sizeof(si.sleepStringMap); count++){
+      if (si.sleepStringMap[count] == p)
+        if (property == "sleeptimer1state")
+          si.setL_1SNZ_DAY(si.sleepCodeMap[count]);
+        else if (property == "sleeptimer2state")
+          si.setL_2SNZ_DAY(si.sleepCodeMap[count]);
+    }
+  } else if (property == "sleeptimer1begin") {
+    si.setL_1SNZ_BGN(convertToInteger(p.c_str()));
+  } else if (property == "sleeptimer1end") {
+    si.setL_1SNZ_END(convertToInteger(p.c_str()));
+  } else if (property == "sleeptimer2begin") {
+    si.setL_2SNZ_BGN(convertToInteger(p.c_str()));
+  } else if (property == "sleeptimer2end") {
+    si.setL_2SNZ_END(convertToInteger(p.c_str()));
   } else {
     debugE("Unhandled property - %s",property.c_str());
   }
@@ -443,7 +502,6 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
   json["initial"]=36;
   json["max_temp"]=41;
   json["min_temp"]=10;
-
   JsonArray modes = json.createNestedArray("modes");
   modes.add("auto");
 //  modes.add("heat");
@@ -529,7 +587,8 @@ void switchADPublish (String name, String deviceClass, String stateTopic, String
 /// @param propertyId string appended to spa serial number to create a unique id eg 123456-789012_pump1
 /// @param deviceName Name of the spa
 /// @param deviceIdentifier identifier of the spa (serial number)
-void selectADPublish (String name, std::vector<String> options, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier) {
+/// @param category (optional) one of either "", "config" or "diagnostic"
+void selectADPublish (String name, std::vector<String> options, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier, String category="") {
 /*
 {
    "name":"Irrigation",
@@ -546,6 +605,7 @@ void selectADPublish (String name, std::vector<String> options, String stateTopi
 
   StaticJsonDocument<1024> json;
 
+  if (category != "") json["entity_category"] = category;
   json["name"]=name;
   json["state_topic"] = stateTopic;
   json["value_template"] = valueTemplate;
@@ -579,9 +639,9 @@ void selectADPublish (String name, std::vector<String> options, String stateTopi
 /// @param propertyId string appended to spa serial number to create a unique id eg 123456-789012_pump1
 /// @param deviceName Name of the spa
 /// @param deviceIdentifier identifier of the spa (serial number)
-/// @param category one of either "", "config" or "diagnostic"
-/// @param regex Regex that the text must confirm to
-void textADPublish (String name, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier, String category, String regex) {
+/// @param category (optional) one of either "", "config" or "diagnostic"
+/// @param regex (optional) Regex that the text must confirm to
+void textADPublish (String name, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier, String category="", String regex="") {
 /*{
   "availability": {
       "topic": "sn_esp32/21110001-20000337/available"
@@ -734,6 +794,14 @@ void mqttHaAutoDiscovery() {
   lightADPublish("Lights","",mqttLightsTopic,"","lights",spaName,spaSerialNumber);
   selectADPublish("Lights Speed",{"1","2","3","4","5"},mqttStatusTopic,"{{ value_json.lightsspeed }}","lightsspeed",spaName, spaSerialNumber);
 
+  std::vector<String> sleepStrings(std::begin(si.sleepStringMap), std::end(si.sleepStringMap));
+  selectADPublish("Sleep Timer 1", sleepStrings, mqttStatusTopic, "{{ value_json.sleeptimer1state }}", "sleeptimer1state", spaName, spaSerialNumber, "config");
+  selectADPublish("Sleep Timer 2", sleepStrings, mqttStatusTopic, "{{ value_json.sleeptimer2state }}", "sleeptimer2state", spaName, spaSerialNumber, "config");
+  textADPublish("Sleep Timer 1 Begin",mqttStatusTopic,"{{ value_json.sleeptimer1begin }}", "sleeptimer1begin", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
+  textADPublish("Sleep Timer 1 End",mqttStatusTopic,"{{ value_json.sleeptimer1end }}", "sleeptimer1end", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
+  textADPublish("Sleep Timer 2 Begin",mqttStatusTopic,"{{ value_json.sleeptimer2begin }}", "sleeptimer2begin", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
+  textADPublish("Sleep Timer 2 End",mqttStatusTopic,"{{ value_json.sleeptimer2end }}", "sleeptimer2end", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
+
   textADPublish("Date Time",mqttStatusTopic,"{{ value_json.datetime }}", "datetime", spaName, spaSerialNumber, "config", "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
   
   //switchADPublish("Blower","",mqttState,"{{ value_json.blower }}","blower",spaName, spaSerialNumber);
@@ -796,6 +864,17 @@ void mqttPublishStatus() {
 
   json["status"]=si.getStatus();
   json["lightsspeed"]=si.getLSPDValue();
+
+  for (int count = 0; count < sizeof(si.sleepCodeMap); count++){
+    if (si.sleepCodeMap[count] == si.getL_1SNZ_DAY())
+      json["sleeptimer1state"]=si.sleepStringMap[count];
+    if (si.sleepCodeMap[count] == si.getL_2SNZ_DAY())
+      json["sleeptimer2state"]=si.sleepStringMap[count];
+  }
+  json["sleeptimer1begin"]=convertToTime(si.getL_1SNZ_BGN());
+  json["sleeptimer1end"]=convertToTime(si.getL_1SNZ_END());
+  json["sleeptimer2begin"]=convertToTime(si.getL_2SNZ_BGN());
+  json["sleeptimer2end"]=convertToTime(si.getL_2SNZ_END());
 
   String output = "";
   serializeJson(json,output);
