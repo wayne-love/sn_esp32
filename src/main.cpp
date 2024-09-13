@@ -132,178 +132,6 @@ void checkButton(){
   }
 }
 
-/*
-bool parseBool(String val){
-  val.toUpperCase();
-  if (val=="ON" || val=="TRUE" || val=="1") {
-    return true;
-  } else {
-    return false;
-  }
-}
-*/
-void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  String t = String(topic);
-
-  String p = "";
-  for (int x = 0; x < length; x++) {
-    p += char(*payload);
-    payload++;
-  }
-
-  debugD("MQTT subscribe received '%s' with payload '%s'",topic,p.c_str());
-
-  String property = t.substring(t.lastIndexOf("/")+1);
-
-  debugI("Received update for %s to %s",property.c_str(),p.c_str());
-
-  if (property == "temperature") {
-    si.setSTMP(int(p.toFloat()*10));
-  } else if (property == "heatpumpmode") {
-    si.setHPMP(p);
-  } else if (property == "pump1") {
-    si.setRB_TP_Pump1(p=="OFF"?0:1);
-  } else if (property == "pump2") {
-    si.setRB_TP_Pump2(p=="OFF"?0:1);
-  } else if (property == "pump3") { 
-    si.setRB_TP_Pump3(p=="OFF"?0:1);
-  } else if (property == "pump4") {
-    si.setRB_TP_Pump4(p=="OFF"?0:1);
-  } else if (property == "pump5") {
-    si.setRB_TP_Pump5(p=="OFF"?0:1);
-  } else if (property == "auxheat") {
-    si.setHELE(p=="OFF"?0:1);
-  } else if (property == "datetime") {
-    tmElements_t tm;
-    tm.Year=CalendarYrToTm(p.substring(0,4).toInt());
-    tm.Month=p.substring(5,7).toInt();
-    tm.Day=p.substring(8,10).toInt();
-    tm.Hour=p.substring(11,13).toInt();
-    tm.Minute=p.substring(14,16).toInt();
-    tm.Second=p.substring(17).toInt();
-    si.setSpaTime(makeTime(tm));
-  } else if (property == "lightsspeed") {
-    si.setLSPDValue(p);
-  } else if (property == "blower") {
-    si.setOutlet_Blower(p=="OFF"?2:0);
-  } else if (property == "blowerspeed") {
-    if (p=="0") si.setOutlet_Blower(2);
-    else si.setVARIValue(p.toInt());
-  } else if (property == "blowermode") {
-    si.setOutlet_Blower(p=="Variable"?0:1);
-  } else if (property == "lights") {
-    DynamicJsonDocument json(1024);
-    deserializeJson(json, p);
-    si.setRB_TP_Light(json["state"]=="ON"?1:0);
-    if (json.containsKey("effect")) {
-      const char *effect = json["effect"];
-      si.setColorMode(String(effect));
-    }
-    if (json.containsKey("brightness")) {
-      byte value = json["brightness"];
-      if (value == 255) {
-        value = 254;
-      }
-      value = (value / 51) + 1; // Map from 0 to 254 to 1 to 5
-      si.setLBRTValue(value);
-    }
-    if (json.containsKey("color")) {
-      int value = json["color"]["h"];
-      si.setCurrClr(si.colorMap[value/15]);
-    }
-
-
-
-  } else {
-    debugE("Unhandled property - %s",property.c_str());
-  }
-
-
-/*
-  int start = t.lastIndexOf("/", t.lastIndexOf("/") - 1) + 1; //get second last "/"
-  String item = t.substring(start, t.lastIndexOf("/"));
-
-  String p = "";
-  for (int x = 0; x < length; x++) {
-    p = p + char(*payload);
-    payload++;
-  }
-
-  debugI("Got update for %s - %s", item.c_str(), p.c_str());
-
-  String itemCopy = item;
-  itemCopy.remove(4,1);
-
-  if (itemCopy == "pump_operating_mode_text") {
-    debugI("pump mode update");
-    int pump = item.substring(4, 5).toInt();
-    snc.setPumpOperating(pump, p.c_str());
-   } else if (itemCopy == "pump_operating_mode") {
-    int pump = item.substring(4, 5).toInt();
-    snc.setPumpOperating(pump, p.toInt());
-  } else if (item == "lights") {
-    parseLightsJSON(p);
-  } else if (item == "heat_pump_mode") {
-    snc.setHeatPumpMode(SpaNetController::heat_pump_modes(p.toInt()));
-  } else if (item == "water_temp_set_point") {
-    snc.setWaterTempSetPoint(p.toFloat());
-  } else if (item == "resitive_heating") {
-    snc.setAuxHeatingEnabled(parseBool(p));
-  } else if (item == "heat_pump_mode_txt") {
-    if (p == "auto") {
-      snc.setHeatPumpMode(SpaNetController::heat_pump_modes(SpaNetController::automatic));
-    } else if (p == "heat") {
-      snc.setHeatPumpMode(SpaNetController::heat_pump_modes(SpaNetController::heat));
-    } else if (p == "cool") {
-      snc.setHeatPumpMode(SpaNetController::heat_pump_modes(SpaNetController::cool));
-    } else if (p == "off") {
-      snc.setHeatPumpMode(SpaNetController::heat_pump_modes(SpaNetController::off));
-    }
-  } */ 
-}
-
-
-/*
-void mqttPublishStatus(SpaNetController *s) {
-  char ON[] = "ON";
-  char OFF[] = "OFF";
-  char *resp;
-  
-  String tmpString;
-
-  // This gets called each time the spa does a successful poll
-  // it takes as a pearemeter a pointer to the calling instance.
-
-
-  mqttClient.publish((mqttBase + "lights/value").c_str(), buildLightsJSON().c_str());
-
-  
-  if (snc.isAuxHeatingEnabled()) {
-    resp = ON;
-  } else {
-    resp = OFF;
-  }
-
-  mqttClient.publish((mqttBase + "resitive_heating/value").c_str(), String(snc.isAuxHeatingEnabled()).c_str());
-  mqttClient.publish((mqttBase + "water_temp/value").c_str(), String(s->getWaterTemp()).c_str());
-  mqttClient.publish((mqttBase + "heating_active/value").c_str(), String(snc.isHeatingOn()).c_str());
-  mqttClient.publish((mqttBase + "uv_ozone_active/value").c_str(), String(snc.isUVOn()).c_str());
-  mqttClient.publish((mqttBase + "sanatise_running/value").c_str(), String(snc.isSanatiseRunning()).c_str());
-  mqttClient.publish((mqttBase + "status/value").c_str(), snc.getStatus());
-
-  mqttClient.publish((mqttBase + "total_energy/value").c_str(), String(s->getTotalEnergy()).c_str());
-  mqttClient.publish((mqttBase + "energy_today/value").c_str(), String(s->getEnergyToday()).c_str());
-  mqttClient.publish((mqttBase + "power_consumption/value").c_str(), String(s->getPower()).c_str());
-  
-
-  for (int x = 0; x < 5;x++) {
-    String pump = "pump" + String(x+1) + "_operating_mode";
-    int mode = snc.getPump(x)->getOperatingMode();
-    mqttClient.publish((mqttBase + pump + "/value").c_str(), String(mode).c_str());
-    mqttClient.publish((mqttBase + pump + "_text/value").c_str(), Pump::pump_modes[mode]);
-  }
-}
-*/
 
 #pragma region Auto Discovery
 
@@ -823,15 +651,12 @@ void mqttHaAutoDiscovery() {
   textADPublish("Date Time",mqttStatusTopic,"{{ value_json.datetime }}", "datetime", spaName, spaSerialNumber, "config", "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
 
   fanADPublish("Blower","blower",spaName, spaSerialNumber);
-  
-  //switchADPublish("Blower","",mqttState,"{{ value_json.blower }}","blower",spaName, spaSerialNumber);
-  //selectADPublish("Blower Mode", {"VariSpeed","Ramp"}, mqttState, "{{ value_json.blowermode }}", "blowermode", spaName, spaSerialNumber);
 
 }
 
 #pragma endregion
 
-#pragma region MQTT Publish
+#pragma region MQTT Publish / Subscribe
 
 void mqttPublishStatusString(String s){
 
@@ -919,6 +744,82 @@ void mqttPublishStatus() {
 
   mqttClient.publish(mqttLightsTopic.c_str(),output.c_str());
 }
+
+
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  String t = String(topic);
+
+  String p = "";
+  for (int x = 0; x < length; x++) {
+    p += char(*payload);
+    payload++;
+  }
+
+  debugD("MQTT subscribe received '%s' with payload '%s'",topic,p.c_str());
+
+  String property = t.substring(t.lastIndexOf("/")+1);
+
+  debugI("Received update for %s to %s",property.c_str(),p.c_str());
+
+  if (property == "temperature") {
+    si.setSTMP(int(p.toFloat()*10));
+  } else if (property == "heatpumpmode") {
+    si.setHPMP(p);
+  } else if (property == "pump1") {
+    si.setRB_TP_Pump1(p=="OFF"?0:1);
+  } else if (property == "pump2") {
+    si.setRB_TP_Pump2(p=="OFF"?0:1);
+  } else if (property == "pump3") { 
+    si.setRB_TP_Pump3(p=="OFF"?0:1);
+  } else if (property == "pump4") {
+    si.setRB_TP_Pump4(p=="OFF"?0:1);
+  } else if (property == "pump5") {
+    si.setRB_TP_Pump5(p=="OFF"?0:1);
+  } else if (property == "auxheat") {
+    si.setHELE(p=="OFF"?0:1);
+  } else if (property == "datetime") {
+    tmElements_t tm;
+    tm.Year=CalendarYrToTm(p.substring(0,4).toInt());
+    tm.Month=p.substring(5,7).toInt();
+    tm.Day=p.substring(8,10).toInt();
+    tm.Hour=p.substring(11,13).toInt();
+    tm.Minute=p.substring(14,16).toInt();
+    tm.Second=p.substring(17).toInt();
+    si.setSpaTime(makeTime(tm));
+  } else if (property == "lightsspeed") {
+    si.setLSPDValue(p);
+  } else if (property == "blower") {
+    si.setOutlet_Blower(p=="OFF"?2:0);
+  } else if (property == "blowerspeed") {
+    if (p=="0") si.setOutlet_Blower(2);
+    else si.setVARIValue(p.toInt());
+  } else if (property == "blowermode") {
+    si.setOutlet_Blower(p=="Variable"?0:1);
+  } else if (property == "lights") {
+    DynamicJsonDocument json(1024);
+    deserializeJson(json, p);
+    si.setRB_TP_Light(json["state"]=="ON"?1:0);
+    if (json.containsKey("effect")) {
+      const char *effect = json["effect"];
+      si.setColorMode(String(effect));
+    }
+    if (json.containsKey("brightness")) {
+      byte value = json["brightness"];
+      if (value == 255) {
+        value = 254;
+      }
+      value = (value / 51) + 1; // Map from 0 to 254 to 1 to 5
+      si.setLBRTValue(value);
+    }
+    if (json.containsKey("color")) {
+      int value = json["color"]["h"];
+      si.setCurrClr(si.colorMap[value/15]);
+    }
+  } else {
+    debugE("Unhandled property - %s",property.c_str());
+  }
+}
+
 
 #pragma endregion
 
