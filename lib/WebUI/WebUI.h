@@ -8,7 +8,7 @@
   #include <Update.h>
 #endif
 
-#include "SpaNetController.h"
+#include "SpaInterface.h"
 
 class WebUI {
     public:
@@ -20,20 +20,20 @@ class WebUI {
         
         char indexPage[1024] = "\0";
 
-        WebUI(SpaNetController *spa);
+        WebUI(SpaInterface *spa);
         void begin();
         bool initialised = false;
 
     private:
         char buffer[1024];
-        SpaNetController *_spa;
+        SpaInterface *_spa;
         const char *indexPageTemplate =
             "<!DOCTYPE html>"
             "<html>"
             "<meta http-equiv=\"refresh\" content=\"10\">"
             "<body>"
             "<h1>ESC32 Spa Controller</h1>"
-            "<p>Spa temperature is - %f</p>"
+            "<p>Spa temperature is - %.1f</p>"
             "<p>Spa status is - %s</p>"
             "</body>"
             "</html>";
