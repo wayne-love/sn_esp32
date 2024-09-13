@@ -184,6 +184,13 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     si.setSpaTime(makeTime(tm));
   } else if (property == "lightsspeed") {
     si.setLSPDValue(p);
+  } else if (property == "blower") {
+    si.setOutlet_Blower(p=="OFF"?2:0);
+  } else if (property == "blowerspeed") {
+    if (p=="0") si.setOutlet_Blower(2);
+    else si.setVARIValue(p.toInt());
+  } else if (property == "blowermode") {
+    si.setOutlet_Blower(p=="Variable"?0:1);
   } else if (property == "lights") {
     DynamicJsonDocument json(1024);
     deserializeJson(json, p);
@@ -473,6 +480,85 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
 
 }
 
+/// @brief Publish a fan control via MQTT auto discovery
+/// @param name Sensor name
+/// @param stateTopic Mqtt topic to read state information from.
+/// @param propertId Unique ID of the property
+/// @param deviceName Spa name eg MySpa
+/// @param deviceIdentifier Spa serial number eg 123456-789012
+void fanADPublish(String name, String propertyId, String deviceName, String deviceIdentifier ) {
+
+/*
+# Example using percentage based speeds with preset modes configuration.yaml
+mqtt:
+  - fan:
+      name: "Bedroom Fan"
+      state_topic: "bedroom_fan/on/state"
+      command_topic: "bedroom_fan/on/set"
+      direction_state_topic: "bedroom_fan/direction/state"
+      direction_command_topic: "bedroom_fan/direction/set"
+      oscillation_state_topic: "bedroom_fan/oscillation/state"
+      oscillation_command_topic: "bedroom_fan/oscillation/set"
+      percentage_state_topic: "bedroom_fan/speed/percentage_state"
+      percentage_command_topic: "bedroom_fan/speed/percentage"
+      preset_mode_state_topic: "bedroom_fan/preset/preset_mode_state"
+      preset_mode_command_topic: "bedroom_fan/preset/preset_mode"
+      preset_modes:
+        -  "auto"
+        -  "smart"
+        -  "whoosh"
+        -  "eco"
+        -  "breeze"
+      qos: 0
+      payload_on: "true"
+      payload_off: "false"
+      payload_oscillation_on: "true"
+      payload_oscillation_off: "false"
+      speed_range_min: 1
+      speed_range_max: 10
+*/
+
+  StaticJsonDocument<1024> json;
+  String uniqueID = spaSerialNumber + "-" + propertyId;
+
+  if (name != "") { json["name"]=name; }
+  JsonObject device = json.createNestedObject("device");
+  device["name"] = deviceName;
+  JsonArray identifiers = device.createNestedArray("identifiers");
+  identifiers.add(deviceIdentifier);
+
+
+  json["state_topic"] = mqttStatusTopic;
+  json["state_value_template"] = "{{ value_json."+propertyId+" }}";
+
+  json["command_topic"] = mqttSet + "/" + propertyId;
+  
+  json["percentage_state_topic"] = mqttStatusTopic;
+  json["percentage_command_topic"] = mqttSet + "/" + propertyId + "speed";
+  json["percentage_value_template"] = "{{ value_json."+ propertyId + "speed }}";
+  
+  json["preset_mode_state_topic"] = mqttStatusTopic;
+  json["preset_mode_command_topic"] = mqttSet + "/" + propertyId + "mode";
+  json["preset_mode_value_template"] = "{{ value_json."+ propertyId + "mode }}";
+  
+  JsonArray modes = json.createNestedArray("preset_modes");
+  modes.add("Variable");
+  modes.add("Ramp");
+  json["speed_range_min"]=1;
+  json["speed_range_max"]=5;
+
+  json["unique_id"] = uniqueID;
+
+  JsonObject availability = json.createNestedObject("availability");
+  availability["topic"] =mqttAvailability;
+
+  String discoveryTopic = "homeassistant/fan/"+ spaSerialNumber + "/" + uniqueID + "/config";
+  String output = "";
+  serializeJson(json,output);
+  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
+}
+
+
 
 /// @brief Publish a swtich by MQTT auto discovery
 /// @param name Name to display
@@ -735,6 +821,8 @@ void mqttHaAutoDiscovery() {
   selectADPublish("Lights Speed",{"1","2","3","4","5"},mqttStatusTopic,"{{ value_json.lightsspeed }}","lightsspeed",spaName, spaSerialNumber);
 
   textADPublish("Date Time",mqttStatusTopic,"{{ value_json.datetime }}", "datetime", spaName, spaSerialNumber, "config", "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
+
+  fanADPublish("Blower","blower",spaName, spaSerialNumber);
   
   //switchADPublish("Blower","",mqttState,"{{ value_json.blower }}","blower",spaName, spaSerialNumber);
   //selectADPublish("Blower Mode", {"VariSpeed","Ramp"}, mqttState, "{{ value_json.blowermode }}", "blowermode", spaName, spaSerialNumber);
@@ -790,12 +878,14 @@ void mqttPublishStatus() {
 
   json["datetime"]=y+"-"+m+"-"+d+" "+h+":"+min+":"+s;
 
-// TODO : need to return blower vlaue
-
   json["auxheat"]=si.getHELE()==0? "OFF" : "ON";
 
   json["status"]=si.getStatus();
   json["lightsspeed"]=si.getLSPDValue();
+
+  json["blower"] = si.getOutlet_Blower()==2? "OFF" : "ON";
+  json["blowermode"] = si.getOutlet_Blower()==1? "Ramp" : "Variable";
+  json["blowerspeed"] = si.getOutlet_Blower() ==2? "0" : String(si.getVARIValue());
 
   String output = "";
   serializeJson(json,output);

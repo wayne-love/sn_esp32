@@ -193,6 +193,17 @@ class SpaInterface : public SpaProperties {
         /// @param t Time
         /// @return True if successful
         bool setSpaTime(time_t t);
+
+        /// @brief Controls the air blower
+        /// @param mode 0 = Varible, 1 = Ramp, 2 = Off
+        /// @return True if successful
+        bool setOutlet_Blower(int mode);
+
+        /// @brief Set the speed of the air blower
+        /// @param mode 1 = low, 5 = high
+        /// @return True if successful
+        bool setVARIValue(int mode);
+
 };
 
 

@@ -286,6 +286,32 @@ bool SpaInterface::setSpaTime(time_t t){
 
 }
 
+bool SpaInterface::setOutlet_Blower(int mode){
+    debugD("setOuput-Blower - %i", mode);
+
+    String smode = String(mode);
+
+    if (sendCommandCheckResult("S28:"+smode,"S28-OK")) {
+        update_Outlet_Blower(smode);
+        return true;
+    }
+    return false;
+}
+
+bool SpaInterface::setVARIValue(int mode){
+    debugD("setVARIValue - %i", mode);
+    if (mode > 0 && mode < 6) {
+        String smode = String(mode);
+
+        if (sendCommandCheckResult("S13:"+smode,smode+"  S13")) {
+            update_VARIValue(smode);
+            return true;
+        }
+    }
+    return false;
+}
+
+
 bool SpaInterface::readStatus() {
 
     // We could just do a port.readString but this will always impose a
