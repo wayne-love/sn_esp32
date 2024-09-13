@@ -337,6 +337,9 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
 //  json["mode_state_template"]="{{ value_json.heatermode }}";
   json["mode_state_template"]="auto";
   json["mode_state_topic"]=mqttStatusTopic;
+
+  json["action_topic"]=mqttStatusTopic;
+  json["action_template"]="{% if value_json.heatingactive == 'ON' %}heating{% else %}off{% endif %}";
   
   json["temperature_command_topic"]=mqttSet+"/temperature";
   json["temperature_state_template"]="{{ value_json.temperaturesetpoint }}";
