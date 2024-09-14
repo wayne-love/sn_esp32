@@ -364,6 +364,28 @@ bool SpaInterface::setVARIValue(int mode){
     return false;
 }
 
+bool SpaInterface::setMode(int mode){
+    debugD("setMode - %i", mode);
+
+    String smode = String(mode);
+
+    if (sendCommandCheckResult("W66:"+smode,smode)) {
+        update_Mode(spaModeStrings[mode]);
+        return true;
+    }
+    return false;
+}
+
+bool SpaInterface::setMode(String mode){
+    debugD("setMode - %s", mode.c_str());
+    for (int x=0; x<spaModeStrings.size(); x++) {
+        if (spaModeStrings[x] == mode) {
+            return setMode(x);
+        }
+    }
+    return false;
+}
+
 
 bool SpaInterface::readStatus() {
 

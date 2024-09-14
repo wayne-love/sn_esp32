@@ -226,7 +226,11 @@ class SpaInterface : public SpaProperties {
         /// @return True if successful
         bool setVARIValue(int mode);
 
+        /// @brief Set Spa mode (0 --> 4, {"NORM","ECON","AWAY","WEEK"};)
+        /// @param mode
+        /// @return Returns True if succesful
+        bool setMode(int mode);
+        bool setMode(String mode);
 };
-
 
 #endif

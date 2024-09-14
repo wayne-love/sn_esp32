@@ -714,6 +714,9 @@ void mqttHaAutoDiscovery() {
 
   fanADPublish("Blower","blower",spaName, spaSerialNumber);
 
+  std::vector<String> spaModeStrings(std::begin(si.spaModeStrings), std::end(si.spaModeStrings));
+  selectADPublish("Spa Mode", spaModeStrings, mqttStatusTopic, "{{ value_json.spamode }}", "spamode", spaName, spaSerialNumber);
+
 }
 
 #pragma endregion
@@ -784,6 +787,8 @@ void mqttPublishStatus() {
   json["sleeptimer1end"]=convertToTime(si.getL_1SNZ_END());
   json["sleeptimer2begin"]=convertToTime(si.getL_2SNZ_BGN());
   json["sleeptimer2end"]=convertToTime(si.getL_2SNZ_END());
+
+  json["spamode"]=si.getMode();
 
   String output = "";
   serializeJson(json,output);
@@ -904,6 +909,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     si.setL_2SNZ_BGN(convertToInteger(p));
   } else if (property == "sleeptimer2end") {
     si.setL_2SNZ_END(convertToInteger(p));
+  } else if (property == "spamode") {
+    si.setMode(p);
   } else {
     debugE("Unhandled property - %s",property.c_str());
   }

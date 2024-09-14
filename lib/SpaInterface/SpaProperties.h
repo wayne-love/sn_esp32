@@ -1025,6 +1025,7 @@ public:
 
     String getMode() { return Mode.getValue(); }
     void setModeCallback(void (*callback)(String)) { Mode.setCallback(callback); }
+    const std::array <String, 4> spaModeStrings = {"NORM","ECON", "AWAY","WEEK"};
 
     int getSer1_Timer() { return Ser1_Timer.getValue(); }
     void setSer1_TimerCallback(void (*callback)(int)) { Ser1_Timer.setCallback(callback); }
