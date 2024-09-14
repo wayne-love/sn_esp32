@@ -1025,6 +1025,7 @@ public:
 
     String getMode() { return Mode.getValue(); }
     void setModeCallback(void (*callback)(String)) { Mode.setCallback(callback); }
+    const std::array <String, 4> spaModeStrings = {"NORM","ECON", "AWAY","WEEK"};
 
     int getSer1_Timer() { return Ser1_Timer.getValue(); }
     void setSer1_TimerCallback(void (*callback)(int)) { Ser1_Timer.setCallback(callback); }
@@ -1199,6 +1200,8 @@ public:
 
     int getL_1SNZ_DAY() { return L_1SNZ_DAY.getValue(); }
     void setL_1SNZ_DAYCallback(void (*callback)(int)) { L_1SNZ_DAY.setCallback(callback); }
+    const std::array <byte, 11> sleepCodeMap = {128,127,96,31,16,8,4,2,1,64,32};
+    const std::array <String, 11> sleepStringMap = {"Off","Everyday","Weekends","Weekdays","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"};
 
     int getL_2SNZ_DAY() { return L_2SNZ_DAY.getValue(); }
     void setL_2SNZ_DAYCallback(void (*callback)(int)) { L_2SNZ_DAY.setCallback(callback); }

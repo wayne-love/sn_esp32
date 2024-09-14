@@ -32,7 +32,7 @@ class WebUI {
             "<html>"
             "<meta http-equiv=\"refresh\" content=\"10\">"
             "<body>"
-            "<h1>ESC32 Spa Controller</h1>"
+            "<h1>ESP32 Spa Controller</h1>"
             "<p>Spa temperature is - %.1f</p>"
             "<p>Spa status is - %s</p>"
             "</body>"
