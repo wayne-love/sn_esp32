@@ -922,7 +922,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 void setup() {
   pinMode(TRIGGER_PIN, INPUT_PULLUP);
 
-#if defined(ESP32)
+#if !defined(ESP8266)
   Serial.begin(115200);
   Serial.setDebugOutput(true);
 #endif
@@ -935,7 +935,7 @@ void setup() {
   Debug.begin(WiFi.getHostname());
   Debug.setResetCmdEnabled(true);
   Debug.showProfiler(true);
-#if defined(ESP32)
+#if !defined(ESP8266)
   Debug.setSerialEnabled(true);
 #endif
 

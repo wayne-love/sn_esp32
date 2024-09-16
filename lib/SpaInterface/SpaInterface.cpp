@@ -439,7 +439,7 @@ bool SpaInterface::readStatus() {
                 }
                 else if (statusResponseRaw[field] == "SVM2") {
                     debugI("SVM2 variant detected");
-                    statusResponseExpectedFields = statusResponseCount_SV3;
+                    statusResponseExpectedFields = statusResponseCount_SVM2;
                     
                 }
                 else {

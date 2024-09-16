@@ -6,7 +6,6 @@
 #include <functional>
 #include <stdexcept>
 #include "SpaProperties.h"
-#include <RemoteDebug.h>
 
 
 #define UPDATEFREQUENCY 60000 //(ms) Frequency to poll controller when idle.
