@@ -161,7 +161,7 @@ void checkButton(){
         mqttPassword = String(custom_mqtt_password.getValue());
 
         debugI("Updating config file");
-        DynamicJsonDocument json(1024);
+        JsonDocument json;
         json["mqtt_server"] = mqttServer;
         json["mqtt_port"] = mqttPort;
         json["mqtt_password"] = mqttPassword;
@@ -213,7 +213,7 @@ void sensorADPublish(String name, String entityCategory, String deviceClass, Str
 }"
 */
 
-  StaticJsonDocument<512> json;
+  JsonDocument json;
   String uniqueID = spaSerialNumber + "-" + propertyId;
 
   json["name"]=name;
@@ -224,12 +224,12 @@ void sensorADPublish(String name, String entityCategory, String deviceClass, Str
   json["value_template"] = valueTemplate;
   if (stateClass != "") { json["state_class"] = stateClass; }
   json["unique_id"] = uniqueID;
-  JsonObject device = json.createNestedObject("device");
+  JsonObject device = json["device"].to<JsonObject>();
   device["name"] = deviceName;
-  JsonArray identifiers = device.createNestedArray("identifiers");
+  JsonArray identifiers = device["identifiers"].to<JsonArray>();
   identifiers.add(deviceIdentifier);
 
-  JsonObject availability = json.createNestedObject("availability");
+  JsonObject availability = json["availability"].to<JsonObject>();
   availability["topic"] =mqttAvailability;
 
   // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
@@ -264,7 +264,7 @@ void binarySensorADPublish (String name, String deviceClass, String stateTopic, 
   }
 }*/
 
-  StaticJsonDocument<512> json;
+  JsonDocument json;
   String uniqueID = spaSerialNumber + "-" + propertyId;
 
   if (deviceClass != "") { json["device_class"] = deviceClass; }
@@ -272,12 +272,12 @@ void binarySensorADPublish (String name, String deviceClass, String stateTopic, 
   json["state_topic"] = stateTopic;
   json["value_template"] = valueTemplate;
   json["unique_id"] = uniqueID;
-  JsonObject device = json.createNestedObject("device");
+  JsonObject device = json["device"].to<JsonObject>();
   device["name"] = deviceName;
-  JsonArray identifiers = device.createNestedArray("identifiers");
+  JsonArray identifiers = device["identifiers"].to<JsonArray>();
   identifiers.add(deviceIdentifier);
 
-  JsonObject availability = json.createNestedObject("availability");
+  JsonObject availability = json["availability"].to<JsonObject>();
   availability["topic"] =mqttAvailability;
 
   // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
@@ -311,7 +311,7 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
 }"
 */
 
-  StaticJsonDocument<1024> json;
+  JsonDocument json;
   String uniqueID = spaSerialNumber + "-" + propertyId;
 
   if (name != "") { json["name"]=name; }
@@ -319,15 +319,15 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
   json["current_temperature_topic"]=mqttStatusTopic;;
   json["current_temperature_template"]="{{ value_json.watertemperature }}";
 
-  JsonObject device = json.createNestedObject("device");
+  JsonObject device = json["device"].to<JsonObject>();
   device["name"] = deviceName;
-  JsonArray identifiers = device.createNestedArray("identifiers");
+  JsonArray identifiers = device["identifiers"].to<JsonArray>();
   identifiers.add(deviceIdentifier);
 
   json["initial"]=36;
   json["max_temp"]=41;
   json["min_temp"]=10;
-  JsonArray modes = json.createNestedArray("modes");
+  JsonArray modes = json["modes"].to<JsonArray>();
   modes.add("auto");
 //  modes.add("heat");
 //  modes.add("cool");
@@ -348,7 +348,7 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
 
   json["unique_id"] = uniqueID;
 
-  JsonObject availability = json.createNestedObject("availability");
+  JsonObject availability = json["availability"].to<JsonObject>();
   availability["topic"] =mqttAvailability;
 
   // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
@@ -397,13 +397,13 @@ mqtt:
       speed_range_max: 10
 */
 
-  StaticJsonDocument<1024> json;
+  JsonDocument json;
   String uniqueID = spaSerialNumber + "-" + propertyId;
 
   if (name != "") { json["name"]=name; }
-  JsonObject device = json.createNestedObject("device");
+  JsonObject device = json["device"].to<JsonObject>();
   device["name"] = deviceName;
-  JsonArray identifiers = device.createNestedArray("identifiers");
+  JsonArray identifiers = device["identifiers"].to<JsonArray>();
   identifiers.add(deviceIdentifier);
 
 
@@ -420,7 +420,7 @@ mqtt:
   json["preset_mode_command_topic"] = mqttSet + "/" + propertyId + "mode";
   json["preset_mode_value_template"] = "{{ value_json."+ propertyId + "mode }}";
   
-  JsonArray modes = json.createNestedArray("preset_modes");
+  JsonArray modes = json["preset_modes"].to<JsonArray>();
   modes.add("Variable");
   modes.add("Ramp");
   json["speed_range_min"]=1;
@@ -428,7 +428,7 @@ mqtt:
 
   json["unique_id"] = uniqueID;
 
-  JsonObject availability = json.createNestedObject("availability");
+  JsonObject availability = json["availability"].to<JsonObject>();
   availability["topic"] =mqttAvailability;
 
   String discoveryTopic = "homeassistant/fan/"+ spaSerialNumber + "/" + uniqueID + "/config";
@@ -462,7 +462,7 @@ void switchADPublish (String name, String deviceClass, String stateTopic, String
    }
 }*/
 
-  StaticJsonDocument<512> json;
+  JsonDocument json;
 
   if (deviceClass != "") { json["device_class"] = deviceClass; }
   json["name"]=name;
@@ -470,12 +470,12 @@ void switchADPublish (String name, String deviceClass, String stateTopic, String
   json["value_template"] = valueTemplate;
   json["command_topic"] = mqttSet + "/" + propertyId;
   json["unique_id"] = spaSerialNumber + "-" + propertyId;
-  JsonObject device = json.createNestedObject("device");
+  JsonObject device = json["device"].to<JsonObject>();
   device["name"] = deviceName;
-  JsonArray identifiers = device.createNestedArray("identifiers");
+  JsonArray identifiers = device["identifiers"].to<JsonArray>();
   identifiers.add(deviceIdentifier);
 
-  JsonObject availability = json.createNestedObject("availability");
+  JsonObject availability = json["availability"].to<JsonObject>();
   availability["topic"] =mqttAvailability;
 
   // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
@@ -510,7 +510,7 @@ void selectADPublish (String name, std::vector<String> options, String stateTopi
    }
 }*/
 
-  StaticJsonDocument<1024> json;
+  JsonDocument json;
 
   if (category != "") json["entity_category"] = category;
   json["name"]=name;
@@ -518,15 +518,15 @@ void selectADPublish (String name, std::vector<String> options, String stateTopi
   json["value_template"] = valueTemplate;
   json["command_topic"] = mqttSet + "/" + propertyId;
   json["unique_id"] = spaSerialNumber + "-" + propertyId;
-  JsonObject device = json.createNestedObject("device");
+  JsonObject device = json["device"].to<JsonObject>();
   device["name"] = deviceName;
-  JsonArray identifiers = device.createNestedArray("identifiers");
+  JsonArray identifiers = device["identifiers"].to<JsonArray>();
   identifiers.add(deviceIdentifier);
 
-  JsonObject availability = json.createNestedObject("availability");
+  JsonObject availability = json["availability"].to<JsonObject>();
   availability["topic"] =mqttAvailability;
 
-  JsonArray opts = json.createNestedArray("options");
+  JsonArray opts = json["options"].to<JsonArray>();
   for (auto o : options) opts.add(o);
   
   // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
@@ -567,16 +567,16 @@ void textADPublish (String name, String stateTopic, String valueTemplate, String
   "unique_id": "21110001-20000337-datetime",
   "value_template": "{{ value_json.datetime }}"
 }*/
-  StaticJsonDocument<512> json;
+  JsonDocument json;
 
-  JsonObject availability = json.createNestedObject("availability");
+  JsonObject availability = json["availability"].to<JsonObject>();
   availability["topic"] =mqttAvailability;
 
   json["command_topic"] = mqttSet + "/" + propertyId;
 
-  JsonObject device = json.createNestedObject("device");
+  JsonObject device = json["device"].to<JsonObject>();
   device["name"] = deviceName;
-  JsonArray identifiers = device.createNestedArray("identifiers");
+  JsonArray identifiers = device["identifiers"].to<JsonArray>();
   identifiers.add(deviceIdentifier);
 
   if (category != "") json["entity_category"] = category;
@@ -622,7 +622,7 @@ void lightADPublish (String name, String deviceClass, String stateTopic, String 
    }
 }*/
 
-  StaticJsonDocument<1024> json;
+  JsonDocument json;
 
   if (deviceClass != "") { json["device_class"] = deviceClass; }
   json["name"]=name;
@@ -653,20 +653,20 @@ void lightADPublish (String name, String deviceClass, String stateTopic, String 
   json["color_mode_value_template"] = valueTemplate.substring(0, lastIndex + 1) + ".color_mode" + valueTemplate.substring(lastIndex + 1);
 
   json["unique_id"] = spaSerialNumber + "-" + propertyId;
-  JsonObject device = json.createNestedObject("device");
+  JsonObject device = json["device"].to<JsonObject>();
   device["name"] = deviceName;
-  JsonArray identifiers = device.createNestedArray("identifiers");
+  JsonArray identifiers = device["identifiers"].to<JsonArray>();
   identifiers.add(deviceIdentifier);
 
-  JsonObject availability = json.createNestedObject("availability");
+  JsonObject availability = json["availability"].to<JsonObject>();
   availability["topic"] =mqttAvailability;
 
   json["brightness"] = true;
   json["brightness_scale"]=5;
   json["effect"] = true;
-  JsonArray effect_list = json.createNestedArray("effect_list");
+  JsonArray effect_list = json["effect_list"].to<JsonArray>();
   for (auto effect: si.colorModeStrings) effect_list.add(effect);
-  JsonArray color_modes = json.createNestedArray("supported_color_modes");
+  JsonArray color_modes = json["supported_color_modes"].to<JsonArray>();
   color_modes.add("hs");
 
   // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
@@ -753,7 +753,7 @@ void mqttPublishStatusString(String s){
 
 bool generateStatusJson(String &output) {
 
-  StaticJsonDocument<1024> json;
+  JsonDocument json;
 
   json["watertemperature"] = String(si.getWTMP() / 10) + "." + String(si.getWTMP() % 10); //avoids stupid rounding errors
   json["heatertemperature"] = String(si.getHeaterTemperature() / 10) + "." + String(si.getHeaterTemperature() % 10); //avoids stupid rounding errors
@@ -974,7 +974,7 @@ void setup() {
     std::unique_ptr<char[]> buf(new char[size]);
     configFile.readBytes(buf.get(), size);
 
-    DynamicJsonDocument json(1024);
+    JsonDocument json;
     auto deserializeError = deserializeJson(json, buf.get());
     serializeJson(json, Serial);
     if ( ! deserializeError ) {
