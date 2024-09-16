@@ -68,7 +68,6 @@ String mqttBase = "";
 String mqttStatusTopic = "";
 String mqttSet = "";
 String mqttAvailability = "";
-String mqttLightsTopic = "";
 
 String spaSerialNumber = "";
 
@@ -627,10 +626,32 @@ void lightADPublish (String name, String deviceClass, String stateTopic, String 
 
   if (deviceClass != "") { json["device_class"] = deviceClass; }
   json["name"]=name;
-  json["schema"] = "json";
+  //json["schema"] = "json";
   json["state_topic"] = stateTopic;
-  json["state_value_template"] = valueTemplate;
-  json["command_topic"] = mqttSet + "/" + propertyId;
+  json["brightness_state_topic"] = stateTopic;
+  json["color_mode_state_topic"] = stateTopic;
+  json["effect_state_topic"] = stateTopic;
+  json["hs_state_topic"] = stateTopic;
+
+  json["command_topic"] = mqttSet + "/" + propertyId + "_state";
+  json["brightness_command_topic"] = mqttSet + "/" + propertyId + "_brightness";
+  json["effect_command_topic"] = mqttSet + "/" + propertyId + "_effect";
+  json["hs_command_topic"] = mqttSet + "/" + propertyId + "_color";
+
+  // Find the last character that is not a space or curly brace
+  int lastIndex = valueTemplate.length() - 1;
+  while (lastIndex >= 0 && (valueTemplate[lastIndex] == ' ' || valueTemplate[lastIndex] == '}')) {
+    lastIndex--;
+  }
+
+  // Value templates to extract values from the same topic
+  json["state_value_template"] = valueTemplate.substring(0, lastIndex + 1) + ".state" + valueTemplate.substring(lastIndex + 1);
+  json["brightness_value_template"] = valueTemplate.substring(0, lastIndex + 1) + ".brightness" + valueTemplate.substring(lastIndex + 1);
+  json["effect_value_template"] = valueTemplate.substring(0, lastIndex + 1) + ".effect" + valueTemplate.substring(lastIndex + 1);
+  json["hs_value_template"] = valueTemplate.substring(0, lastIndex + 1) + ".color.h" + valueTemplate.substring(lastIndex + 1) + ","
+                            + valueTemplate.substring(0, lastIndex + 1) + ".color.s" + valueTemplate.substring(lastIndex + 1);
+  json["color_mode_value_template"] = valueTemplate.substring(0, lastIndex + 1) + ".color_mode" + valueTemplate.substring(lastIndex + 1);
+
   json["unique_id"] = spaSerialNumber + "-" + propertyId;
   JsonObject device = json.createNestedObject("device");
   device["name"] = deviceName;
@@ -641,6 +662,7 @@ void lightADPublish (String name, String deviceClass, String stateTopic, String 
   availability["topic"] =mqttAvailability;
 
   json["brightness"] = true;
+  json["brightness_scale"]=5;
   json["effect"] = true;
   JsonArray effect_list = json.createNestedArray("effect_list");
   for (auto effect: si.colorModeStrings) effect_list.add(effect);
@@ -699,23 +721,23 @@ void mqttHaAutoDiscovery() {
   }   
 
   switchADPublish("Aux Heat Element","",mqttStatusTopic,"{{ value_json.auxheat }}","auxheat",spaName,spaSerialNumber);
-  lightADPublish("Lights","",mqttLightsTopic,"","lights",spaName,spaSerialNumber);
-  selectADPublish("Lights Speed",{"1","2","3","4","5"},mqttStatusTopic,"{{ value_json.lightsspeed }}","lightsspeed",spaName, spaSerialNumber);
+  lightADPublish("Lights","",mqttStatusTopic,"{{ value_json.lights }}","lights",spaName,spaSerialNumber);
+  selectADPublish("Lights Speed",{"1","2","3","4","5"},mqttStatusTopic,"{{ value_json.lights.speed }}","lights_speed",spaName, spaSerialNumber);
 
   std::vector<String> sleepStrings(std::begin(si.sleepStringMap), std::end(si.sleepStringMap));
-  selectADPublish("Sleep Timer 1", sleepStrings, mqttStatusTopic, "{{ value_json.sleeptimer1state }}", "sleeptimer1state", spaName, spaSerialNumber, "config");
-  selectADPublish("Sleep Timer 2", sleepStrings, mqttStatusTopic, "{{ value_json.sleeptimer2state }}", "sleeptimer2state", spaName, spaSerialNumber, "config");
-  textADPublish("Sleep Timer 1 Begin",mqttStatusTopic,"{{ value_json.sleeptimer1begin }}", "sleeptimer1begin", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
-  textADPublish("Sleep Timer 1 End",mqttStatusTopic,"{{ value_json.sleeptimer1end }}", "sleeptimer1end", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
-  textADPublish("Sleep Timer 2 Begin",mqttStatusTopic,"{{ value_json.sleeptimer2begin }}", "sleeptimer2begin", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
-  textADPublish("Sleep Timer 2 End",mqttStatusTopic,"{{ value_json.sleeptimer2end }}", "sleeptimer2end", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
+  selectADPublish("Sleep Timer 1",sleepStrings,mqttStatusTopic,"{{ value_json.sleepTimers.one.state }}", "sleepTimers_1_state", spaName, spaSerialNumber, "config");
+  selectADPublish("Sleep Timer 2",sleepStrings,mqttStatusTopic,"{{ value_json.sleepTimers.two.state }}", "sleepTimers_2_state", spaName, spaSerialNumber, "config");
+  textADPublish("Sleep Timer 1 Begin",mqttStatusTopic,"{{ value_json.sleepTimers.one.begin }}", "sleepTimers_1_begin", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
+  textADPublish("Sleep Timer 1 End",mqttStatusTopic,"{{ value_json.sleepTimers.one.end }}", "sleepTimers_1_end", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
+  textADPublish("Sleep Timer 2 Begin",mqttStatusTopic,"{{ value_json.sleepTimers.two.begin }}", "sleepTimers_2_begin", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
+  textADPublish("Sleep Timer 2 End",mqttStatusTopic,"{{ value_json.sleepTimers.two.end }}", "sleepTimers_2_end", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
 
   textADPublish("Date Time",mqttStatusTopic,"{{ value_json.datetime }}", "datetime", spaName, spaSerialNumber, "config", "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
 
   fanADPublish("Blower","blower",spaName, spaSerialNumber);
 
   std::vector<String> spaModeStrings(std::begin(si.spaModeStrings), std::end(si.spaModeStrings));
-  selectADPublish("Spa Mode", spaModeStrings, mqttStatusTopic, "{{ value_json.spamode }}", "spamode", spaName, spaSerialNumber);
+  selectADPublish("Spa Mode", spaModeStrings, mqttStatusTopic, "{{ value_json.info.spaMode }}", "info_spaMode", spaName, spaSerialNumber);
 
 }
 
@@ -729,7 +751,7 @@ void mqttPublishStatusString(String s){
 
 }
 
-void mqttPublishStatus() {
+bool generateStatusJson(String &output) {
 
   StaticJsonDocument<1024> json;
 
@@ -771,7 +793,6 @@ void mqttPublishStatus() {
   json["auxheat"]=si.getHELE()==0? "OFF" : "ON";
 
   json["status"]=si.getStatus();
-  json["lightsspeed"]=si.getLSPDValue();
 
   json["blower"] = si.getOutlet_Blower()==2? "OFF" : "ON";
   json["blowermode"] = si.getOutlet_Blower()==1? "Ramp" : "Variable";
@@ -779,32 +800,26 @@ void mqttPublishStatus() {
 
   for (int count = 0; count < sizeof(si.sleepCodeMap); count++){
     if (si.sleepCodeMap[count] == si.getL_1SNZ_DAY())
-      json["sleeptimer1state"]=si.sleepStringMap[count];
+      json["sleepTimers"]["one"]["state"]=si.sleepStringMap[count];
     if (si.sleepCodeMap[count] == si.getL_2SNZ_DAY())
-      json["sleeptimer2state"]=si.sleepStringMap[count];
+      json["sleepTimers"]["two"]["state"]=si.sleepStringMap[count];
   }
-  json["sleeptimer1begin"]=convertToTime(si.getL_1SNZ_BGN());
-  json["sleeptimer1end"]=convertToTime(si.getL_1SNZ_END());
-  json["sleeptimer2begin"]=convertToTime(si.getL_2SNZ_BGN());
-  json["sleeptimer2end"]=convertToTime(si.getL_2SNZ_END());
+  json["sleepTimers"]["one"]["begin"]=convertToTime(si.getL_1SNZ_BGN());
+  json["sleepTimers"]["one"]["end"]=convertToTime(si.getL_1SNZ_END());
+  json["sleepTimers"]["two"]["begin"]=convertToTime(si.getL_2SNZ_BGN());
+  json["sleepTimers"]["two"]["end"]=convertToTime(si.getL_2SNZ_END());
 
-  json["spamode"]=si.getMode();
+  json["info"]["spaMode"]=si.getMode();
 
-  String output = "";
-  serializeJson(json,output);
-
-  mqttClient.publish(mqttStatusTopic.c_str(),output.c_str());
-
-  json.clear();
-  json["state"]=si.getRB_TP_Light()? "ON": "OFF";
-
-  json["effect"] = si.colorModeStrings[si.getColorMode()];
-  json["brightness"] = int(si.getLBRTValue() * 51);
+  json["lights"]["speed"]=si.getLSPDValue();
+  json["lights"]["state"]=si.getRB_TP_Light()? "ON": "OFF";
+  json["lights"]["effect"] = si.colorModeStrings[si.getColorMode()];
+  json["lights"]["brightness"] = si.getLBRTValue();
 
   // 0 = white, if white, then set the hue and saturation to white so the light displays correctly in HA.
   if (si.getColorMode() == 0) {
-    json["color"]["h"] = 0;
-    json["color"]["s"] = 0;
+    json["lights"]["color"]["h"] = 0;
+    json["lights"]["color"]["s"] = 0;
   } else {
     int hue = 4;
     for (int count = 0; count < sizeof(si.colorMap); count++){
@@ -812,15 +827,25 @@ void mqttPublishStatus() {
         hue = count * 15;
       }
     }
-    json["color"]["h"] = hue;
-    json["color"]["s"] = 100;
+    json["lights"]["color"]["h"] = hue;
+    json["lights"]["color"]["s"] = 100;
   }
-  json["color_mode"] = "hs";
+  json["lights"]["color_mode"] = "hs";
 
-  output = "";
-  serializeJson(json,output);
+  if (serializeJson(json, output) == 0) {
+    // Serialization failed
+    return false;
+  }
+  return true;
+}
 
-  mqttClient.publish(mqttLightsTopic.c_str(),output.c_str());
+void mqttPublishStatus() {
+  String json;
+  if (generateStatusJson(json)) {
+    mqttClient.publish(mqttStatusTopic.c_str(),json.c_str());
+  } else {
+    debugD("Error generating json");
+  }
 }
 
 
@@ -864,7 +889,19 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     tm.Minute=p.substring(14,16).toInt();
     tm.Second=p.substring(17).toInt();
     si.setSpaTime(makeTime(tm));
-  } else if (property == "lightsspeed") {
+  } else if (property == "lights_state") {
+    si.setRB_TP_Light(p=="ON"?1:0);
+  } else if (property == "lights_effect") {
+    si.setColorMode(p);
+  } else if (property == "lights_brightness") {
+    si.setLBRTValue(p.toInt());
+  } else if (property == "lights_color") {
+    int pos = p.indexOf(',');
+    if ( pos > 0) {
+      int value = p.substring(0, pos).toInt();
+      si.setCurrClr(si.colorMap[value/15]);
+    }
+  } else if (property == "lights_speed") {
     si.setLSPDValue(p);
   } else if (property == "blower") {
     si.setOutlet_Blower(p=="OFF"?2:0);
@@ -873,43 +910,23 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     else si.setVARIValue(p.toInt());
   } else if (property == "blowermode") {
     si.setOutlet_Blower(p=="Variable"?0:1);
-  } else if (property == "lights") {
-    DynamicJsonDocument json(1024);
-    deserializeJson(json, p);
-    si.setRB_TP_Light(json["state"]=="ON"?1:0);
-    if (json.containsKey("effect")) {
-      const char *effect = json["effect"];
-      si.setColorMode(String(effect));
-    }
-    if (json.containsKey("brightness")) {
-      byte value = json["brightness"];
-      if (value == 255) {
-        value = 254;
-      }
-      value = (value / 51) + 1; // Map from 0 to 254 to 1 to 5
-      si.setLBRTValue(value);
-    }
-    if (json.containsKey("color")) {
-      int value = json["color"]["h"];
-      si.setCurrClr(si.colorMap[value/15]);
-    }
-  } else if (property == "sleeptimer1state" || property == "sleeptimer2state") {
+  } else if (property == "sleepTimers_1_state" || property == "sleepTimers_2_state") {
     for (int count = 0; count < sizeof(si.sleepStringMap); count++){
       if (si.sleepStringMap[count] == p)
-        if (property == "sleeptimer1state")
+        if (property == "sleepTimers_1_state")
           si.setL_1SNZ_DAY(si.sleepCodeMap[count]);
-        else if (property == "sleeptimer2state")
+        else if (property == "sleepTimers_2_state")
           si.setL_2SNZ_DAY(si.sleepCodeMap[count]);
     }
-  } else if (property == "sleeptimer1begin") {
+  } else if (property == "sleepTimers_1_begin") {
     si.setL_1SNZ_BGN(convertToInteger(p));
-  } else if (property == "sleeptimer1end") {
+  } else if (property == "sleepTimers_1_end") {
     si.setL_1SNZ_END(convertToInteger(p));
-  } else if (property == "sleeptimer2begin") {
+  } else if (property == "sleepTimers_2_begin") {
     si.setL_2SNZ_BGN(convertToInteger(p));
-  } else if (property == "sleeptimer2end") {
+  } else if (property == "sleepTimers_2_end") {
     si.setL_2SNZ_END(convertToInteger(p));
-  } else if (property == "spamode") {
+  } else if (property == "info_spaMode") {
     si.setMode(p);
   } else {
     debugE("Unhandled property - %s",property.c_str());
@@ -1028,7 +1045,6 @@ void loop() {
           mqttStatusTopic = mqttBase + "status";
           mqttSet = mqttBase + "set";
           mqttAvailability = mqttBase+"available";
-          mqttLightsTopic = mqttBase + "lights";
           debugI("MQTT base topic is %s",mqttBase.c_str());
         }
         if (!mqttClient.connected()) {  // MQTT broker reconnect if not connected
