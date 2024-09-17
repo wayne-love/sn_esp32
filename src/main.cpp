@@ -26,25 +26,13 @@
 
 #include "SpaInterface.h"
 
-
-#if defined(ESP8266)
-  #define EN_PIN D0 //Note: D0 seems to latch LOW when the USB cable is connected. Change to D1 if needed.
-#elif defined(ESP32)
-  #define EN_PIN 0
-  #if !defined(SPACTRLPCB)
-  const int LED_BUILTIN = 2;
-  #endif
-#endif
-
-const int TRIGGER_PIN = EN_PIN;
-
-
 #ifndef DEBUG_ENABLED
     #define DEBUG_ENABLED
     RemoteDebug Debug;
 #endif
 
 SpaInterface si;
+
 
 Blinker led(LED_BUILTIN);
 WiFiClient wifi;
@@ -130,10 +118,10 @@ void saveConfigCallback(){
 
 // We check the button on D0 every loop, to allow people to restart the system 
 void checkButton(){
-  if(digitalRead(TRIGGER_PIN) == LOW) {
+  if(digitalRead(EN_PIN) == LOW) {
     debugI("Initial buttong press detected");
     delay(100); // wait and then test again to ensure that it is a held button not a press
-    if(digitalRead(TRIGGER_PIN) == LOW) {
+    if(digitalRead(EN_PIN) == LOW) {
       debugI("Button press detected. Starting Portal");
 
       if (ui.initialised) {
@@ -939,7 +927,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 #pragma endregion
 
 void setup() {
-  pinMode(TRIGGER_PIN, INPUT_PULLUP);
+  pinMode(EN_PIN, INPUT_PULLUP);
 
 #if !defined(ESP8266)
   Serial.begin(115200);
