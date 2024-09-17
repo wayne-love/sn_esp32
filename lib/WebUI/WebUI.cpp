@@ -40,18 +40,18 @@ void WebUI::begin() {
         if (upload.status == UPLOAD_FILE_START) {
             debugD("Update: %s", upload.filename.c_str());
             if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
-                debugD("Update Error: %s",Update.getErrorString().c_str());
+                debugD("Update Error: %s",Update.errorString());
             }
         } else if (upload.status == UPLOAD_FILE_WRITE) {
             /* flashing firmware to ESP*/
             if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-                debugD("Update Error: %s",Update.getErrorString().c_str());
+                debugD("Update Error: %s",Update.errorString());
             }
         } else if (upload.status == UPLOAD_FILE_END) {
             if (Update.end(true)) { //true to set the size to the current progress
                 debugD("Update Success: %u\nRebooting...\n", upload.totalSize);
             } else {
-                debugD("Update Error: %s",Update.getErrorString().c_str());
+                debugD("Update Error: %s",Update.errorString());
             }
         }
     });
