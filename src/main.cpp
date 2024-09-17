@@ -34,7 +34,7 @@
 SpaInterface si;
 
 
-Blinker led(LED_BUILTIN);
+Blinker led(LED_PIN);
 WiFiClient wifi;
 PubSubClient mqttClient(wifi);
 
@@ -118,6 +118,7 @@ void saveConfigCallback(){
 
 // We check the button on D0 every loop, to allow people to restart the system 
 void checkButton(){
+#if defined(EN_PIN)
   if(digitalRead(EN_PIN) == LOW) {
     debugI("Initial buttong press detected");
     delay(100); // wait and then test again to ensure that it is a held button not a press
@@ -170,6 +171,7 @@ void checkButton(){
       ESP.restart();  // restart, dirty but easier than trying to restart services one by one
     }
   }
+#endif
 }
 
 #pragma region Auto Discovery
@@ -927,7 +929,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 #pragma endregion
 
 void setup() {
+#if defined(EN_PIN)
   pinMode(EN_PIN, INPUT_PULLUP);
+#endif
 
 #if !defined(ESP8266)
   Serial.begin(115200);

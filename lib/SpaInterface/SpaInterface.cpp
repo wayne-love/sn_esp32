@@ -2,26 +2,20 @@
 
 #define BAUD_RATE 38400
 
-#if defined(ESP8266)
-    HardwareSerial spaSerial = Serial;
-#elif defined(ESP32)
-    HardwareSerial spaSerial = Serial2;
-#endif
-
 SpaInterface::SpaInterface(Stream &p) : port(p) {
 }
 
-SpaInterface::SpaInterface() : port(spaSerial) {
+SpaInterface::SpaInterface() : port(SPA_SERIAL) {
     #if defined(ESP8266)
-        spaSerial.setRxBufferSize(1024);  //required for unit testing
-        spaSerial.begin(BAUD_RATE);
-        spaSerial.pins(TX_PIN, RX_PIN);
+        SPA_SERIAL.setRxBufferSize(1024);  //required for unit testing
+        SPA_SERIAL.begin(BAUD_RATE);
+        SPA_SERIAL.pins(TX_PIN, RX_PIN);
     #elif defined(ESP32)
-        spaSerial.setRxBufferSize(1024);  //required for unit testing
-        spaSerial.setTxBufferSize(1024);  //required for unit testing
-        spaSerial.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
+        SPA_SERIAL.setRxBufferSize(1024);  //required for unit testing
+        SPA_SERIAL.setTxBufferSize(1024);  //required for unit testing
+        SPA_SERIAL.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
     #endif
-    spaSerial.setTimeout(250);
+    SPA_SERIAL.setTimeout(250);
 }
 
 SpaInterface::~SpaInterface() {}
