@@ -3,12 +3,8 @@
 #define BAUD_RATE 38400
 
 #if defined(ESP8266)
-    #define RX_PIN 13 //goes to rx on spanet pin5
-    #define TX_PIN 15 //goes to tx on spanet pin6
     HardwareSerial spaSerial = Serial;
 #elif defined(ESP32)
-    #define RX_PIN 16 //goes to rx on spanet pin5
-    #define TX_PIN 17 //goes to tx on spanet pin6
     HardwareSerial spaSerial = Serial2;
 #endif
 
