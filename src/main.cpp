@@ -31,7 +31,9 @@
   #define EN_PIN D0 //Note: D0 seems to latch LOW when the USB cable is connected. Change to D1 if needed.
 #elif defined(ESP32)
   #define EN_PIN 0
+  #if !defined(SPACTRLPCB)
   const int LED_BUILTIN = 2;
+  #endif
 #endif
 
 const int TRIGGER_PIN = EN_PIN;
