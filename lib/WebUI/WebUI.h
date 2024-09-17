@@ -26,6 +26,7 @@ class WebUI {
         char indexPage[1024] = "\0";
 
         WebUI(SpaInterface *spa);
+        const char * getError();
         void begin();
         bool initialised = false;
 

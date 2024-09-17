@@ -26,7 +26,6 @@
 
 #include "SpaInterface.h"
 
-
 #ifndef DEBUG_ENABLED
     #define DEBUG_ENABLED
     RemoteDebug Debug;

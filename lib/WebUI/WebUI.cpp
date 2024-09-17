@@ -8,6 +8,14 @@ WebUI::WebUI(SpaInterface *spa) {
     _spa = spa;
 }
 
+const char * WebUI::getError() {
+    #if defined(ESP8266)
+        return Update.getErrorString().c_str();
+    #elif defined(ESP32)
+        return Update.errorString();
+    #endif
+}
+
 void WebUI::begin() {
         
     #if defined(ESP8266)
@@ -40,18 +48,18 @@ void WebUI::begin() {
         if (upload.status == UPLOAD_FILE_START) {
             debugD("Update: %s", upload.filename.c_str());
             if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
-                debugD("Update Error: %s",Update.errorString());
+                debugD("Update Error: %s",getError());
             }
         } else if (upload.status == UPLOAD_FILE_WRITE) {
             /* flashing firmware to ESP*/
             if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-                debugD("Update Error: %s",Update.errorString());
+                debugD("Update Error: %s",getError());
             }
         } else if (upload.status == UPLOAD_FILE_END) {
             if (Update.end(true)) { //true to set the size to the current progress
                 debugD("Update Success: %u\nRebooting...\n", upload.totalSize);
             } else {
-                debugD("Update Error: %s",Update.errorString());
+                debugD("Update Error: %s",getError());
             }
         }
     });
