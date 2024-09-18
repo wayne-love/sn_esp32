@@ -20,7 +20,7 @@ Debug / log functionality is available by telneting to the device's ip address
 
 ## Circuit
 To keep things as simple as possible, off the shelf modules have been used.  
-NOTE: The resitors on the RX/TX pins are recommended but optional.  
+NOTE: The resistors on the RX/TX pins are recommended but optional.  
 
 <img src="circuit/circuit.png" alt="Circuit" title="Circuit"/>  
 
