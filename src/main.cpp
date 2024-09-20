@@ -44,10 +44,10 @@ WebUI ui(&si);
 
 
 bool saveConfig = false;
-long mqttLastConnect = 0;
-long wifiLastConnect = millis();
-long bootTime = millis();
-long statusLastPublish = millis();
+ulong mqttLastConnect = 0;
+ulong wifiLastConnect = millis();
+ulong bootTime = millis();
+ulong statusLastPublish = millis();
 bool autoDiscoveryPublished = false;
 
 String mqttServer = "";
@@ -791,7 +791,7 @@ bool generateStatusJson(String &output) {
   json["blowermode"] = si.getOutlet_Blower()==1? "Ramp" : "Variable";
   json["blowerspeed"] = si.getOutlet_Blower() ==2? "0" : String(si.getVARIValue());
 
-  for (int count = 0; count < sizeof(si.sleepCodeMap); count++){
+  for (uint count = 0; count < sizeof(si.sleepCodeMap); count++){
     if (si.sleepCodeMap[count] == si.getL_1SNZ_DAY())
       json["sleepTimers"]["one"]["state"]=si.sleepStringMap[count];
     if (si.sleepCodeMap[count] == si.getL_2SNZ_DAY())
@@ -815,7 +815,7 @@ bool generateStatusJson(String &output) {
     json["lights"]["color"]["s"] = 0;
   } else {
     int hue = 4;
-    for (int count = 0; count < sizeof(si.colorMap); count++){
+    for (uint count = 0; count < sizeof(si.colorMap); count++){
       if (si.colorMap[count] == si.getCurrClr()) {
         hue = count * 15;
       }
@@ -846,7 +846,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   String t = String(topic);
 
   String p = "";
-  for (int x = 0; x < length; x++) {
+  for (uint x = 0; x < length; x++) {
     p += char(*payload);
     payload++;
   }
@@ -904,7 +904,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   } else if (property == "blowermode") {
     si.setOutlet_Blower(p=="Variable"?0:1);
   } else if (property == "sleepTimers_1_state" || property == "sleepTimers_2_state") {
-    for (int count = 0; count < sizeof(si.sleepStringMap); count++){
+    for (uint count = 0; count < sizeof(si.sleepStringMap); count++){
       if (si.sleepStringMap[count] == p) {
         if (property == "sleepTimers_1_state")
           si.setL_1SNZ_DAY(si.sleepCodeMap[count]);

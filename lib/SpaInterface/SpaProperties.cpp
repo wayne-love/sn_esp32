@@ -5,8 +5,8 @@ inline boolean isNumber(String s) {
     if (s.isEmpty()) {
         return false;
     }
-    for (int i = 0; i < s.length(); i++) {
-        if ((!isDigit(s[i])) && (!s[i] == '-') && (!s[i]=='.')) {
+    for (u_int i = 0; i < s.length(); i++) {
+        if ((!isDigit(s[i])) && !(s[i] == '-') && !(s[i]=='.')) {
             return false;
         }
     }

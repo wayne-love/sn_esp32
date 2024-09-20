@@ -90,7 +90,7 @@ class SpaInterface : public SpaProperties {
    
         void (*updateCallback)() = nullptr;
 
-        long _lastWaitMessage = millis();
+        u_long _lastWaitMessage = millis();
 
 
 

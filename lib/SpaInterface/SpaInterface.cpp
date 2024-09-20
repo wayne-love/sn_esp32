@@ -43,7 +43,7 @@ void SpaInterface::sendCommand(String cmd) {
     port.printf("%s\n", cmd.c_str());
     port.flush();
 
-    long timeout = millis() + 1000; // wait up to 1 sec for a response
+    ulong timeout = millis() + 1000; // wait up to 1 sec for a response
 
     debugD("Start waiting for a response");
     while (port.available()==0 and millis()<timeout) {}
@@ -223,7 +223,7 @@ bool SpaInterface::setHPMP(int mode){
 bool SpaInterface::setHPMP(String mode){
     debugD("setHPMP - %s", mode.c_str());
 
-    for (int x=0; x<HPMPStrings.size(); x++) {
+    for (uint x=0; x<HPMPStrings.size(); x++) {
         if (HPMPStrings[x] == mode) {
             return setHPMP(x);
         }
@@ -245,7 +245,7 @@ bool SpaInterface::setColorMode(int mode){
 
 bool SpaInterface::setColorMode(String mode){
     debugD("setColorMode - %s", mode.c_str());
-    for (int x=0; x<colorModeStrings.size(); x++) {
+    for (uint x=0; x<colorModeStrings.size(); x++) {
         if (colorModeStrings[x] == mode) {
             return setColorMode(x);
         }
@@ -365,7 +365,7 @@ bool SpaInterface::setMode(int mode){
 
 bool SpaInterface::setMode(String mode){
     debugD("setMode - %s", mode.c_str());
-    for (int x=0; x<spaModeStrings.size(); x++) {
+    for (uint x=0; x<spaModeStrings.size(); x++) {
         if (spaModeStrings[x] == mode) {
             return setMode(x);
         }
