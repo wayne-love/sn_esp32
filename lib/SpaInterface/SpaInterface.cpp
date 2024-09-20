@@ -2,9 +2,6 @@
 
 #define BAUD_RATE 38400
 
-SpaInterface::SpaInterface(Stream &p) : port(p) {
-}
-
 SpaInterface::SpaInterface() : port(SPA_SERIAL) {
     #if defined(ESP8266)
         SPA_SERIAL.setRxBufferSize(1024);  //required for unit testing
