@@ -79,7 +79,7 @@ String convertToTime(int data) {
                    String(minutes / 10) + String(minutes % 10);
 
   // Print debug information
-  debugV("data: %i, timeStr %s", data, timeStr);
+  debugV("data: %i, timeStr: %s", data, timeStr.c_str());
 
   return timeStr;
 }
@@ -108,7 +108,7 @@ int convertToInteger(const String& timeStr) {
   }
 
   // Print debug information
-  debugV("data: %i, timeStr %s", data, timeStr);
+  debugV("data: %i, timeStr: %s", data, timeStr.c_str());
 
   return data;
 }
@@ -905,11 +905,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     si.setOutlet_Blower(p=="Variable"?0:1);
   } else if (property == "sleepTimers_1_state" || property == "sleepTimers_2_state") {
     for (int count = 0; count < sizeof(si.sleepStringMap); count++){
-      if (si.sleepStringMap[count] == p)
+      if (si.sleepStringMap[count] == p) {
         if (property == "sleepTimers_1_state")
           si.setL_1SNZ_DAY(si.sleepCodeMap[count]);
         else if (property == "sleepTimers_2_state")
           si.setL_2SNZ_DAY(si.sleepCodeMap[count]);
+      }
     }
   } else if (property == "sleepTimers_1_begin") {
     si.setL_1SNZ_BGN(convertToInteger(p));
