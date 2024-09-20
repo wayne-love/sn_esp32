@@ -19,9 +19,9 @@
 #include <vector>
 #include <Time.h>
 #include <TimeLib.h>
-
+#if defined(LED_PIN)
 #include "Blinker.h"
-
+#endif
 #include "WebUI.h"
 
 #include "SpaInterface.h"
@@ -33,8 +33,9 @@
 
 SpaInterface si;
 
-
-Blinker led(LED_BUILTIN);
+#if defined(LED_PIN)
+Blinker led(LED_PIN);
+#endif
 WiFiClient wifi;
 PubSubClient mqttClient(wifi);
 
@@ -78,7 +79,7 @@ String convertToTime(int data) {
                    String(minutes / 10) + String(minutes % 10);
 
   // Print debug information
-  debugV("data: %i, timeStr %s", data, timeStr);
+  debugV("data: %i, timeStr: %s", data, timeStr.c_str());
 
   return timeStr;
 }
@@ -107,7 +108,7 @@ int convertToInteger(const String& timeStr) {
   }
 
   // Print debug information
-  debugV("data: %i, timeStr %s", data, timeStr);
+  debugV("data: %i, timeStr: %s", data, timeStr.c_str());
 
   return data;
 }
@@ -118,6 +119,7 @@ void saveConfigCallback(){
 
 // We check the button on D0 every loop, to allow people to restart the system 
 void checkButton(){
+#if defined(EN_PIN)
   if(digitalRead(EN_PIN) == LOW) {
     debugI("Initial buttong press detected");
     delay(100); // wait and then test again to ensure that it is a held button not a press
@@ -170,6 +172,7 @@ void checkButton(){
       ESP.restart();  // restart, dirty but easier than trying to restart services one by one
     }
   }
+#endif
 }
 
 #pragma region Auto Discovery
@@ -902,11 +905,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     si.setOutlet_Blower(p=="Variable"?0:1);
   } else if (property == "sleepTimers_1_state" || property == "sleepTimers_2_state") {
     for (int count = 0; count < sizeof(si.sleepStringMap); count++){
-      if (si.sleepStringMap[count] == p)
+      if (si.sleepStringMap[count] == p) {
         if (property == "sleepTimers_1_state")
           si.setL_1SNZ_DAY(si.sleepCodeMap[count]);
         else if (property == "sleepTimers_2_state")
           si.setL_2SNZ_DAY(si.sleepCodeMap[count]);
+      }
     }
   } else if (property == "sleepTimers_1_begin") {
     si.setL_1SNZ_BGN(convertToInteger(p));
@@ -927,7 +931,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 #pragma endregion
 
 void setup() {
+#if defined(EN_PIN)
   pinMode(EN_PIN, INPUT_PULLUP);
+#endif
 
 #if !defined(ESP8266)
   Serial.begin(115200);
@@ -1002,7 +1008,9 @@ void loop() {
 
 
   checkButton();
+  #if defined(LED_PIN)
   led.tick();
+  #endif
   mqttClient.loop();
   Debug.handle();
 
@@ -1012,7 +1020,9 @@ void loop() {
 
   if (WiFi.status() != WL_CONNECTED) {
     //wifi not connected
+    #if defined(LED_PIN)
     led.setInterval(100);
+    #endif
     long now = millis();
     if (now-wifiLastConnect > 10000) {
       debugI("Wifi reconnecting...");
@@ -1040,7 +1050,9 @@ void loop() {
         if (!mqttClient.connected()) {  // MQTT broker reconnect if not connected
           long now=millis();
           if (now - mqttLastConnect > 1000) {
+            #if defined(LED_PIN)
             led.setInterval(500);
+            #endif
             debugW("MQTT not connected, attempting connection to %s:%s",mqttServer.c_str(),mqttPort.c_str());
             mqttLastConnect = now;
 
@@ -1070,7 +1082,9 @@ void loop() {
             si.statusResponse.setCallback(mqttPublishStatusString);
 
           }
+          #if defined(LED_PIN)
           led.setInterval(2000);
+          #endif
         }
       }
     }

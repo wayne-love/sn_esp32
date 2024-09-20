@@ -2,26 +2,17 @@
 
 #define BAUD_RATE 38400
 
-#if defined(ESP8266)
-    HardwareSerial spaSerial = Serial;
-#elif defined(ESP32)
-    HardwareSerial spaSerial = Serial2;
-#endif
-
-SpaInterface::SpaInterface(Stream &p) : port(p) {
-}
-
-SpaInterface::SpaInterface() : port(spaSerial) {
+SpaInterface::SpaInterface() : port(SPA_SERIAL) {
     #if defined(ESP8266)
-        spaSerial.setRxBufferSize(1024);  //required for unit testing
-        spaSerial.begin(BAUD_RATE);
-        spaSerial.pins(TX_PIN, RX_PIN);
+        SPA_SERIAL.setRxBufferSize(1024);  //required for unit testing
+        SPA_SERIAL.begin(BAUD_RATE);
+        SPA_SERIAL.pins(TX_PIN, RX_PIN);
     #elif defined(ESP32)
-        spaSerial.setRxBufferSize(1024);  //required for unit testing
-        spaSerial.setTxBufferSize(1024);  //required for unit testing
-        spaSerial.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
+        SPA_SERIAL.setRxBufferSize(1024);  //required for unit testing
+        SPA_SERIAL.setTxBufferSize(1024);  //required for unit testing
+        SPA_SERIAL.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
     #endif
-    spaSerial.setTimeout(250);
+    SPA_SERIAL.setTimeout(250);
 }
 
 SpaInterface::~SpaInterface() {}
@@ -49,7 +40,7 @@ void SpaInterface::sendCommand(String cmd) {
     port.print('\n');
     port.flush();
     delay(50); // **TODO** is this needed?
-    port.printf("%s\n", cmd);
+    port.printf("%s\n", cmd.c_str());
     port.flush();
 
     long timeout = millis() + 1000; // wait up to 1 sec for a response
@@ -399,7 +390,7 @@ bool SpaInterface::readStatus() {
     while (field < statusResponseExpectedFields)
     {
         statusResponseRaw[field] = port.readStringUntil(',');
-        debugV("(%i,%s)",field,statusResponseRaw[field]);
+        debugV("(%i,%s)",field,statusResponseRaw[field].c_str());
 
         statusResponseTmp = statusResponseTmp + statusResponseRaw[field]+",";
 
@@ -408,7 +399,7 @@ bool SpaInterface::readStatus() {
             return false;
         }
         if (field == 0 && !statusResponseRaw[field].startsWith("RF:")) { // If the first field is not "RF:" stop we don't have the start of the register
-            debugE("Throwing exception - field: %i, value: %s", field, statusResponseRaw[field]);
+            debugE("Throwing exception - field: %i, value: %s", field, statusResponseRaw[field].c_str());
             return false;
         }
 

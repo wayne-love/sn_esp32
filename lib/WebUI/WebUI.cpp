@@ -28,7 +28,7 @@ void WebUI::begin() {
         server->sendHeader("Connection", "close");
         char buffer[1024];
         SpaInterface &si = *_spa;
-        float current_temp = (si.getWTMP() / 10);
+        float current_temp = float(si.getWTMP()) / 10;
         String status = si.getStatus();
         sprintf(buffer, indexPageTemplate, current_temp, status);
         server->send(200, "text/html", buffer);
