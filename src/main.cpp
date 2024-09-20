@@ -19,9 +19,9 @@
 #include <vector>
 #include <Time.h>
 #include <TimeLib.h>
-
+#if defined(LED_PIN)
 #include "Blinker.h"
-
+#endif
 #include "WebUI.h"
 
 #include "SpaInterface.h"
@@ -33,8 +33,9 @@
 
 SpaInterface si;
 
-
+#if defined(LED_PIN)
 Blinker led(LED_PIN);
+#endif
 WiFiClient wifi;
 PubSubClient mqttClient(wifi);
 
@@ -1006,7 +1007,9 @@ void loop() {
 
 
   checkButton();
+  #if defined(LED_PIN)
   led.tick();
+  #endif
   mqttClient.loop();
   Debug.handle();
 
@@ -1016,7 +1019,9 @@ void loop() {
 
   if (WiFi.status() != WL_CONNECTED) {
     //wifi not connected
+    #if defined(LED_PIN)
     led.setInterval(100);
+    #endif
     long now = millis();
     if (now-wifiLastConnect > 10000) {
       debugI("Wifi reconnecting...");
@@ -1044,7 +1049,9 @@ void loop() {
         if (!mqttClient.connected()) {  // MQTT broker reconnect if not connected
           long now=millis();
           if (now - mqttLastConnect > 1000) {
+            #if defined(LED_PIN)
             led.setInterval(500);
+            #endif
             debugW("MQTT not connected, attempting connection to %s:%s",mqttServer.c_str(),mqttPort.c_str());
             mqttLastConnect = now;
 
@@ -1074,7 +1081,9 @@ void loop() {
             si.statusResponse.setCallback(mqttPublishStatusString);
 
           }
+          #if defined(LED_PIN)
           led.setInterval(2000);
+          #endif
         }
       }
     }
