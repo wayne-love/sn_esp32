@@ -26,10 +26,33 @@
 
 #include "SpaInterface.h"
 
+#if defined(ESP32)
+#include <Preferences.h>
+#endif
+
 #ifndef DEBUG_ENABLED
     #define DEBUG_ENABLED
     RemoteDebug Debug;
 #endif
+
+// Define the threshold for detecting a fast reboot (within 20 seconds)
+#define REBOOT_THRESHOLD 20
+
+#if defined(ESP8266)
+struct RTCData {
+  int16_t magicNumber;  // Use a unique number to identify valid data
+  int16_t rebootFlag;   // -1 failed to load, 0 flag cleared = don't start wifi manager, 1 start wifi manager on next boot, 2 start wifi manager now.
+};
+RTCData rtcData;
+const int16_t MAGIC_NUMBER = 0xAAAA;
+#endif
+
+#if defined(ESP32)
+Preferences preferences;  // For ESP32 reboot storage
+#endif
+
+unsigned long bootStartMillis;  // To track when the device started
+bool rebootFlag = false;
 
 SpaInterface si;
 
@@ -117,7 +140,87 @@ void saveConfigCallback(){
   saveConfig = true;
 }
 
-// We check the button on D0 every loop, to allow people to restart the system 
+bool readRebootFlag() {
+  bool retVal = false;
+
+  #if defined(ESP8266)
+    ESP.rtcUserMemoryRead(0, (uint32_t*)&rtcData, sizeof(rtcData));
+    // Check if the magic number matches
+    if (rtcData.magicNumber != MAGIC_NUMBER) {
+      debugD("Invalid or uninitialized RTC memory.");
+    } else {
+      retVal = (rtcData.rebootFlag  == 1);
+    }
+  #elif defined(ESP32)
+    preferences.begin("reboot_data", false);
+    retVal = preferences.getBool("rebootFlag", false);
+    preferences.end();
+  #endif
+  rebootFlag = retVal;
+  return retVal;
+}
+
+void writeRebootFlag(bool flagValue) {
+  rebootFlag = flagValue;
+  #if defined(ESP8266)
+    // Write MAGIC_NUMBER so we can validate the data when we read it later
+    rtcData.magicNumber = MAGIC_NUMBER;
+    rtcData.rebootFlag = flagValue?1:0;
+    ESP.rtcUserMemoryWrite(0, (uint32_t*)&rtcData, sizeof(rtcData));
+  #elif defined(ESP32)
+    preferences.begin("reboot_data", false);
+    preferences.putBool("rebootFlag", flagValue);
+    preferences.end();
+  #endif
+}
+
+void startWiFiManager(){
+  writeRebootFlag(false);
+  if (ui.initialised) {
+    ui.server->stop();
+  }
+
+  WiFiManager wm;
+  WiFiManagerParameter custom_mqtt_server("server", "MQTT server", mqttServer.c_str(), 40);
+  WiFiManagerParameter custom_mqtt_port("port", "MQTT port", mqttPort.c_str(), 6);
+  WiFiManagerParameter custom_mqtt_username("username", "MQTT Username", mqttUserName.c_str(), 20 );
+  WiFiManagerParameter custom_mqtt_password("password", "MQTT Password", mqttPassword.c_str(), 40 );
+  wm.addParameter(&custom_mqtt_server);
+  wm.addParameter(&custom_mqtt_port);
+  wm.addParameter(&custom_mqtt_username);
+  wm.addParameter(&custom_mqtt_password);
+  wm.setBreakAfterConfig(true);
+  wm.setSaveConfigCallback(saveConfigCallback);
+
+
+  wm.startConfigPortal();
+  debugI("Exiting Portal");
+
+  if (saveConfig) {
+    mqttServer = String(custom_mqtt_server.getValue());
+    mqttPort = String(custom_mqtt_port.getValue());
+    mqttUserName = String(custom_mqtt_username.getValue());
+    mqttPassword = String(custom_mqtt_password.getValue());
+
+    debugI("Updating config file");
+    JsonDocument json;
+    json["mqtt_server"] = mqttServer;
+    json["mqtt_port"] = mqttPort;
+    json["mqtt_password"] = mqttPassword;
+    json["mqtt_username"] = mqttUserName;
+
+    File configFile = LittleFS.open("/config.json","w");
+    if (!configFile) {
+      debugE("Failed to open config file for writing");
+    } else {
+      serializeJson(json, configFile);
+      configFile.close();
+      debugI("Config file updated");
+    }
+  }
+}
+
+// We check the EN_PIN every loop, to allow people to configure the system
 void checkButton(){
 #if defined(EN_PIN)
   if(digitalRead(EN_PIN) == LOW) {
@@ -125,54 +228,45 @@ void checkButton(){
     delay(100); // wait and then test again to ensure that it is a held button not a press
     if(digitalRead(EN_PIN) == LOW) {
       debugI("Button press detected. Starting Portal");
-
-      if (ui.initialised) {
-        ui.server->stop();
-      }
-      
-      WiFiManager wm;
-      WiFiManagerParameter custom_mqtt_server("server", "MQTT server", mqttServer.c_str(), 40);
-      WiFiManagerParameter custom_mqtt_port("port", "MQTT port", mqttPort.c_str(), 6);
-      WiFiManagerParameter custom_mqtt_username("username", "MQTT Username", mqttUserName.c_str(), 20 );
-      WiFiManagerParameter custom_mqtt_password("password", "MQTT Password", mqttPassword.c_str(), 40 );
-      wm.addParameter(&custom_mqtt_server);
-      wm.addParameter(&custom_mqtt_port);
-      wm.addParameter(&custom_mqtt_username);
-      wm.addParameter(&custom_mqtt_password);
-      wm.setBreakAfterConfig(true);
-      wm.setSaveConfigCallback(saveConfigCallback);
-      
-
-      wm.startConfigPortal();
-      debugI("Exiting Portal");
-
-      if (saveConfig) {
-        mqttServer = String(custom_mqtt_server.getValue());
-        mqttPort = String(custom_mqtt_port.getValue());
-        mqttUserName = String(custom_mqtt_username.getValue());
-        mqttPassword = String(custom_mqtt_password.getValue());
-
-        debugI("Updating config file");
-        JsonDocument json;
-        json["mqtt_server"] = mqttServer;
-        json["mqtt_port"] = mqttPort;
-        json["mqtt_password"] = mqttPassword;
-        json["mqtt_username"] = mqttUserName;
-
-        File configFile = LittleFS.open("/config.json","w");
-        if (!configFile) {
-          debugE("Failed to open config file for writing");
-        } else {
-          serializeJson(json, configFile);
-          configFile.close();
-          debugI("Config file updated");
-        }
-      }
+      startWiFiManager();
 
       ESP.restart();  // restart, dirty but easier than trying to restart services one by one
     }
   }
 #endif
+}
+
+void checkRebootThreshold(){
+  // Check if REBOOT_THRESHOLD seconds have passed since the boot time, then clear the reboot flag
+  if (rebootFlag && millis() - bootStartMillis > (REBOOT_THRESHOLD * 1000)) {
+    debugI("Clear reboot flag after %i seconds.", REBOOT_THRESHOLD);
+    writeRebootFlag(false);
+  }
+}
+
+bool shouldStartWiFiManager() {
+  bool isSelectedRebootReason = false;
+
+  #if defined(ESP8266)
+    uint32_t resetReason = ESP.getResetInfoPtr()->reason;
+    debugI("ESP8266 Reset Reason: %d", resetReason);
+
+    // Check selected reset reasons for ESP8266
+    if (resetReason == REASON_SOFT_RESTART || resetReason == REASON_EXT_SYS_RST) {
+      isSelectedRebootReason = true;
+    }
+
+  #elif defined(ESP32)
+    esp_reset_reason_t resetReason = esp_reset_reason();
+    debugI("ESP32 Reset Reason: %d", resetReason);
+
+    // Check selected reset reasons for ESP32
+    if (resetReason == ESP_RST_POWERON || resetReason == ESP_RST_EXT || resetReason == ESP_RST_SW) {
+      isSelectedRebootReason = true;
+    }
+  #endif
+
+  return (isSelectedRebootReason && rebootFlag);
 }
 
 #pragma region Auto Discovery
@@ -931,16 +1025,18 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 #pragma endregion
 
 void setup() {
-#if defined(EN_PIN)
-  pinMode(EN_PIN, INPUT_PULLUP);
-#endif
+  #if defined(EN_PIN)
+    pinMode(EN_PIN, INPUT_PULLUP);
+  #endif
 
-#if !defined(ESP8266)
-  Serial.begin(115200);
-  Serial.setDebugOutput(true);
-#endif
+  #if !defined(ESP8266) or defined(ENABLE_SERIAL)
+    Serial.begin(115200);
+    Serial.setDebugOutput(true);
+    Debug.setSerialEnabled(true);
+  #endif
 
   delay(200);
+  debugA("Starting... %s", WiFi.getHostname());
 
   WiFi.mode(WIFI_STA); 
   WiFi.begin();
@@ -948,11 +1044,6 @@ void setup() {
   Debug.begin(WiFi.getHostname());
   Debug.setResetCmdEnabled(true);
   Debug.showProfiler(true);
-#if !defined(ESP8266)
-  Debug.setSerialEnabled(true);
-#endif
-
-  debugA("Starting...");
 
   debugI("Mounting FS");
 
@@ -997,6 +1088,21 @@ void setup() {
   mqttClient.setCallback(mqttCallback);
   mqttClient.setBufferSize(2048);
 
+  int valueFlag = readRebootFlag();
+  debugI("readRebootFlag: %i", valueFlag);
+  bootStartMillis = millis();  // Record the current boot time in milliseconds
+
+  // If rebootFlag is true, the device rebooted within the threshold
+  if (shouldStartWiFiManager()) {
+    debugI("Detected reboot within the last %i seconds. Starting WiFiManager...", REBOOT_THRESHOLD);
+    startWiFiManager();
+    ESP.restart();
+  } else {
+    debugI("Normal boot, no WiFiManager needed.");
+    // Set the reboot flag to true
+    writeRebootFlag(true);
+  }
+
   ui.begin();
 
 }
@@ -1008,6 +1114,7 @@ void loop() {
 
 
   checkButton();
+  checkRebootThreshold();
   #if defined(LED_PIN)
   led.tick();
   #endif
