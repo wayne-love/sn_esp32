@@ -25,6 +25,7 @@ void WebUI::begin() {
     #endif
 
     server->on("/", HTTP_GET, [&]() {
+        debugD("uri: %s", server->uri().c_str());
         server->sendHeader("Connection", "close");
         char buffer[1024];
         SpaInterface &si = *_spa;
@@ -34,16 +35,31 @@ void WebUI::begin() {
         server->send(200, "text/html", buffer);
     });
 
+    server->on("/json", HTTP_GET, [&]() {
+        debugD("uri: %s", server->uri().c_str());
+        server->sendHeader("Connection", "close");
+        String json;
+        SpaInterface &si = *_spa;
+        if (generateStatusJson(si, json, true)) {
+            server->send(200, "text/json", json.c_str());
+        } else {
+            server->send(200, "text/text", "Error generating json");
+        }
+    });
+
     server->on("/fota", HTTP_GET, [&]() {
+        debugD("uri: %s", server->uri().c_str());
         server->sendHeader("Connection", "close");
         server->send(200, "text/html", fotaPage);
     });
 
     server->on("/update", HTTP_POST, [&]() {
+        debugD("uri: %s", server->uri().c_str());
         server->sendHeader("Connection", "close");
         server->send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
         if (!Update.hasError()) ESP.restart();
     }, [&]() {
+        debugD("uri: %s", server->uri().c_str());
         HTTPUpload& upload = server->upload();
         if (upload.status == UPLOAD_FILE_START) {
             debugD("Update: %s", upload.filename.c_str());

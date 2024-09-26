@@ -25,6 +25,7 @@
 #include "WebUI.h"
 
 #include "SpaInterface.h"
+#include "SpaUtils.h"
 
 #if defined(ESP32)
 #include <Preferences.h>
@@ -41,7 +42,7 @@
 #if defined(ESP8266)
 struct RTCData {
   int16_t magicNumber;  // Use a unique number to identify valid data
-  int16_t rebootFlag;   // -1 failed to load, 0 flag cleared = don't start wifi manager, 1 start wifi manager on next boot, 2 start wifi manager now.
+  int16_t rebootFlag;   // 1 start wifi manager on next boot
 };
 RTCData rtcData;
 const int16_t MAGIC_NUMBER = 0xAAAA;
@@ -84,57 +85,6 @@ String mqttSet = "";
 String mqttAvailability = "";
 
 String spaSerialNumber = "";
-
-// Function to convert integer to time in HH:mm format
-String convertToTime(int data) {
-  // Extract hours and minutes from data
-  int hours = (data >> 8) & 0xFF; // High byte for hours
-  int minutes = data & 0xFF;      // Low byte for minutes
-
-  // If minutes are greater than or equal to 100, adjust hours and minutes
-  if (minutes >= 100) {
-    int extraHours = minutes / 100;
-    minutes = minutes % 100;
-    hours += extraHours;
-  }
-
-  String timeStr = String(hours / 10) + String(hours % 10) + ":" +
-                   String(minutes / 10) + String(minutes % 10);
-
-  // Print debug information
-  debugV("data: %i, timeStr: %s", data, timeStr.c_str());
-
-  return timeStr;
-}
-
-int convertToInteger(const String& timeStr) {
-  int data = -1;
-
-  // Check for an empty string
-  if (timeStr.length() == 0) {
-    return data;
-  }
-
-  // Find the position of the colon
-  int colonIndex = timeStr.indexOf(':');
-  if (colonIndex == -1) {
-    return data; // Invalid format
-  }
-
-  // Extract hours and minutes as substrings
-  int hours = timeStr.substring(0, colonIndex).toInt();
-  int minutes = timeStr.substring(colonIndex + 1).toInt();
-
-  // Validate hours and minutes ranges
-  if (hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60) {
-    data = (hours * 256) + minutes;
-  }
-
-  // Print debug information
-  debugV("data: %i, timeStr: %s", data, timeStr.c_str());
-
-  return data;
-}
 
 void saveConfigCallback(){
   saveConfig = true;
@@ -404,7 +354,7 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
   if (name != "") { json["name"]=name; }
 
   json["current_temperature_topic"]=mqttStatusTopic;;
-  json["current_temperature_template"]="{{ value_json.watertemperature }}";
+  json["current_temperature_template"]="{{ value_json.temperatures.water }}";
 
   JsonObject device = json["device"].to<JsonObject>();
   device["name"] = deviceName;
@@ -425,10 +375,10 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
   json["mode_state_topic"]=mqttStatusTopic;
 
   json["action_topic"]=mqttStatusTopic;
-  json["action_template"]="{% if value_json.heatingactive == 'ON' %}heating{% else %}off{% endif %}";
+  json["action_template"]="{% if value_json.status.heatingActive == 'ON' %}heating{% else %}off{% endif %}";
   
-  json["temperature_command_topic"]=mqttSet+"/temperature";
-  json["temperature_state_template"]="{{ value_json.temperaturesetpoint }}";
+  json["temperature_command_topic"]=mqttSet+"/status_temperatureSetPoint";
+  json["temperature_state_template"]="{{ value_json.status.temperatureSetPoint }}";
   json["temperature_state_topic"]=mqttStatusTopic;
   json["temperature_unit"]="C";
   json["temp_step"]=0.2;
@@ -500,12 +450,12 @@ mqtt:
   json["command_topic"] = mqttSet + "/" + propertyId;
   
   json["percentage_state_topic"] = mqttStatusTopic;
-  json["percentage_command_topic"] = mqttSet + "/" + propertyId + "speed";
-  json["percentage_value_template"] = "{{ value_json."+ propertyId + "speed }}";
+  json["percentage_command_topic"] = mqttSet + "/" + propertyId + "_speed";
+  json["percentage_value_template"] = "{{ value_json."+ propertyId + ".speed }}";
   
   json["preset_mode_state_topic"] = mqttStatusTopic;
-  json["preset_mode_command_topic"] = mqttSet + "/" + propertyId + "mode";
-  json["preset_mode_value_template"] = "{{ value_json."+ propertyId + "mode }}";
+  json["preset_mode_command_topic"] = mqttSet + "/" + propertyId + "_mode";
+  json["preset_mode_value_template"] = "{{ value_json."+ propertyId + ".mode }}";
   
   JsonArray modes = json["preset_modes"].to<JsonArray>();
   modes.add("Variable");
@@ -770,44 +720,44 @@ void mqttHaAutoDiscovery() {
 
   debugI("Publishing Home Assistant auto discovery");
 
-  sensorADPublish("Water Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.watertemperature }}","measurement","Temperature", spaName, spaSerialNumber);
-  sensorADPublish("Heater Temperature","diagnostic","temperature",mqttStatusTopic,"°C","{{ value_json.heatertemperature }}","measurement","HeaterTemperature", spaName, spaSerialNumber);
-  sensorADPublish("Case Temperature","diagnostic","temperature",mqttStatusTopic,"°C","{{ value_json.casetemperature }}","measurement","WaterTemperature", spaName, spaSerialNumber);
-  sensorADPublish("Mains Voltage","diagnostic","voltage",mqttStatusTopic,"V","{{ value_json.voltage }}","measurement","MainsVoltage", spaName, spaSerialNumber);
-  sensorADPublish("Mains Current","diagnostic","current",mqttStatusTopic,"A","{{ value_json.current }}","measurement","MainsCurrent", spaName, spaSerialNumber);
-  sensorADPublish("Power","","energy",mqttStatusTopic,"W","{{ value_json.power }}","measurement","Power", spaName, spaSerialNumber);
+  sensorADPublish("Water Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.water }}","measurement","WaterTemperature", spaName, spaSerialNumber);
+  sensorADPublish("Heater Temperature","diagnostic","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.heater }}","measurement","HeaterTemperature", spaName, spaSerialNumber);
+  sensorADPublish("Case Temperature","diagnostic","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.case }}","measurement","CaseTemperature", spaName, spaSerialNumber);
+  sensorADPublish("Mains Voltage","diagnostic","voltage",mqttStatusTopic,"V","{{ value_json.power.voltage }}","measurement","MainsVoltage", spaName, spaSerialNumber);
+  sensorADPublish("Mains Current","diagnostic","current",mqttStatusTopic,"A","{{ value_json.power.current }}","measurement","MainsCurrent", spaName, spaSerialNumber);
+  sensorADPublish("Power","","energy",mqttStatusTopic,"W","{{ value_json.power.energy }}","measurement","Power", spaName, spaSerialNumber);
   sensorADPublish("Total Energy","","energy",mqttStatusTopic,"Wh","{{ value_json.totalenergy }}","total_increasing","TotalEnergy", spaName, spaSerialNumber);
-  sensorADPublish("Heatpump Ambient Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.hpambtemp }}","measurement","HPAmbTemp", spaName, spaSerialNumber);
-  sensorADPublish("Heatpump Condensor Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.hpcondtemp }}","measurement","HPCondTemp", spaName, spaSerialNumber);
-  sensorADPublish("Status","","",mqttStatusTopic,"","{{ value_json.status }}","","Status", spaName, spaSerialNumber);
+  sensorADPublish("Heatpump Ambient Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.heatpumpAmbient }}","measurement","HPAmbTemp", spaName, spaSerialNumber);
+  sensorADPublish("Heatpump Condensor Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.heatpumpCondensor }}","measurement","HPCondTemp", spaName, spaSerialNumber);
+  sensorADPublish("State","","",mqttStatusTopic,"","{{ value_json.status.state }}","","State", spaName, spaSerialNumber);
   
-  binarySensorADPublish("Heating Active","",mqttStatusTopic,"{{ value_json.heatingactive }}","HeatingActive", spaName, spaSerialNumber);
-  binarySensorADPublish("Ozone Active","",mqttStatusTopic,"{{ value_json.ozoneactive }}","OzoneActive", spaName, spaSerialNumber);
+  binarySensorADPublish("Heating Active","",mqttStatusTopic,"{{ value_json.status.heatingActive }}","HeatingActive", spaName, spaSerialNumber);
+  binarySensorADPublish("Ozone Active","",mqttStatusTopic,"{{ value_json.status.ozoneActive }}","OzoneActive", spaName, spaSerialNumber);
   
   climateADPublish(spaName,"Heating", spaName, spaSerialNumber);
-  selectADPublish("Heatpump Mode",{"Auto","Heat","Cool","Off"}, mqttStatusTopic, "{{ value_json.heatermode }}","heatpumpmode", spaName, spaSerialNumber);
+  selectADPublish("Heatpump Mode",{"Auto","Heat","Cool","Off"}, mqttStatusTopic, "{{ value_json.heatpump.mode }}","heatpump_mode", spaName, spaSerialNumber);
 
   if (si.getPump1InstallState().startsWith("1") && !(si.getPump1InstallState().endsWith("4"))) {
-     switchADPublish("Pump 1","",mqttStatusTopic,"{{ value_json.pump1 }}","pump1",spaName,spaSerialNumber);
+     switchADPublish("Pump 1","",mqttStatusTopic,"{{ value_json.pumps.pump1 }}","pumps_pump1",spaName,spaSerialNumber);
   }
 
   if (si.getPump2InstallState().startsWith("1") && !(si.getPump2InstallState().endsWith("4"))) {
-    switchADPublish("Pump 2","",mqttStatusTopic,"{{ value_json.pump2 }}","pump2",spaName,spaSerialNumber);
+    switchADPublish("Pump 2","",mqttStatusTopic,"{{ value_json.pumps.pump2 }}","pumps_pump2",spaName,spaSerialNumber);
   } 
 
   if (si.getPump3InstallState().startsWith("1") && !(si.getPump3InstallState().endsWith("4"))) {
-    switchADPublish("Pump 3","",mqttStatusTopic,"{{ value_json.pump3 }}","pump3",spaName,spaSerialNumber);
+    switchADPublish("Pump 3","",mqttStatusTopic,"{{ value_json.pumps.pump3 }}","pumps_pump3",spaName,spaSerialNumber);
   } 
 
   if (si.getPump4InstallState().startsWith("1") && !(si.getPump4InstallState().endsWith("4"))) {
-    switchADPublish("Pump 4","",mqttStatusTopic,"{{ value_json.pump4 }}","pump4",spaName,spaSerialNumber);
+    switchADPublish("Pump 4","",mqttStatusTopic,"{{ value_json.pumps.pump4 }}","pumps_pump4",spaName,spaSerialNumber);
   } 
 
   if (si.getPump5InstallState().startsWith("1") && !(si.getPump5InstallState().endsWith("4"))) {
-    switchADPublish("Pump 5","",mqttStatusTopic,"{{ value_json.pump5 }}","pump5",spaName,spaSerialNumber);
+    switchADPublish("Pump 5","",mqttStatusTopic,"{{ value_json.pumps.pump5 }}","pumps_pump5",spaName,spaSerialNumber);
   }   
 
-  switchADPublish("Aux Heat Element","",mqttStatusTopic,"{{ value_json.auxheat }}","auxheat",spaName,spaSerialNumber);
+  switchADPublish("Aux Heat Element","",mqttStatusTopic,"{{ value_json.heatpump.auxheat }}","heatpump_auxheat",spaName,spaSerialNumber);
   lightADPublish("Lights","",mqttStatusTopic,"{{ value_json.lights }}","lights",spaName,spaSerialNumber);
   selectADPublish("Lights Speed",{"1","2","3","4","5"},mqttStatusTopic,"{{ value_json.lights.speed }}","lights_speed",spaName, spaSerialNumber);
 
@@ -819,12 +769,12 @@ void mqttHaAutoDiscovery() {
   textADPublish("Sleep Timer 2 Begin",mqttStatusTopic,"{{ value_json.sleepTimers.two.begin }}", "sleepTimers_2_begin", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
   textADPublish("Sleep Timer 2 End",mqttStatusTopic,"{{ value_json.sleepTimers.two.end }}", "sleepTimers_2_end", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
 
-  textADPublish("Date Time",mqttStatusTopic,"{{ value_json.datetime }}", "datetime", spaName, spaSerialNumber, "config", "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
+  textADPublish("Date Time",mqttStatusTopic,"{{ value_json.status.datetime }}", "status_datetime", spaName, spaSerialNumber, "config", "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
 
   fanADPublish("Blower","blower",spaName, spaSerialNumber);
 
   std::vector<String> spaModeStrings(std::begin(si.spaModeStrings), std::end(si.spaModeStrings));
-  selectADPublish("Spa Mode", spaModeStrings, mqttStatusTopic, "{{ value_json.info.spaMode }}", "info_spaMode", spaName, spaSerialNumber);
+  selectADPublish("Spa Mode", spaModeStrings, mqttStatusTopic, "{{ value_json.status.spaMode }}", "status_spaMode", spaName, spaSerialNumber);
 
 }
 
@@ -838,97 +788,9 @@ void mqttPublishStatusString(String s){
 
 }
 
-bool generateStatusJson(String &output) {
-
-  JsonDocument json;
-
-  json["watertemperature"] = String(si.getWTMP() / 10) + "." + String(si.getWTMP() % 10); //avoids stupid rounding errors
-  json["heatertemperature"] = String(si.getHeaterTemperature() / 10) + "." + String(si.getHeaterTemperature() % 10); //avoids stupid rounding errors
-  json["casetemperature"] = String(si.getCaseTemperature()); //avoids stupid rounding errors
-  json["voltage"]=String(si.getMainsVoltage());
-  json["current"]=String(si.getMainsCurrent() / 10) + "." + String(si.getMainsCurrent() % 10);
-  json["power"]=String(si.getPower() / 10) + "." + String(si.getPower() % 10);
-  json["heatingactive"]=si.getRB_TP_Heater()? "ON": "OFF";
-  json["ozoneactive"]=si.getRB_TP_Ozone()? "ON": "OFF";
-  json["totalenergy"]=String(si.getPower_kWh() * 10); // convert to kWh to Wh.
-  json["hpambtemp"]=String(si.getHP_Ambient());
-  json["hpcondtemp"]=String(si.getHP_Condensor());
-  json["temperaturesetpoint"]=String(si.getSTMP() / 10) + "." + String(si.getSTMP() % 10);
-  json["heatermode"]=si.HPMPStrings[si.getHPMP()];
-
-  json["pump1"]=si.getRB_TP_Pump1()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pump2"]=si.getRB_TP_Pump2()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pump3"]=si.getRB_TP_Pump3()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pump4"]=si.getRB_TP_Pump4()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pump5"]=si.getRB_TP_Pump5()==0? "OFF" : "ON"; // we're ignoring auto here
-
-
-  String y=String(year(si.getSpaTime()));
-  String m=String(month(si.getSpaTime()));
-  if (month(si.getSpaTime())<10) m = "0"+m;
-  String d=String(day(si.getSpaTime()));
-  if (day(si.getSpaTime())<10) d = "0"+d;
-  String h=String(hour(si.getSpaTime()));
-  if (hour(si.getSpaTime())<10) h = "0"+h;
-  String min=String(minute(si.getSpaTime()));
-  if (minute(si.getSpaTime())<10) min = "0"+min;
-  String s=String(second(si.getSpaTime()));
-  if (second(si.getSpaTime())<10) s = "0"+s;
-
-  json["datetime"]=y+"-"+m+"-"+d+" "+h+":"+min+":"+s;
-
-  json["auxheat"]=si.getHELE()==0? "OFF" : "ON";
-
-  json["status"]=si.getStatus();
-
-  json["blower"] = si.getOutlet_Blower()==2? "OFF" : "ON";
-  json["blowermode"] = si.getOutlet_Blower()==1? "Ramp" : "Variable";
-  json["blowerspeed"] = si.getOutlet_Blower() ==2? "0" : String(si.getVARIValue());
-
-  for (uint count = 0; count < sizeof(si.sleepCodeMap); count++){
-    if (si.sleepCodeMap[count] == si.getL_1SNZ_DAY())
-      json["sleepTimers"]["one"]["state"]=si.sleepStringMap[count];
-    if (si.sleepCodeMap[count] == si.getL_2SNZ_DAY())
-      json["sleepTimers"]["two"]["state"]=si.sleepStringMap[count];
-  }
-  json["sleepTimers"]["one"]["begin"]=convertToTime(si.getL_1SNZ_BGN());
-  json["sleepTimers"]["one"]["end"]=convertToTime(si.getL_1SNZ_END());
-  json["sleepTimers"]["two"]["begin"]=convertToTime(si.getL_2SNZ_BGN());
-  json["sleepTimers"]["two"]["end"]=convertToTime(si.getL_2SNZ_END());
-
-  json["info"]["spaMode"]=si.getMode();
-
-  json["lights"]["speed"]=si.getLSPDValue();
-  json["lights"]["state"]=si.getRB_TP_Light()? "ON": "OFF";
-  json["lights"]["effect"] = si.colorModeStrings[si.getColorMode()];
-  json["lights"]["brightness"] = si.getLBRTValue();
-
-  // 0 = white, if white, then set the hue and saturation to white so the light displays correctly in HA.
-  if (si.getColorMode() == 0) {
-    json["lights"]["color"]["h"] = 0;
-    json["lights"]["color"]["s"] = 0;
-  } else {
-    int hue = 4;
-    for (uint count = 0; count < sizeof(si.colorMap); count++){
-      if (si.colorMap[count] == si.getCurrClr()) {
-        hue = count * 15;
-      }
-    }
-    json["lights"]["color"]["h"] = hue;
-    json["lights"]["color"]["s"] = 100;
-  }
-  json["lights"]["color_mode"] = "hs";
-
-  if (serializeJson(json, output) == 0) {
-    // Serialization failed
-    return false;
-  }
-  return true;
-}
-
 void mqttPublishStatus() {
   String json;
-  if (generateStatusJson(json)) {
+  if (generateStatusJson(si, json)) {
     mqttClient.publish(mqttStatusTopic.c_str(),json.c_str());
   } else {
     debugD("Error generating json");
@@ -951,23 +813,23 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
   debugI("Received update for %s to %s",property.c_str(),p.c_str());
 
-  if (property == "temperature") {
+  if (property == "status_temperatureSetPoint") {
     si.setSTMP(int(p.toFloat()*10));
-  } else if (property == "heatpumpmode") {
+  } else if (property == "heatpump_mode") {
     si.setHPMP(p);
-  } else if (property == "pump1") {
+  } else if (property == "pumps_pump1") {
     si.setRB_TP_Pump1(p=="OFF"?0:1);
-  } else if (property == "pump2") {
+  } else if (property == "pumps_pump2") {
     si.setRB_TP_Pump2(p=="OFF"?0:1);
-  } else if (property == "pump3") { 
+  } else if (property == "pumps_pump3") { 
     si.setRB_TP_Pump3(p=="OFF"?0:1);
-  } else if (property == "pump4") {
+  } else if (property == "pumps_pump4") {
     si.setRB_TP_Pump4(p=="OFF"?0:1);
-  } else if (property == "pump5") {
+  } else if (property == "pumps_pump5") {
     si.setRB_TP_Pump5(p=="OFF"?0:1);
-  } else if (property == "auxheat") {
+  } else if (property == "heatpump_auxheat") {
     si.setHELE(p=="OFF"?0:1);
-  } else if (property == "datetime") {
+  } else if (property == "status_datetime") {
     tmElements_t tm;
     tm.Year=CalendarYrToTm(p.substring(0,4).toInt());
     tm.Month=p.substring(5,7).toInt();
@@ -992,10 +854,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     si.setLSPDValue(p);
   } else if (property == "blower") {
     si.setOutlet_Blower(p=="OFF"?2:0);
-  } else if (property == "blowerspeed") {
+  } else if (property == "blower_speed") {
     if (p=="0") si.setOutlet_Blower(2);
     else si.setVARIValue(p.toInt());
-  } else if (property == "blowermode") {
+  } else if (property == "blower_mode") {
     si.setOutlet_Blower(p=="Variable"?0:1);
   } else if (property == "sleepTimers_1_state" || property == "sleepTimers_2_state") {
     for (uint count = 0; count < sizeof(si.sleepStringMap); count++){
@@ -1014,7 +876,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     si.setL_2SNZ_BGN(convertToInteger(p));
   } else if (property == "sleepTimers_2_end") {
     si.setL_2SNZ_END(convertToInteger(p));
-  } else if (property == "info_spaMode") {
+  } else if (property == "status_spaMode") {
     si.setMode(p);
   } else {
     debugE("Unhandled property - %s",property.c_str());
@@ -1137,7 +999,7 @@ void loop() {
       WiFi.reconnect();
     }
   } else {
-    if (bootTime + 10000 < millis()) {
+    if (bootTime + 10000 < millis() && false) {
 
       si.loop();
 
