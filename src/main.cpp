@@ -776,7 +776,7 @@ void mqttHaAutoDiscovery() {
   sensorADPublish("Mains Voltage","diagnostic","voltage",mqttStatusTopic,"V","{{ value_json.voltage }}","measurement","MainsVoltage", spaName, spaSerialNumber);
   sensorADPublish("Mains Current","diagnostic","current",mqttStatusTopic,"A","{{ value_json.current }}","measurement","MainsCurrent", spaName, spaSerialNumber);
   sensorADPublish("Power","","energy",mqttStatusTopic,"W","{{ value_json.power }}","measurement","Power", spaName, spaSerialNumber);
-  sensorADPublish("Total Energy","","energy",mqttStatusTopic,"Wh","{{ value_json.totalenergy }}","total_increasing","TotalEnergy", spaName, spaSerialNumber);
+  sensorADPublish("Total Energy","","energy",mqttStatusTopic,"kWh","{{ value_json.totalenergy }}","total_increasing","TotalEnergy", spaName, spaSerialNumber);
   sensorADPublish("Heatpump Ambient Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.hpambtemp }}","measurement","HPAmbTemp", spaName, spaSerialNumber);
   sensorADPublish("Heatpump Condensor Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.hpcondtemp }}","measurement","HPCondTemp", spaName, spaSerialNumber);
   sensorADPublish("Status","","",mqttStatusTopic,"","{{ value_json.status }}","","Status", spaName, spaSerialNumber);
@@ -842,18 +842,18 @@ bool generateStatusJson(String &output) {
 
   JsonDocument json;
 
-  json["watertemperature"] = String(si.getWTMP() / 10) + "." + String(si.getWTMP() % 10); //avoids stupid rounding errors
-  json["heatertemperature"] = String(si.getHeaterTemperature() / 10) + "." + String(si.getHeaterTemperature() % 10); //avoids stupid rounding errors
-  json["casetemperature"] = String(si.getCaseTemperature()); //avoids stupid rounding errors
-  json["voltage"]=String(si.getMainsVoltage());
-  json["current"]=String(si.getMainsCurrent() / 10) + "." + String(si.getMainsCurrent() % 10);
-  json["power"]=String(si.getPower() / 10) + "." + String(si.getPower() % 10);
+  json["watertemperature"] = si.getWTMP() / 10.0;
+  json["heatertemperature"] = si.getHeaterTemperature() / 10.0;
+  json["casetemperature"] = si.getCaseTemperature(); 
+  json["voltage"]=si.getMainsVoltage();
+  json["current"]=si.getMainsCurrent() / 10.0;
+  json["power"]=si.getPower() / 10.0;
   json["heatingactive"]=si.getRB_TP_Heater()? "ON": "OFF";
   json["ozoneactive"]=si.getRB_TP_Ozone()? "ON": "OFF";
-  json["totalenergy"]=String(si.getPower_kWh() * 10); // convert to kWh to Wh.
-  json["hpambtemp"]=String(si.getHP_Ambient());
-  json["hpcondtemp"]=String(si.getHP_Condensor());
-  json["temperaturesetpoint"]=String(si.getSTMP() / 10) + "." + String(si.getSTMP() % 10);
+  json["totalenergy"]=si.getPower_kWh() / 100.0; // kWh.
+  json["hpambtemp"]=si.getHP_Ambient();
+  json["hpcondtemp"]=si.getHP_Condensor();
+  json["temperaturesetpoint"]=si.getSTMP() / 10.0;
   json["heatermode"]=si.HPMPStrings[si.getHPMP()];
 
   json["pump1"]=si.getRB_TP_Pump1()==0? "OFF" : "ON"; // we're ignoring auto here
@@ -883,11 +883,11 @@ bool generateStatusJson(String &output) {
 
   json["blower"] = si.getOutlet_Blower()==2? "OFF" : "ON";
   json["blowermode"] = si.getOutlet_Blower()==1? "Ramp" : "Variable";
-  json["blowerspeed"] = si.getOutlet_Blower() ==2? "0" : String(si.getVARIValue());
+  json["blowerspeed"] = si.getOutlet_Blower() ==2? 0 : si.getVARIValue();
 
   for (uint count = 0; count < sizeof(si.sleepCodeMap); count++){
     if (si.sleepCodeMap[count] == si.getL_1SNZ_DAY())
-      json["sleepTimers"]["one"]["state"]=si.sleepStringMap[count];
+      json["sleepTimers"]["one"]["state"]=si.sleepStringMap[count];  // TODO #35
     if (si.sleepCodeMap[count] == si.getL_2SNZ_DAY())
       json["sleepTimers"]["two"]["state"]=si.sleepStringMap[count];
   }
