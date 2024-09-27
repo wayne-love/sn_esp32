@@ -11,7 +11,7 @@ On first boot or whenever the enable key is press the board will enter hotspot m
 
 ## Firmware updates
 
-Firmware updates can be pushed to http://<ipaddress>/fota
+Firmware updates can be pushed to http://ipaddress/fota
 
 ## Logging
 
