@@ -54,31 +54,31 @@ int convertToInteger(String &timeStr) {
 bool generateStatusJson(SpaInterface &si, String &output, bool prettyJson) {
   JsonDocument json;
 
-  json["temperatures"]["water"] = String(si.getWTMP() / 10) + "." + String(si.getWTMP() % 10); //avoids stupid rounding errors
-  json["temperatures"]["heater"] = String(si.getHeaterTemperature() / 10) + "." + String(si.getHeaterTemperature() % 10); //avoids stupid rounding errors
-  json["temperatures"]["case"] = String(si.getCaseTemperature()); //avoids stupid rounding errors
-  json["temperatures"]["heatpumpAmbient"]=String(si.getHP_Ambient());
-  json["temperatures"]["hpcondtemp"]=String(si.getHP_Condensor());
+  json["temperatures"]["water"] = si.getWTMP() / 10.0;
+  json["temperatures"]["heater"] = si.getHeaterTemperature() / 10.0;
+  json["temperatures"]["case"] = si.getCaseTemperature(); 
+  json["temperatures"]["heatpumpAmbient"] = si.getHP_Ambient();
+  json["temperatures"]["hpcondtemp"] = si.getHP_Condensor();
 
-  json["power"]["voltage"]=String(si.getMainsVoltage());
-  json["power"]["current"]=String(si.getMainsCurrent() / 10) + "." + String(si.getMainsCurrent() % 10);
-  json["power"]["energy"]=String(si.getPower() / 10) + "." + String(si.getPower() % 10);
-  json["power"]["totalenergy"]=String(si.getPower_kWh() * 10); // convert to kWh to Wh.
+  json["power"]["voltage"] = si.getMainsVoltage();
+  json["power"]["current"]= si.getMainsCurrent() / 10.0;
+  json["power"]["energy"] = si.getPower() / 10.0;
+  json["power"]["totalenergy"]= si.getPower_kWh() / 100.0; // convert to kWh to Wh.
 
-  json["status"]["heatingActive"]=si.getRB_TP_Heater()? "ON": "OFF";
-  json["status"]["ozoneActive"]=si.getRB_TP_Ozone()? "ON": "OFF";
-  json["status"]["temperatureSetPoint"]=String(si.getSTMP() / 10) + "." + String(si.getSTMP() % 10);
-  json["status"]["state"]=si.getStatus();
-  json["status"]["spaMode"]=si.getMode();
+  json["status"]["heatingActive"] = si.getRB_TP_Heater()? "ON": "OFF";
+  json["status"]["ozoneActive"] = si.getRB_TP_Ozone()? "ON": "OFF";
+  json["status"]["temperatureSetPoint"] = si.getSTMP() / 10.0;
+  json["status"]["state"] = si.getStatus();
+  json["status"]["spaMode"] = si.getMode();
 
-  json["heatpump"]["mode"]=si.HPMPStrings[si.getHPMP()];
-  json["heatpump"]["auxheat"]=si.getHELE()==0? "OFF" : "ON";
+  json["heatpump"]["mode"] = si.HPMPStrings[si.getHPMP()];
+  json["heatpump"]["auxheat"] = si.getHELE()==0? "OFF" : "ON";
 
-  json["pumps"]["pump1"]=si.getRB_TP_Pump1()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pumps"]["pump2"]=si.getRB_TP_Pump2()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pumps"]["pump3"]=si.getRB_TP_Pump3()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pumps"]["pump4"]=si.getRB_TP_Pump4()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pumps"]["pump5"]=si.getRB_TP_Pump5()==0? "OFF" : "ON"; // we're ignoring auto here
+  json["pumps"]["pump1"] = si.getRB_TP_Pump1()==0? "OFF" : "ON"; // we're ignoring auto here
+  json["pumps"]["pump2"] = si.getRB_TP_Pump2()==0? "OFF" : "ON"; // we're ignoring auto here
+  json["pumps"]["pump3"] = si.getRB_TP_Pump3()==0? "OFF" : "ON"; // we're ignoring auto here
+  json["pumps"]["pump4"] = si.getRB_TP_Pump4()==0? "OFF" : "ON"; // we're ignoring auto here
+  json["pumps"]["pump5"] = si.getRB_TP_Pump5()==0? "OFF" : "ON"; // we're ignoring auto here
 
 
   String y=String(year(si.getSpaTime()));
@@ -110,8 +110,8 @@ bool generateStatusJson(SpaInterface &si, String &output, bool prettyJson) {
   json["sleepTimers"]["two"]["begin"]=convertToTime(si.getL_2SNZ_BGN());
   json["sleepTimers"]["two"]["end"]=convertToTime(si.getL_2SNZ_END());
 
-  json["lights"]["speed"]=si.getLSPDValue();
-  json["lights"]["state"]=si.getRB_TP_Light()? "ON": "OFF";
+  json["lights"]["speed"] = si.getLSPDValue();
+  json["lights"]["state"] = si.getRB_TP_Light()? "ON": "OFF";
   json["lights"]["effect"] = si.colorModeStrings[si.getColorMode()];
   json["lights"]["brightness"] = si.getLBRTValue();
 

@@ -1200,7 +1200,7 @@ public:
 
     int getL_1SNZ_DAY() { return L_1SNZ_DAY.getValue(); }
     void setL_1SNZ_DAYCallback(void (*callback)(int)) { L_1SNZ_DAY.setCallback(callback); }
-    const std::array <byte, 11> sleepCodeMap = {128,127,96,31,16,8,4,2,1,64,32};
+    const std::array <byte, 11> sleepCodeMap = {128,127,96,31,16,8,4,2,1,64,32};  // TODO #36
     const std::array <String, 11> sleepStringMap = {"Off","Everyday","Weekends","Weekdays","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"};
 
     int getL_2SNZ_DAY() { return L_2SNZ_DAY.getValue(); }
