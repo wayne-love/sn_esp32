@@ -2,6 +2,9 @@ name: Build software for ESP32 and ESP8266
 on:
   pull_request:
     types: [opened, reopened]
+  push:
+    branches:
+      - master
   workflow_dispatch:
 jobs:
   build:
