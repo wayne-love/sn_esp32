@@ -12,6 +12,7 @@
 #endif
 
 #include "SpaInterface.h"
+#include "SpaUtils.h"
 
 extern RemoteDebug Debug;
 

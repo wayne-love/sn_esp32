@@ -1,0 +1,18 @@
+#ifndef SPAUTILS_H
+#define SPAUTILS_H
+
+#include <Arduino.h>
+#include <RemoteDebug.h>
+#include <ArduinoJson.h>
+#include <vector>
+#include <Time.h>
+#include <TimeLib.h>
+#include "SpaInterface.h"
+
+extern RemoteDebug Debug;
+
+String convertToTime(int data);
+int convertToInteger(String &timeStr);
+bool generateStatusJson(SpaInterface &si, String &output, bool prettyJson=false);
+
+#endif
