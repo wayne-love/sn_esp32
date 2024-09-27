@@ -992,10 +992,10 @@ void loop() {
     #if defined(LED_PIN)
     led.setInterval(100);
     #endif
-    long now = millis();
-    if (now-wifiLastConnect > 10000) {
+
+    if (millis()-wifiLastConnect > 10000) {
       debugI("Wifi reconnecting...");
-      wifiLastConnect = now;
+      wifiLastConnect = millis();
       WiFi.reconnect();
     }
   } else {
