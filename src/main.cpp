@@ -72,6 +72,7 @@ ulong mqttLastConnect = 0;
 ulong wifiLastConnect = millis();
 ulong bootTime = millis();
 ulong statusLastPublish = millis();
+bool delayedStart = true; // Delay spa connection for 10sec after boot to allow for external debugging if required.
 bool autoDiscoveryPublished = false;
 
 String mqttServer = "";
@@ -999,7 +1000,9 @@ void loop() {
       WiFi.reconnect();
     }
   } else {
-    if (bootTime + 10000 < millis()) {
+    if (delayedStart) {
+      delayedStart = !(bootTime + 10000 < millis());
+    } else {
 
       si.loop();
 
