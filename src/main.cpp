@@ -15,7 +15,7 @@
 #include <RemoteDebug.h>
 #include <PubSubClient.h>
 #include <LittleFS.h>
-#include <ArduinoJson.h>
+//#include <ArduinoJson.h>
 #include <vector>
 #include <time.h>
 #include <TimeLib.h>
@@ -26,6 +26,7 @@
 
 #include "SpaInterface.h"
 #include "SpaUtils.h"
+#include "HAAutoDiscovery.h"
 
 #if defined(ESP32)
 #include <Preferences.h>
@@ -220,19 +221,7 @@ bool shouldStartWiFiManager() {
   return (isSelectedRebootReason && rebootFlag);
 }
 
-#pragma region Auto Discovery
 
-/// @brief Publish a Sensor via MQTT auto discovery
-/// @param name Sensor name
-/// @param entityCategory https://developers.home-assistant.io/blog/2021/10/26/config-entity?_highlight=diagnostic#entity-categories (empty string accepted)
-/// @param deviceClass Sensor, etc (empty string accepted)
-/// @param stateTopic Mqtt topic to read state information from.
-/// @param unitOfMeasurement V, W, A, mV, etc (empty string accepted)
-/// @param valueTemplate HA value template to parse topic payload to derive value
-/// @param stateClass https://developers.home-assistant.io/docs/core/entity/sensor/#long-term-statistics (empty string accepted)
-/// @param propertId Unique ID of the property
-/// @param deviceName Spa name eg MySpa
-/// @param deviceIdentifier Spa serial number eg 123456-789012
 void sensorADPublish(String name, String entityCategory, String deviceClass, String stateTopic, String unitOfMeasurement, String valueTemplate, String stateClass, String propertyId, String deviceName, String deviceIdentifier ) {
 
 /*
@@ -268,7 +257,7 @@ void sensorADPublish(String name, String entityCategory, String deviceClass, Str
   identifiers.add(deviceIdentifier);
 
   JsonObject availability = json["availability"].to<JsonObject>();
-  availability["topic"] =mqttAvailability;
+  availability["topic"] = mqttAvailability;
 
   // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
   String discoveryTopic = "homeassistant/sensor/"+ spaSerialNumber + "/" + uniqueID + "/config";
@@ -279,14 +268,6 @@ void sensorADPublish(String name, String entityCategory, String deviceClass, Str
 }
 
 
-/// @brief Publish a Binary Sensor via MQTT auto discovery
-/// @param name Sensor name
-/// @param deviceClass Sensor, etc
-/// @param stateTopic Mqtt topic to read state information from.
-/// @param valueTemplate HA value template to parse topic payload to derive value
-/// @param propertId Unique ID of the property
-/// @param deviceName Spa name eg MySpa
-/// @param deviceIdentifier Spa serial number eg 123456-789012
 void binarySensorADPublish (String name, String deviceClass, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier) {
 /*
 {
@@ -316,7 +297,7 @@ void binarySensorADPublish (String name, String deviceClass, String stateTopic, 
   identifiers.add(deviceIdentifier);
 
   JsonObject availability = json["availability"].to<JsonObject>();
-  availability["topic"] =mqttAvailability;
+  availability["topic"] = mqttAvailability;
 
   // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
   String discoveryTopic = "homeassistant/binary_sensor/"+ spaSerialNumber + "/" + uniqueID + "/config";
@@ -326,11 +307,7 @@ void binarySensorADPublish (String name, String deviceClass, String stateTopic, 
 
 }
 
-/// @brief Publish a Climate control via MQTT auto discovery
-/// @param name Sensor name
-/// @param propertId Unique ID of the property
-/// @param deviceName Spa name eg MySpa
-/// @param deviceIdentifier Spa serial number eg 123456-789012
+
 void climateADPublish(String name, String propertyId, String deviceName, String deviceIdentifier ) {
 
 /*
@@ -366,12 +343,7 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
   json["max_temp"]=41;
   json["min_temp"]=10;
   JsonArray modes = json["modes"].to<JsonArray>();
-  modes.add("auto");
-//  modes.add("heat");
-//  modes.add("cool");
-//  modes.add("off");  // this just turns the HP off, not the heating
-//  json["mode_command_topic"]=mqttSet+"/mode";
-//  json["mode_state_template"]="{{ value_json.heatermode }}";
+  modes.add("auto"); // the actual modes of the heat pump are controlled through a select control to avoid accidently turning off the HP and using the resistance heater
   json["mode_state_template"]="auto";
   json["mode_state_topic"]=mqttStatusTopic;
 
@@ -397,12 +369,6 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
 
 }
 
-/// @brief Publish a fan control via MQTT auto discovery
-/// @param name Sensor name
-/// @param stateTopic Mqtt topic to read state information from.
-/// @param propertId Unique ID of the property
-/// @param deviceName Spa name eg MySpa
-/// @param deviceIdentifier Spa serial number eg 123456-789012
 void fanADPublish(String name, String propertyId, String deviceName, String deviceIdentifier ) {
 
 /*
@@ -476,15 +442,6 @@ mqtt:
 }
 
 
-
-/// @brief Publish a swtich by MQTT auto discovery
-/// @param name Name to display
-/// @param deviceClass outlet = power outlet, switch (or "") = generic switch
-/// @param stateTopic Mqtt topic to read state information from.
-/// @param valueTemplate HA value template to parse topic payload to derive value
-/// @param propertyId string appended to spa serial number to create a unique id eg 123456-789012_pump1
-/// @param deviceName Name of the spa
-/// @param deviceIdentifier identifier of the spa (serial number)
 void switchADPublish (String name, String deviceClass, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier) {
 /*
 {
@@ -524,15 +481,7 @@ void switchADPublish (String name, String deviceClass, String stateTopic, String
 
 }
 
-/// @brief Publish a select control by MQTT auto discovery
-/// @param name Name to display
-/// @param options List of options
-/// @param stateTopic Mqtt topic to read state information from.
-/// @param valueTemplate HA value template to parse topic payload to derive value
-/// @param propertyId string appended to spa serial number to create a unique id eg 123456-789012_pump1
-/// @param deviceName Name of the spa
-/// @param deviceIdentifier identifier of the spa (serial number)
-/// @param category (optional) one of either "", "config" or "diagnostic"
+
 void selectADPublish (String name, std::vector<String> options, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier, String category="") {
 /*
 {
@@ -577,15 +526,6 @@ void selectADPublish (String name, std::vector<String> options, String stateTopi
 }
 
 
-/// @brief Publish a swtich by MQTT auto discovery
-/// @param name Name to display
-/// @param stateTopic Mqtt topic to read state information from.
-/// @param valueTemplate HA value template to parse topic payload to derive value
-/// @param propertyId string appended to spa serial number to create a unique id eg 123456-789012_pump1
-/// @param deviceName Name of the spa
-/// @param deviceIdentifier identifier of the spa (serial number)
-/// @param category (optional) one of either "", "config" or "diagnostic"
-/// @param regex (optional) Regex that the text must confirm to
 void textADPublish (String name, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier, String category="", String regex="") {
 /*{
   "availability": {
@@ -637,14 +577,7 @@ void textADPublish (String name, String stateTopic, String valueTemplate, String
 
 }
 
-/// @brief Publish a swtich by MQTT auto discovery
-/// @param name Name to display
-/// @param deviceClass outlet = power outlet, switch (or "") = generic switch
-/// @param stateTopic Mqtt topic to read state information from.
-/// @param valueTemplate HA value template to parse topic payload to derive value
-/// @param propertyId string appended to spa serial number to create a unique id eg 123456-789012_pump1
-/// @param deviceName Name of the spa
-/// @param deviceIdentifier identifier of the spa (serial number)
+
 void lightADPublish (String name, String deviceClass, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier) {
 /*
 {
@@ -721,7 +654,12 @@ void mqttHaAutoDiscovery() {
 
   debugI("Publishing Home Assistant auto discovery");
 
-  sensorADPublish("Water Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.water }}","measurement","WaterTemperature", spaName, spaSerialNumber);
+  String output;
+  String sensorId = "WaterTemperature";
+  sensorAdJSON(output, "Water Temperature", spaName, spaSerialNumber, mqttStatusTopic, "{{ value_json.temperatures.water }}", sensorId, mqttAvailability, "temperature", "", "measurement", "°C");
+  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorId + "/config").c_str(), output.c_str());
+
+  //sensorADPublish("Water Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.water }}","measurement","WaterTemperature", spaName, spaSerialNumber);
   sensorADPublish("Heater Temperature","diagnostic","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.heater }}","measurement","HeaterTemperature", spaName, spaSerialNumber);
   sensorADPublish("Case Temperature","diagnostic","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.case }}","measurement","CaseTemperature", spaName, spaSerialNumber);
   sensorADPublish("Mains Voltage","diagnostic","voltage",mqttStatusTopic,"V","{{ value_json.power.voltage }}","measurement","MainsVoltage", spaName, spaSerialNumber);
@@ -774,12 +712,10 @@ void mqttHaAutoDiscovery() {
 
   fanADPublish("Blower","blower",spaName, spaSerialNumber);
 
-  std::vector<String> spaModeStrings(std::begin(si.spaModeStrings), std::end(si.spaModeStrings));
-  selectADPublish("Spa Mode", spaModeStrings, mqttStatusTopic, "{{ value_json.status.spaMode }}", "status_spaMode", spaName, spaSerialNumber);
+  //std::vector<String> spaModeStrings(std::begin(si.spaModeStrings), std::end(si.spaModeStrings));
+  //selectADPublish("Spa Mode", spaModeStrings, mqttStatusTopic, "{{ value_json.status.spaMode }}", "status_spaMode", spaName, spaSerialNumber);
 
 }
-
-#pragma endregion
 
 #pragma region MQTT Publish / Subscribe
 
