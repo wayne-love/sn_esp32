@@ -999,7 +999,7 @@ void loop() {
       WiFi.reconnect();
     }
   } else {
-    if (bootTime + 10000 < millis() && false) {
+    if (bootTime + 10000 < millis()) {
 
       si.loop();
 
