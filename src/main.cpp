@@ -327,9 +327,9 @@ mqtt:
 
 
   json["state_topic"] = mqttStatusTopic;
-  json["state_value_template"] = "{{ value_json."+propertyId+" }}";
+  json["state_value_template"] = "{{ value_json."+propertyId+".state }}";
 
-  json["command_topic"] = mqttSet + "/" + propertyId;
+  json["command_topic"] = mqttSet + "/" + propertyId + "_state";
   
   json["percentage_state_topic"] = mqttStatusTopic;
   json["percentage_command_topic"] = mqttSet + "/" + propertyId + "_speed";
@@ -570,6 +570,7 @@ void mqttHaAutoDiscovery() {
   debugI("Publishing Home Assistant auto discovery");
 
   String output;
+  String discoveryTopic;
 
   SpaAdConfig spa;
   spa.spaName = spaName;
@@ -597,9 +598,9 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "°C";
-  sensorAdJSON(output, sensorConfig, spa);
+  sensorAdJSON(output, sensorConfig, spa, discoveryTopic);
 
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   sensorConfig.displayName = "Case Temperature";
   sensorConfig.valueTemplate = "{{ value_json.temperatures.case }}";
@@ -608,9 +609,9 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "°C";
-  sensorAdJSON(output, sensorConfig, spa);
+  sensorAdJSON(output, sensorConfig, spa, discoveryTopic);
 
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   sensorConfig.displayName = "Heater Temperature";
   sensorConfig.valueTemplate = "{{ value_json.temperatures.heater }}";
@@ -619,9 +620,9 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "°C";
-  sensorAdJSON(output, sensorConfig, spa);
+  sensorAdJSON(output, sensorConfig, spa, discoveryTopic);
 
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   sensorConfig.displayName = "Heatpump Ambient Temperature";
   sensorConfig.valueTemplate = "{{ value_json.temperatures.heatpumpAmbient }}";
@@ -630,9 +631,9 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "°C";
-  sensorAdJSON(output, sensorConfig, spa);
+  sensorAdJSON(output, sensorConfig, spa, discoveryTopic);
 
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   sensorConfig.displayName = "Heatpump Condensor Temperature";
   sensorConfig.valueTemplate = "{{ value_json.temperatures.heatpumpCondensor }}";
@@ -641,54 +642,64 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "°C";
-  sensorAdJSON(output, sensorConfig, spa);
+  sensorAdJSON(output, sensorConfig, spa, discoveryTopic);
 
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   sensorConfig.displayName = "Mains Voltage";
-  sensorConfig.valueTemplate = "{{ value_json.temperatures.voltage }}";
+  sensorConfig.valueTemplate = "{{ value_json.power.voltage }}";
   sensorConfig.propertyId = "MainsVoltage";
   sensorConfig.deviceClass = "voltage";
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "V";
-  sensorAdJSON(output, sensorConfig, spa);
+  sensorAdJSON(output, sensorConfig, spa, discoveryTopic);
 
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   sensorConfig.displayName = "Mains Current";
-  sensorConfig.valueTemplate = "{{ value_json.temperatures.current }}";
+  sensorConfig.valueTemplate = "{{ value_json.power.current }}";
   sensorConfig.propertyId = "MainsCurrent";
   sensorConfig.deviceClass = "current";
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "A";
-  sensorAdJSON(output, sensorConfig, spa);
+  sensorAdJSON(output, sensorConfig, spa, discoveryTopic);
 
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   sensorConfig.displayName = "Power";
-  sensorConfig.valueTemplate = "{{ value_json.temperatures.power }}";
+  sensorConfig.valueTemplate = "{{ value_json.power.power }}";
   sensorConfig.propertyId = "Power";
   sensorConfig.deviceClass = "power";
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "W";
-  sensorAdJSON(output, sensorConfig, spa);
+  sensorAdJSON(output, sensorConfig, spa, discoveryTopic);
 
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   sensorConfig.displayName = "Total Energy";
-  sensorConfig.valueTemplate = "{{ value_json.temperatures.totalenergy }}";
+  sensorConfig.valueTemplate = "{{ value_json.power.totalEnergy }}";
   sensorConfig.propertyId = "TotalEnergy";
   sensorConfig.deviceClass = "energy";
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "kWh";
-  sensorAdJSON(output, sensorConfig, spa);
+  sensorAdJSON(output, sensorConfig, spa, discoveryTopic);
 
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
+  sensorConfig.displayName = "State";
+  sensorConfig.valueTemplate = "{{ value_json.status.state }}";
+  sensorConfig.propertyId = "State";
+  sensorConfig.deviceClass = "";
+  sensorConfig.entityCategory = "";
+  sensorConfig.stateClass = "";
+  sensorConfig.unitOfMeasure = "";
+  sensorAdJSON(output, sensorConfig, spa, discoveryTopic);
+
+  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //binarySensorADPublish("Heating Active","",mqttStatusTopic,"{{ value_json.status.heatingActive }}","HeatingActive", spaName, spaSerialNumber);
   //binarySensorADPublish("Ozone Active","",mqttStatusTopic,"{{ value_json.status.ozoneActive }}","OzoneActive", spaName, spaSerialNumber);
@@ -699,60 +710,60 @@ void mqttHaAutoDiscovery() {
   binaryConfig.valueTemplate = "{{ value_json.status.heatingActive }}";
   binaryConfig.propertyId = "HeatingActive";
   binaryConfig.deviceClass = "heat";
-  binarySensorAdJSON(output, binaryConfig, spa);
+  binarySensorAdJSON(output, binaryConfig, spa, discoveryTopic);
 
-  mqttClient.publish(("homeassistant/binary_sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + binaryConfig.propertyId + "/config").c_str(), output.c_str());
+  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   binaryConfig.displayName = "Ozone Active";
   binaryConfig.valueTemplate = "{{ value_json.status.ozoneActive }}";
   binaryConfig.propertyId = "OzoneActive";
   binaryConfig.deviceClass = "running";
-  binarySensorAdJSON(output, binaryConfig, spa);
+  binarySensorAdJSON(output, binaryConfig, spa, discoveryTopic);
 
-  mqttClient.publish(("homeassistant/binary_sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + binaryConfig.propertyId + "/config").c_str(), output.c_str());
+  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   
   climateADPublish(spaName,"Heating", spaName, spaSerialNumber);
   selectADPublish("Heatpump Mode",{"Auto","Heat","Cool","Off"}, mqttStatusTopic, "{{ value_json.heatpump.mode }}","heatpump_mode", spaName, spaSerialNumber);
 
   if (si.getPump1InstallState().startsWith("1") && !(si.getPump1InstallState().endsWith("4"))) {
-     switchADPublish("Pump 1","",mqttStatusTopic,"{{ value_json.pumps.pump1 }}","pumps_pump1",spaName,spaSerialNumber);
+     switchADPublish("Pump 1","",mqttStatusTopic,"{{ value_json.pumps.pump1.state }}","pump1",spaName,spaSerialNumber);
   }
 
   if (si.getPump2InstallState().startsWith("1") && !(si.getPump2InstallState().endsWith("4"))) {
-    switchADPublish("Pump 2","",mqttStatusTopic,"{{ value_json.pumps.pump2 }}","pumps_pump2",spaName,spaSerialNumber);
-  } 
+    switchADPublish("Pump 2","",mqttStatusTopic,"{{ value_json.pumps.pump2.state }}","pump2",spaName,spaSerialNumber);
+  }
 
   if (si.getPump3InstallState().startsWith("1") && !(si.getPump3InstallState().endsWith("4"))) {
-    switchADPublish("Pump 3","",mqttStatusTopic,"{{ value_json.pumps.pump3 }}","pumps_pump3",spaName,spaSerialNumber);
-  } 
+    switchADPublish("Pump 3","",mqttStatusTopic,"{{ value_json.pumps.pump3.state }}","pump3",spaName,spaSerialNumber);
+  }
 
   if (si.getPump4InstallState().startsWith("1") && !(si.getPump4InstallState().endsWith("4"))) {
-    switchADPublish("Pump 4","",mqttStatusTopic,"{{ value_json.pumps.pump4 }}","pumps_pump4",spaName,spaSerialNumber);
-  } 
+    switchADPublish("Pump 4","",mqttStatusTopic,"{{ value_json.pumps.pump4.state }}","pump4",spaName,spaSerialNumber);
+  }
 
   if (si.getPump5InstallState().startsWith("1") && !(si.getPump5InstallState().endsWith("4"))) {
-    switchADPublish("Pump 5","",mqttStatusTopic,"{{ value_json.pumps.pump5 }}","pumps_pump5",spaName,spaSerialNumber);
-  }   
+    switchADPublish("Pump 5","",mqttStatusTopic,"{{ value_json.pumps.pump5.state }}","pump5",spaName,spaSerialNumber);
+  }
 
   switchADPublish("Aux Heat Element","",mqttStatusTopic,"{{ value_json.heatpump.auxheat }}","heatpump_auxheat",spaName,spaSerialNumber);
   lightADPublish("Lights","",mqttStatusTopic,"{{ value_json.lights }}","lights",spaName,spaSerialNumber);
   selectADPublish("Lights Speed",{"1","2","3","4","5"},mqttStatusTopic,"{{ value_json.lights.speed }}","lights_speed",spaName, spaSerialNumber);
 
   std::vector<String> sleepStrings(std::begin(si.sleepStringMap), std::end(si.sleepStringMap));
-  selectADPublish("Sleep Timer 1",sleepStrings,mqttStatusTopic,"{{ value_json.sleepTimers.one.state }}", "sleepTimers_1_state", spaName, spaSerialNumber, "config");
-  selectADPublish("Sleep Timer 2",sleepStrings,mqttStatusTopic,"{{ value_json.sleepTimers.two.state }}", "sleepTimers_2_state", spaName, spaSerialNumber, "config");
-  textADPublish("Sleep Timer 1 Begin",mqttStatusTopic,"{{ value_json.sleepTimers.one.begin }}", "sleepTimers_1_begin", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
-  textADPublish("Sleep Timer 1 End",mqttStatusTopic,"{{ value_json.sleepTimers.one.end }}", "sleepTimers_1_end", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
-  textADPublish("Sleep Timer 2 Begin",mqttStatusTopic,"{{ value_json.sleepTimers.two.begin }}", "sleepTimers_2_begin", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
-  textADPublish("Sleep Timer 2 End",mqttStatusTopic,"{{ value_json.sleepTimers.two.end }}", "sleepTimers_2_end", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
+  selectADPublish("Sleep Timer 1",sleepStrings,mqttStatusTopic,"{{ value_json.sleepTimers.timer1.state }}", "sleepTimers_1_state", spaName, spaSerialNumber, "config");
+  selectADPublish("Sleep Timer 2",sleepStrings,mqttStatusTopic,"{{ value_json.sleepTimers.timer2.state }}", "sleepTimers_2_state", spaName, spaSerialNumber, "config");
+  textADPublish("Sleep Timer 1 Begin",mqttStatusTopic,"{{ value_json.sleepTimers.timer1.begin }}", "sleepTimers_1_begin", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
+  textADPublish("Sleep Timer 1 End",mqttStatusTopic,"{{ value_json.sleepTimers.timer1.end }}", "sleepTimers_1_end", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
+  textADPublish("Sleep Timer 2 Begin",mqttStatusTopic,"{{ value_json.sleepTimers.timer2.begin }}", "sleepTimers_2_begin", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
+  textADPublish("Sleep Timer 2 End",mqttStatusTopic,"{{ value_json.sleepTimers.timer2.end }}", "sleepTimers_2_end", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
 
   textADPublish("Date Time",mqttStatusTopic,"{{ value_json.status.datetime }}", "status_datetime", spaName, spaSerialNumber, "config", "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
 
   fanADPublish("Blower","blower",spaName, spaSerialNumber);
 
-  //std::vector<String> spaModeStrings(std::begin(si.spaModeStrings), std::end(si.spaModeStrings));
-  //selectADPublish("Spa Mode", spaModeStrings, mqttStatusTopic, "{{ value_json.status.spaMode }}", "status_spaMode", spaName, spaSerialNumber);
+  std::vector<String> spaModeStrings(std::begin(si.spaModeStrings), std::end(si.spaModeStrings));
+  selectADPublish("Spa Mode", spaModeStrings, mqttStatusTopic, "{{ value_json.status.spaMode }}", "status_spaMode", spaName, spaSerialNumber);
 
 }
 
@@ -793,15 +804,15 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     si.setSTMP(int(p.toFloat()*10));
   } else if (property == "heatpump_mode") {
     si.setHPMP(p);
-  } else if (property == "pumps_pump1") {
+  } else if (property == "pump1") {
     si.setRB_TP_Pump1(p=="OFF"?0:1);
-  } else if (property == "pumps_pump2") {
+  } else if (property == "pump2") {
     si.setRB_TP_Pump2(p=="OFF"?0:1);
-  } else if (property == "pumps_pump3") { 
+  } else if (property == "pump3") {
     si.setRB_TP_Pump3(p=="OFF"?0:1);
-  } else if (property == "pumps_pump4") {
+  } else if (property == "pump4") {
     si.setRB_TP_Pump4(p=="OFF"?0:1);
-  } else if (property == "pumps_pump5") {
+  } else if (property == "pump5") {
     si.setRB_TP_Pump5(p=="OFF"?0:1);
   } else if (property == "heatpump_auxheat") {
     si.setHELE(p=="OFF"?0:1);
@@ -828,7 +839,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     }
   } else if (property == "lights_speed") {
     si.setLSPDValue(p);
-  } else if (property == "blower") {
+  } else if (property == "blower_state") {
     si.setOutlet_Blower(p=="OFF"?2:0);
   } else if (property == "blower_speed") {
     if (p=="0") si.setOutlet_Blower(2);

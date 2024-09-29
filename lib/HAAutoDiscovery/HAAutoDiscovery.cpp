@@ -3,7 +3,8 @@
 void sensorAdJSON(
    String& output,
    const SensorAdConfig& config,
-   const SpaAdConfig& spa
+   const SpaAdConfig& spa,
+   String& discoveryTopic
    ) {
 /*
 { 
@@ -38,6 +39,8 @@ void sensorAdJSON(
    if (config.stateClass != "") { json["state_class"] = config.stateClass; }
    json["availability_topic"] = spa.availabilityTopic;
 
+   discoveryTopic = "homeassistant/sensor/" + spa.spaSerialNumber + "/" + spa.spaSerialNumber + "-" + config.propertyId + "/config";
+
    serializeJson(json, output);
 
 }
@@ -45,7 +48,8 @@ void sensorAdJSON(
 void binarySensorAdJSON(
    String& output, 
    const BinarySensorAdConfig& config, 
-   const SpaAdConfig& spa){
+   const SpaAdConfig& spa,
+   String &discoveryTopic){
 /*
 {
   "name":null,
@@ -72,8 +76,8 @@ void binarySensorAdJSON(
    json["name"] = config.displayName;
    json["availability_topic"] = spa.availabilityTopic;
 
+   discoveryTopic = "homeassistant/binary_sensor/" + spa.spaSerialNumber + "/" + spa.spaSerialNumber + "-" + config.propertyId + "/config";
+
    serializeJson(json, output);
-
-
 
 }

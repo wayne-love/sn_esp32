@@ -227,4 +227,16 @@ class SpaInterface : public SpaProperties {
         bool setMode(String mode);
 };
 
+// Define the function pointer type for getPumpInstallState functions
+typedef String (SpaInterface::*GetPumpStateFunction)();
+
+// Declare the array of function pointers for each pump's install state as static
+static GetPumpStateFunction pumpStateFunctions[] = {
+  &SpaInterface::getPump1InstallState,
+  &SpaInterface::getPump2InstallState,
+  &SpaInterface::getPump3InstallState,
+  &SpaInterface::getPump4InstallState,
+  &SpaInterface::getPump5InstallState
+};
+
 #endif
