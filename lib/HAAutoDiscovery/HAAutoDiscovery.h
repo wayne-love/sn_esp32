@@ -37,12 +37,12 @@ struct BinarySensorAdConfig {
 /// @brief Generate JSON string to publish for Sensor auto discovery
 /// @param output String to revceive JSON output
 /// @param config Structure to define JSON output
-void sensorAdJSON(String& output, const SensorAdConfig& config, const SpaAdConfig& spa);
+void sensorAdJSON(String& output, const SensorAdConfig& config, const SpaAdConfig& spa, String &discoveryTopic);
 
 /// @brief Generate JSON string to publish for Sensor auto discovery
 /// @param output String to revceive JSON output
 /// @param config Structure to define JSON output
-void binarySensorAdJSON(String& output, const BinarySensorAdConfig& config, const SpaAdConfig& spa);
+void binarySensorAdJSON(String& output, const BinarySensorAdConfig& config, const SpaAdConfig& spa, String &discoveryTopic);
 
 
 #endif  
