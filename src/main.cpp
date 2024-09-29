@@ -222,92 +222,6 @@ bool shouldStartWiFiManager() {
 }
 
 
-void sensorADPublish(String name, String entityCategory, String deviceClass, String stateTopic, String unitOfMeasurement, String valueTemplate, String stateClass, String propertyId, String deviceName, String deviceIdentifier ) {
-
-/*
-{ 
-   "device_class":"temperature",
-   "state_topic":"homeassistant/sensor/sensorBedroom/state",
-   "unit_of_measurement":"°C",
-   "value_template":"{{ value_json.temperature}}",
-   "unique_id":"temp01ae",
-   "device":{
-      "identifiers":[
-         "bedroom01ae"
-      ],
-      "name":"Bedroom"
-   }
-}"
-*/
-
-  JsonDocument json;
-  String uniqueID = spaSerialNumber + "-" + propertyId;
-
-  json["name"]=name;
-  if (entityCategory != "") {json["entity_category"] = entityCategory; }
-  if (deviceClass != "") { json["device_class"] = deviceClass; }
-  json["state_topic"] = stateTopic;
-  if (unitOfMeasurement != "") { json["unit_of_measurement"] = unitOfMeasurement; }
-  json["value_template"] = valueTemplate;
-  if (stateClass != "") { json["state_class"] = stateClass; }
-  json["unique_id"] = uniqueID;
-  JsonObject device = json["device"].to<JsonObject>();
-  device["name"] = deviceName;
-  JsonArray identifiers = device["identifiers"].to<JsonArray>();
-  identifiers.add(deviceIdentifier);
-
-  JsonObject availability = json["availability"].to<JsonObject>();
-  availability["topic"] = mqttAvailability;
-
-  // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
-  String discoveryTopic = "homeassistant/sensor/"+ spaSerialNumber + "/" + uniqueID + "/config";
-  String output = "";
-  serializeJson(json,output);
-  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
-
-}
-
-
-void binarySensorADPublish (String name, String deviceClass, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier) {
-/*
-{
-  "name":null,
-  "device_class":"motion",
-  "state_topic":"homeassistant/binary_sensor/garden/state",
-  "unique_id":"motion01ad",
-  "device":{
-    "identifiers":[
-        "01ad"
-    ],
-    "name":"Garden"
-  }
-}*/
-
-  JsonDocument json;
-  String uniqueID = spaSerialNumber + "-" + propertyId;
-
-  if (deviceClass != "") { json["device_class"] = deviceClass; }
-  json["name"]=name;
-  json["state_topic"] = stateTopic;
-  json["value_template"] = valueTemplate;
-  json["unique_id"] = uniqueID;
-  JsonObject device = json["device"].to<JsonObject>();
-  device["name"] = deviceName;
-  JsonArray identifiers = device["identifiers"].to<JsonArray>();
-  identifiers.add(deviceIdentifier);
-
-  JsonObject availability = json["availability"].to<JsonObject>();
-  availability["topic"] = mqttAvailability;
-
-  // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
-  String discoveryTopic = "homeassistant/binary_sensor/"+ spaSerialNumber + "/" + uniqueID + "/config";
-  String output = "";
-  serializeJson(json,output);
-  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
-
-}
-
-
 void climateADPublish(String name, String propertyId, String deviceName, String deviceIdentifier ) {
 
 /*
@@ -655,68 +569,147 @@ void mqttHaAutoDiscovery() {
   debugI("Publishing Home Assistant auto discovery");
 
   String output;
-  String sensorId = "WaterTemperature";
 
-  SensorAdConfig config;
-
-  config.displayName = "Water Temperature";
-  config.spaName = spaName;
-  config.spaSerialNumber = spaSerialNumber;
-  config.stateTopic = mqttStatusTopic;
-  config.valueTemplate = "{{ value_json.temperatures.water }}";
-  config.propertyId = "WaterTemperature";
-  config.availabilityTopic = mqttAvailability;
-  config.deviceClass = "temperature";
-  config.entityCategory = "";
-  config.stateClass = "measurement";
-  config.unitOfMeasure = "°C";
-  sensorAdJSON(output, config);
-
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + config.propertyId + "/config").c_str(), output.c_str());
-
-  config.displayName = "Case Temperature";
-  config.valueTemplate = "{{ value_json.temperatures.case }}";
-  config.propertyId = "CaseTemperature";
-  config.entityCategory = "diagnostic";
-  sensorAdJSON(output, config);
-
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + config.propertyId + "/config").c_str(), output.c_str());
-
-  config.displayName = "Heater Temperature";
-  config.valueTemplate = "{{ value_json.temperatures.heater }}";
-  config.propertyId = "HeaterTemperature";
-  sensorAdJSON(output, config);
-
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + config.propertyId + "/config").c_str(), output.c_str());
-
-  config.displayName = "Heatpump Ambient Temperature";
-  config.valueTemplate = "{{ value_json.temperatures.heatpumpAmbient }}";
-  config.propertyId = "HPAmbTemp";
-  sensorAdJSON(output, config);
-
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + config.propertyId + "/config").c_str(), output.c_str());
-
-  config.displayName = "Heatpump Condensor Temperature";
-  config.valueTemplate = "{{ value_json.temperatures.heatpumpCondensor }}";
-  config.propertyId = "HPCondTemp";
-  sensorAdJSON(output, config);
-
-  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + config.propertyId + "/config").c_str(), output.c_str());
-
+  SpaAdConfig spa;
+  spa.spaName = spaName;
+  spa.spaSerialNumber = spaSerialNumber;
+  spa.stateTopic = mqttStatusTopic;
+  spa.availabilityTopic = mqttAvailability;
 
   //sensorADPublish("Water Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.water }}","measurement","WaterTemperature", spaName, spaSerialNumber);
   //sensorADPublish("Heater Temperature","diagnostic","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.heater }}","measurement","HeaterTemperature", spaName, spaSerialNumber);
   //sensorADPublish("Case Temperature","diagnostic","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.case }}","measurement","CaseTemperature", spaName, spaSerialNumber);
-  sensorADPublish("Mains Voltage","diagnostic","voltage",mqttStatusTopic,"V","{{ value_json.power.voltage }}","measurement","MainsVoltage", spaName, spaSerialNumber);
-  sensorADPublish("Mains Current","diagnostic","current",mqttStatusTopic,"A","{{ value_json.power.current }}","measurement","MainsCurrent", spaName, spaSerialNumber);
-  sensorADPublish("Power","","energy",mqttStatusTopic,"W","{{ value_json.power.energy }}","measurement","Power", spaName, spaSerialNumber);
-  sensorADPublish("Total Energy","","energy",mqttStatusTopic,"Wh","{{ value_json.totalenergy }}","total_increasing","TotalEnergy", spaName, spaSerialNumber);
+  //sensorADPublish("Mains Voltage","diagnostic","voltage",mqttStatusTopic,"V","{{ value_json.power.voltage }}","measurement","MainsVoltage", spaName, spaSerialNumber);
+  //sensorADPublish("Mains Current","diagnostic","current",mqttStatusTopic,"A","{{ value_json.power.current }}","measurement","MainsCurrent", spaName, spaSerialNumber);
+  //sensorADPublish("Power","","energy",mqttStatusTopic,"W","{{ value_json.power.energy }}","measurement","Power", spaName, spaSerialNumber);
+  //sensorADPublish("Total Energy","","energy",mqttStatusTopic,"Wh","{{ value_json.totalenergy }}","total_increasing","TotalEnergy", spaName, spaSerialNumber);
   //sensorADPublish("Heatpump Ambient Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.heatpumpAmbient }}","measurement","HPAmbTemp", spaName, spaSerialNumber);
   //sensorADPublish("Heatpump Condensor Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.heatpumpCondensor }}","measurement","HPCondTemp", spaName, spaSerialNumber);
   //sensorADPublish("State","","",mqttStatusTopic,"","{{ value_json.status.state }}","","State", spaName, spaSerialNumber);
   
-  binarySensorADPublish("Heating Active","",mqttStatusTopic,"{{ value_json.status.heatingActive }}","HeatingActive", spaName, spaSerialNumber);
-  binarySensorADPublish("Ozone Active","",mqttStatusTopic,"{{ value_json.status.ozoneActive }}","OzoneActive", spaName, spaSerialNumber);
+  SensorAdConfig sensorConfig;
+
+  sensorConfig.displayName = "Water Temperature";
+  sensorConfig.valueTemplate = "{{ value_json.temperatures.water }}";
+  sensorConfig.propertyId = "WaterTemperature";
+  sensorConfig.deviceClass = "temperature";
+  sensorConfig.entityCategory = "";
+  sensorConfig.stateClass = "measurement";
+  sensorConfig.unitOfMeasure = "°C";
+  sensorAdJSON(output, sensorConfig, spa);
+
+  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+
+  sensorConfig.displayName = "Case Temperature";
+  sensorConfig.valueTemplate = "{{ value_json.temperatures.case }}";
+  sensorConfig.propertyId = "CaseTemperature";
+  sensorConfig.deviceClass = "temperature";
+  sensorConfig.entityCategory = "diagnostic";
+  sensorConfig.stateClass = "measurement";
+  sensorConfig.unitOfMeasure = "°C";
+  sensorAdJSON(output, sensorConfig, spa);
+
+  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+
+  sensorConfig.displayName = "Heater Temperature";
+  sensorConfig.valueTemplate = "{{ value_json.temperatures.heater }}";
+  sensorConfig.propertyId = "HeaterTemperature";
+  sensorConfig.deviceClass = "temperature";
+  sensorConfig.entityCategory = "diagnostic";
+  sensorConfig.stateClass = "measurement";
+  sensorConfig.unitOfMeasure = "°C";
+  sensorAdJSON(output, sensorConfig, spa);
+
+  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+
+  sensorConfig.displayName = "Heatpump Ambient Temperature";
+  sensorConfig.valueTemplate = "{{ value_json.temperatures.heatpumpAmbient }}";
+  sensorConfig.propertyId = "HPAmbTemp";
+  sensorConfig.deviceClass = "temperature";
+  sensorConfig.entityCategory = "diagnostic";
+  sensorConfig.stateClass = "measurement";
+  sensorConfig.unitOfMeasure = "°C";
+  sensorAdJSON(output, sensorConfig, spa);
+
+  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+
+  sensorConfig.displayName = "Heatpump Condensor Temperature";
+  sensorConfig.valueTemplate = "{{ value_json.temperatures.heatpumpCondensor }}";
+  sensorConfig.propertyId = "HPCondTemp";
+  sensorConfig.deviceClass = "temperature";
+  sensorConfig.entityCategory = "diagnostic";
+  sensorConfig.stateClass = "measurement";
+  sensorConfig.unitOfMeasure = "°C";
+  sensorAdJSON(output, sensorConfig, spa);
+
+  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+
+  sensorConfig.displayName = "Mains Voltage";
+  sensorConfig.valueTemplate = "{{ value_json.temperatures.voltage }}";
+  sensorConfig.propertyId = "MainsVoltage";
+  sensorConfig.deviceClass = "voltage";
+  sensorConfig.entityCategory = "diagnostic";
+  sensorConfig.stateClass = "measurement";
+  sensorConfig.unitOfMeasure = "V";
+  sensorAdJSON(output, sensorConfig, spa);
+
+  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+
+  sensorConfig.displayName = "Mains Current";
+  sensorConfig.valueTemplate = "{{ value_json.temperatures.current }}";
+  sensorConfig.propertyId = "MainsCurrent";
+  sensorConfig.deviceClass = "current";
+  sensorConfig.entityCategory = "diagnostic";
+  sensorConfig.stateClass = "measurement";
+  sensorConfig.unitOfMeasure = "A";
+  sensorAdJSON(output, sensorConfig, spa);
+
+  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+
+  sensorConfig.displayName = "Power";
+  sensorConfig.valueTemplate = "{{ value_json.temperatures.power }}";
+  sensorConfig.propertyId = "Power";
+  sensorConfig.deviceClass = "power";
+  sensorConfig.entityCategory = "diagnostic";
+  sensorConfig.stateClass = "measurement";
+  sensorConfig.unitOfMeasure = "W";
+  sensorAdJSON(output, sensorConfig, spa);
+
+  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+
+  sensorConfig.displayName = "Total Energy";
+  sensorConfig.valueTemplate = "{{ value_json.temperatures.totalenergy }}";
+  sensorConfig.propertyId = "TotalEnergy";
+  sensorConfig.deviceClass = "energy";
+  sensorConfig.entityCategory = "diagnostic";
+  sensorConfig.stateClass = "measurement";
+  sensorConfig.unitOfMeasure = "kWh";
+  sensorAdJSON(output, sensorConfig, spa);
+
+  mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorConfig.propertyId + "/config").c_str(), output.c_str());
+
+
+  //binarySensorADPublish("Heating Active","",mqttStatusTopic,"{{ value_json.status.heatingActive }}","HeatingActive", spaName, spaSerialNumber);
+  //binarySensorADPublish("Ozone Active","",mqttStatusTopic,"{{ value_json.status.ozoneActive }}","OzoneActive", spaName, spaSerialNumber);
+
+  BinarySensorAdConfig binaryConfig;
+
+  binaryConfig.displayName = "Heating Active";
+  binaryConfig.valueTemplate = "{{ value_json.status.heatingActive }}";
+  binaryConfig.propertyId = "HeatingActive";
+  binaryConfig.deviceClass = "heat";
+  binarySensorAdJSON(output, binaryConfig, spa);
+
+  mqttClient.publish(("homeassistant/binary_sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + binaryConfig.propertyId + "/config").c_str(), output.c_str());
+
+  binaryConfig.displayName = "Ozone Active";
+  binaryConfig.valueTemplate = "{{ value_json.status.ozoneActive }}";
+  binaryConfig.propertyId = "OzoneActive";
+  binaryConfig.deviceClass = "running";
+  binarySensorAdJSON(output, binaryConfig, spa);
+
+  mqttClient.publish(("homeassistant/binary_sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + binaryConfig.propertyId + "/config").c_str(), output.c_str());
+
   
   climateADPublish(spaName,"Heating", spaName, spaSerialNumber);
   selectADPublish("Heatpump Mode",{"Auto","Heat","Cool","Off"}, mqttStatusTopic, "{{ value_json.heatpump.mode }}","heatpump_mode", spaName, spaSerialNumber);

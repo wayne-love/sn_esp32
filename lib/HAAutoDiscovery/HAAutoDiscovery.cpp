@@ -1,9 +1,10 @@
 #include "HAAutoDiscovery.h"
 
 void sensorAdJSON(
-    String& output,
-    const SensorAdConfig& config
-    ) {
+   String& output,
+   const SensorAdConfig& config,
+   const SpaAdConfig& spa
+   ) {
 /*
 { 
    "device_class":"temperature",
@@ -18,27 +19,61 @@ void sensorAdJSON(
       "name":"Bedroom"
    }
 }
-
-
 */
 
-    JsonDocument json;
+   JsonDocument json;
 
-    //String uniqueID = spaSerialNumber + "-" + propertyId;
+   //String uniqueID = spaSerialNumber + "-" + propertyId;
 
-    if (config.deviceClass != "") json["device_class"] = config.deviceClass;
-    json["state_topic"] = config.stateTopic;
-    if (config.unitOfMeasure != "") json["unit_of_measurement"] = config.unitOfMeasure;
-    json["value_template"] = config.valueTemplate;
-    json["unique_id"] = config.spaSerialNumber + "-" + config.propertyId;
-    json["device"]["identifiers"][0] = config.spaSerialNumber;
-    json["device"]["serial_number"] = config.spaSerialNumber;
-    json["device"]["name"] = config.spaName;
-    json["name"] = config.displayName;
-    if (config.entityCategory != "") json["entity_category"] = config.entityCategory;
-    if (config.stateClass != "") { json["state_class"] = config.stateClass; }
-    json["availability_topic"] = config.availabilityTopic;
+   if (config.deviceClass != "") json["device_class"] = config.deviceClass;
+   json["state_topic"] = spa.stateTopic;
+   if (config.unitOfMeasure != "") json["unit_of_measurement"] = config.unitOfMeasure;
+   json["value_template"] = config.valueTemplate;
+   json["unique_id"] = spa.spaSerialNumber + "-" + config.propertyId;
+   json["device"]["identifiers"][0] = spa.spaSerialNumber;
+   json["device"]["serial_number"] = spa.spaSerialNumber;
+   json["device"]["name"] = spa.spaName;
+   json["name"] = config.displayName;
+   if (config.entityCategory != "") json["entity_category"] = config.entityCategory;
+   if (config.stateClass != "") { json["state_class"] = config.stateClass; }
+   json["availability_topic"] = spa.availabilityTopic;
 
-    serializeJson(json, output);
+   serializeJson(json, output);
+
+}
+
+void binarySensorAdJSON(
+   String& output, 
+   const BinarySensorAdConfig& config, 
+   const SpaAdConfig& spa){
+/*
+{
+  "name":null,
+  "device_class":"motion",
+  "state_topic":"homeassistant/binary_sensor/garden/state",
+  "unique_id":"motion01ad",
+  "device":{
+    "identifiers":[
+        "01ad"
+    ],
+    "name":"Garden"
+  }
+}*/
+
+   JsonDocument json;
+
+   if (config.deviceClass != "") json["device_class"] = config.deviceClass;
+   json["state_topic"] = spa.stateTopic;
+   json["value_template"] = config.valueTemplate;
+   json["unique_id"] = spa.spaSerialNumber + "-" + config.propertyId;
+   json["device"]["identifiers"][0] = spa.spaSerialNumber;
+   json["device"]["serial_number"] = spa.spaSerialNumber;
+   json["device"]["name"] = spa.spaName;
+   json["name"] = config.displayName;
+   json["availability_topic"] = spa.availabilityTopic;
+
+   serializeJson(json, output);
+
+
 
 }
