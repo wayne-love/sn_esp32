@@ -656,7 +656,24 @@ void mqttHaAutoDiscovery() {
 
   String output;
   String sensorId = "WaterTemperature";
-  sensorAdJSON(output, "Water Temperature", spaName, spaSerialNumber, mqttStatusTopic, "{{ value_json.temperatures.water }}", sensorId, mqttAvailability, "temperature", "", "measurement", "°C");
+
+  SensorAdConfig config;
+  config.displayName = 
+
+  config.displayName = "Water Temperature";
+  config.spaName = spaName;
+  config.spaSerialNumber = spaSerialNumber;
+  config.stateTopic = mqttStatusTopic;
+  config.valueTemplate = "{{ value_json.temperatures.water }}";
+  config.propertyId = sensorId;
+  config.availabilityTopic = mqttAvailability;
+  config.deviceClass = "temperature";
+  config.entityCategory = "";
+  config.stateClass = "measurement";
+  config.unitOfMeasure = "°C";
+
+  sensorAdJSON(output, config);
+
   mqttClient.publish(("homeassistant/sensor/"+ spaSerialNumber + "/" + spaSerialNumber + "-" + sensorId + "/config").c_str(), output.c_str());
 
   //sensorADPublish("Water Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.water }}","measurement","WaterTemperature", spaName, spaSerialNumber);

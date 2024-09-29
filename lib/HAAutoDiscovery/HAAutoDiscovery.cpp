@@ -2,17 +2,7 @@
 
 void sensorAdJSON(
     String& output,
-    String displayName,
-    String spaName,
-    String spaSerialNumber,
-    String stateTopic,
-    String valueTemplate,
-    String propertyId,
-    String availabilityTopic,
-    String deviceClass,
-    String entityCategory,
-    String stateClass,
-    String unitOfMeasure
+    const SensorAdConfig& config
     ) {
 /*
 { 
@@ -36,20 +26,19 @@ void sensorAdJSON(
 
     //String uniqueID = spaSerialNumber + "-" + propertyId;
 
-    if (deviceClass != "") json["device_class"] = deviceClass;
-    json["state_topic"] = stateTopic;
-    if (unitOfMeasure != "") json["unit_of_measurement"] = unitOfMeasure;
-    json["value_template"] = valueTemplate;
-    json["unique_id"] = spaSerialNumber + "-" + propertyId;
-    json["device"]["identifiers"][0] = spaSerialNumber;
-    json["device"]["serial_number"] = spaSerialNumber;
-    json["device"]["name"] = spaName;
-    json["name"]=displayName;
-    if (entityCategory != "") json["entity_category"] = entityCategory;
-    if (stateClass != "") { json["state_class"] = stateClass; }
-    json["availability_topic"] = availabilityTopic;
+    if (config.deviceClass != "") json["device_class"] = config.deviceClass;
+    json["state_topic"] = config.stateTopic;
+    if (config.unitOfMeasure != "") json["unit_of_measurement"] = config.unitOfMeasure;
+    json["value_template"] = config.valueTemplate;
+    json["unique_id"] = config.spaSerialNumber + "-" + config.propertyId;
+    json["device"]["identifiers"][0] = config.spaSerialNumber;
+    json["device"]["serial_number"] = config.spaSerialNumber;
+    json["device"]["name"] = config.spaName;
+    json["name"] = config.displayName;
+    if (config.entityCategory != "") json["entity_category"] = config.entityCategory;
+    if (config.stateClass != "") { json["state_class"] = config.stateClass; }
+    json["availability_topic"] = config.availabilityTopic;
 
     serializeJson(json, output);
 
 }
-
