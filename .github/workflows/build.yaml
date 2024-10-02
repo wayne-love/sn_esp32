@@ -3,34 +3,99 @@ on:
   pull_request:
     types: [opened, reopened]
   push:
-    branches:
-      - master
   workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        platform: [esp32dev, esp8266dev, spa-control-pcb]
     steps:
-    - uses: actions/checkout@v2
-    - name: Cache pip
-      uses: actions/cache@v2
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-    - name: Cache PlatformIO
-      uses: actions/cache@v2
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
-    - name: Set up Python
-      uses: actions/setup-python@v2
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
-    - name: Build for ESP32
-      run: pio run -e esp32dev
-    - name: Build for ESP8266
-      run: pio run -e esp8266dev
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-platformio-${{ hashFiles('**/platformio.ini', '**/lib_deps/*') }}
+          restore-keys: |
+            ${{ runner.os }}-platformio-
+      - name: Cache PlatformIO Build Directory
+        uses: actions/cache@v4
+        with:
+          path: .pio
+          key: ${{ runner.os }}-pio-${{ matrix.platform }}-${{ hashFiles('**/platformio.ini', '**/lib_deps/*') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-${{ matrix.platform }}-
+      - name: Cache PlatformIO Packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformio/packages
+          key: ${{ runner.os }}-platformio-packages-${{ hashFiles('**/platformio.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-platformio-packages-
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Install PlatformIO
+        run: pip install platformio
+      - name: Build for ${{ matrix.platform }}
+        run: pio run -e ${{ matrix.platform }}
+      - name: Display firmware files
+        run: ls -la .pio/build/${{ matrix.platform }}/firmware.bin
+      - name: Rename firmware files
+        run: mv .pio/build/${{ matrix.platform }}/firmware.bin firmware_${{ matrix.platform }}.bin
+      - name: Archive Firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware_${{ matrix.platform }}
+          path: firmware_${{ matrix.platform }}.bin
+  release:
+    name: Release
+    #if: github.ref == 'refs/heads/master'
+    needs: build
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo for CHANGELOG
+        uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: firmware
+          merge-multiple: true
+      - name: Display structure of downloaded files
+        run: ls -Rla firmware/
+      - name: release with tags
+        if: startsWith(github.event.ref, 'refs/tags/v')
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "firmware/firmware*.bin"
+          bodyFile: "CHANGELOG.md"
+          removeArtifacts: true
+      - name: Get current date/time
+        if: >-
+          !startsWith(github.event.ref, 'refs/tags/v')
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+      - name: release without tags uses branch name
+        if: >-
+          !startsWith(github.event.ref, 'refs/tags/v')
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.head_ref || github.ref_name }}_${{ env.date }}
+          makeLatest: true
+          allowUpdates: true
+          artifacts: "firmware/firmware*.bin"
+          bodyFile: "CHANGELOG.md"
+          removeArtifacts: true
