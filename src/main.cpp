@@ -143,6 +143,7 @@ void startWiFiManager(){
   wm.addParameter(&custom_mqtt_password);
   wm.setBreakAfterConfig(true);
   wm.setSaveConfigCallback(saveConfigCallback);
+  wm.setConnectTimeout(300); //close the WiFiManager after 300 seconds of inactivity
 
 
   wm.startConfigPortal();
