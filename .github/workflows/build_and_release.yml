@@ -1,9 +1,12 @@
-name: Build software for ESP32 and ESP8266
+# .github/workflows/build_and_release.yml
+name: Build and Release
+
 on:
   pull_request:
     types: [opened, reopened]
   push:
   workflow_dispatch:
+
 jobs:
   pre_job:
     runs-on: ubuntu-latest
@@ -24,56 +27,13 @@ jobs:
     # If there are current workflows running, we want to run the one with the tag.
     # Therefore, the other workflow(s) are skipped.
     if: needs.pre_job.outputs.concurrent_workflows == 'false' || (needs.pre_job.outputs.concurrent_workflows == 'true' && github.ref_type == 'tag')
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         platform: [esp32dev, esp8266dev, spa-control-pcb]
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Cache PlatformIO
-        uses: actions/cache@v4
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-platformio-${{ matrix.platform }}-${{ hashFiles('**/platformio.ini', '**/lib_deps/*') }}
-          restore-keys: |
-            ${{ runner.os }}-platformio-${{ matrix.platform }}-
-      - name: Cache PlatformIO Build Directory
-        uses: actions/cache@v4
-        with:
-          path: .pio
-          key: ${{ runner.os }}-pio-${{ matrix.platform }}-${{ hashFiles('**/platformio.ini', '**/lib_deps/*') }}
-          restore-keys: |
-            ${{ runner.os }}-pio-${{ matrix.platform }}-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-      - name: Install PlatformIO
-        run: pip install platformio
-      - name: Build for ${{ matrix.platform }}
-        run: pio run -e ${{ matrix.platform }} -t mergebin
-      #- name: Display firmware files
-      #  run: ls -la .pio/build/${{ matrix.platform }}/firmware*.bin
-      - name: Rename and move firmware files
-        run: |
-          mv .pio/build/${{ matrix.platform }}/firmware.bin firmware_${{ matrix.platform }}_ota.bin
-          if [ "${{ matrix.platform }}" != "esp8266dev" ]; then
-            mv .pio/build/${{ matrix.platform }}/firmware_factory.bin firmware_${{ matrix.platform }}_factory.bin
-          fi
-          ls -la firmware*.bin
-      - name: Archive Firmware
-        uses: actions/upload-artifact@v4
-        with:
-          name: firmware_${{ matrix.platform }}
-          path: firmware_${{ matrix.platform }}*.bin
+    uses: ./.github/workflows/build_firmware.yml
+    with:
+      platform: ${{ matrix.platform }}
+    secrets: inherit
 
   release:
     name: Release
