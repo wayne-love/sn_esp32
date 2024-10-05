@@ -5,7 +5,25 @@ on:
   push:
   workflow_dispatch:
 jobs:
+  pre_job:
+    runs-on: ubuntu-latest
+    # If we push a commit with a new tag, it triggers two workflows.
+    #  one for the new commit, one for the new tag.
+    # This detects if multiple concurrent workflows are running.
+    outputs:
+      concurrent_workflows: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          concurrent_skipping: 'always'
+          do_not_skip: '["pull_request", "workflow_dispatch", "schedule"]'
+
   build:
+    needs: pre_job
+    # If there are current workflows running, we want to run the one with the tag.
+    # Therefore, the other workflow(s) are skipped.
+    if: needs.pre_job.outputs.concurrent_workflows == 'false' || (needs.pre_job.outputs.concurrent_workflows == 'true' && github.ref_type == 'tag')
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -24,9 +42,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.platformio
-          key: ${{ runner.os }}-platformio-${{ hashFiles('**/platformio.ini', '**/lib_deps/*') }}
+          key: ${{ runner.os }}-platformio-${{ matrix.platform }}-${{ hashFiles('**/platformio.ini', '**/lib_deps/*') }}
           restore-keys: |
-            ${{ runner.os }}-platformio-
+            ${{ runner.os }}-platformio-${{ matrix.platform }}-
       - name: Cache PlatformIO Build Directory
         uses: actions/cache@v4
         with:
@@ -34,13 +52,6 @@ jobs:
           key: ${{ runner.os }}-pio-${{ matrix.platform }}-${{ hashFiles('**/platformio.ini', '**/lib_deps/*') }}
           restore-keys: |
             ${{ runner.os }}-pio-${{ matrix.platform }}-
-      - name: Cache PlatformIO Packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.platformio/packages
-          key: ${{ runner.os }}-platformio-packages-${{ hashFiles('**/platformio.ini') }}
-          restore-keys: |
-            ${{ runner.os }}-platformio-packages-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -49,22 +60,27 @@ jobs:
         run: pip install platformio
       - name: Build for ${{ matrix.platform }}
         run: pio run -e ${{ matrix.platform }} -t mergebin
-      - name: Display firmware files
-        run: ls -la .pio/build/${{ matrix.platform }}/firmware*.bin
-      - name: Rename firmware files
+      #- name: Display firmware files
+      #  run: ls -la .pio/build/${{ matrix.platform }}/firmware*.bin
+      - name: Rename and move firmware files
         run: |
           mv .pio/build/${{ matrix.platform }}/firmware.bin firmware_${{ matrix.platform }}_ota.bin
           if [ "${{ matrix.platform }}" != "esp8266dev" ]; then
             mv .pio/build/${{ matrix.platform }}/firmware_factory.bin firmware_${{ matrix.platform }}_factory.bin
           fi
+          ls -la firmware*.bin
       - name: Archive Firmware
         uses: actions/upload-artifact@v4
         with:
           name: firmware_${{ matrix.platform }}
           path: firmware_${{ matrix.platform }}*.bin
+
   release:
     name: Release
-    #if: github.ref == 'refs/heads/master'
+    # Optionally limit releases to the mast branch. We might want beta releases from other branches.
+    #if: startsWith(github.event.ref, 'refs/tags/v') && github.ref == 'refs/heads/master'
+    # Create a release if we have a tag that starts with v. E.g. v0.1.0 or v0.1.1-beta
+    if: startsWith(github.event.ref, 'refs/tags/v')
     needs: build
     permissions:
       contents: write
@@ -77,28 +93,12 @@ jobs:
         with:
           path: firmware
           merge-multiple: true
-      - name: Display structure of downloaded files
-        run: ls -Rla firmware/
-      - name: release with tags
-        if: startsWith(github.event.ref, 'refs/tags/v')
+      #- name: Display structure of downloaded files
+      #  run: ls -Rla firmware/
+      # New release uses the tag as the release name and CHANGELOG.md as the body.
+      - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          allowUpdates: true
-          artifacts: "firmware/firmware*.bin"
-          bodyFile: "CHANGELOG.md"
-          removeArtifacts: true
-      - name: Get current date/time
-        if: >-
-          !startsWith(github.event.ref, 'refs/tags/v')
-        id: date
-        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-      - name: release without tags uses branch name
-        if: >-
-          !startsWith(github.event.ref, 'refs/tags/v')
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ github.head_ref || github.ref_name }}_${{ env.date }}
-          makeLatest: true
           allowUpdates: true
           artifacts: "firmware/firmware*.bin"
           bodyFile: "CHANGELOG.md"
