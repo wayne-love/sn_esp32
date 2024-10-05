@@ -16,17 +16,12 @@ extern RemoteDebug Debug;
 class SpaInterface : public SpaProperties {
     private:
 
-        /// @brief Number of fields that we can expect to read, initially set to 100 but updated once we determine the variant of the controller we are running.
-        int statusResponseExpectedFields = 100;
-
-
-        /// @brief Number of fields expected to be returned for a SV3
-        const int statusResponseCount_SV3 = 289;
-        /// @brief Number of fields expected to be returned for a SVM2
-        const int statusResponseCount_SVM2 = 295;
+        /// @brief Number of fields that we can expect to read.
+        int statusResponseMinFields = 289;
+        static const int statusResponseMaxFields = 295;
         
         /// @brief Each field of the RF cmd response as seperate elements.
-        String statusResponseRaw[295];
+        String statusResponseRaw[statusResponseMaxFields];
 
         int R2=-1;
         int R3=-1;
