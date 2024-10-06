@@ -48,16 +48,20 @@ jobs:
       - name: Install PlatformIO
         run: pip install platformio
       - name: Build for ${{ matrix.platform }}
-        run: pio run -e ${{ matrix.platform }}
+        run: pio run -e ${{ matrix.platform }} -t mergebin
       - name: Display firmware files
-        run: ls -la .pio/build/${{ matrix.platform }}/firmware.bin
+        run: ls -la .pio/build/${{ matrix.platform }}/firmware*.bin
       - name: Rename firmware files
-        run: mv .pio/build/${{ matrix.platform }}/firmware.bin firmware_${{ matrix.platform }}.bin
+        run: |
+          mv .pio/build/${{ matrix.platform }}/firmware.bin firmware_${{ matrix.platform }}_ota.bin
+          if [ "${{ matrix.platform }}" != "esp8266dev" ]; then
+            mv .pio/build/${{ matrix.platform }}/firmware_factory.bin firmware_${{ matrix.platform }}_factory.bin
+          fi
       - name: Archive Firmware
         uses: actions/upload-artifact@v4
         with:
           name: firmware_${{ matrix.platform }}
-          path: firmware_${{ matrix.platform }}.bin
+          path: firmware_${{ matrix.platform }}*.bin
   release:
     name: Release
     #if: github.ref == 'refs/heads/master'
