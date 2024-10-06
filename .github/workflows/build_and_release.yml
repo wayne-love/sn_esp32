@@ -1,0 +1,65 @@
+# .github/workflows/build_and_release.yml
+name: Build and Release
+
+on:
+  pull_request:
+    types: [opened, reopened]
+  push:
+  workflow_dispatch:
+
+jobs:
+  pre_job:
+    runs-on: ubuntu-latest
+    # If we push a commit with a new tag, it triggers two workflows.
+    #  one for the new commit, one for the new tag.
+    # This detects if multiple concurrent workflows are running.
+    outputs:
+      concurrent_workflows: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          concurrent_skipping: 'always'
+          do_not_skip: '["pull_request", "workflow_dispatch", "schedule"]'
+
+  build:
+    needs: pre_job
+    # If there are current workflows running, we want to run the one with the tag.
+    # Therefore, the other workflow(s) are skipped.
+    if: needs.pre_job.outputs.concurrent_workflows == 'false' || (needs.pre_job.outputs.concurrent_workflows == 'true' && github.ref_type == 'tag')
+    strategy:
+      matrix:
+        platform: [esp32dev, esp8266dev, spa-control-pcb]
+    uses: ./.github/workflows/build_firmware.yml
+    with:
+      platform: ${{ matrix.platform }}
+    secrets: inherit
+
+  release:
+    name: Release
+    # Optionally limit releases to the mast branch. We might want beta releases from other branches.
+    #if: startsWith(github.event.ref, 'refs/tags/v') && github.ref == 'refs/heads/master'
+    # Create a release if we have a tag that starts with v. E.g. v0.1.0 or v0.1.1-beta
+    if: startsWith(github.event.ref, 'refs/tags/v')
+    needs: build
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo for CHANGELOG
+        uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: firmware
+          merge-multiple: true
+      #- name: Display structure of downloaded files
+      #  run: ls -Rla firmware/
+      # New release uses the tag as the release name and CHANGELOG.md as the body.
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "firmware/firmware*.bin"
+          bodyFile: "CHANGELOG.md"
+          removeArtifacts: true

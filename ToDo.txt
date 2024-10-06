@@ -1,2 +1,0 @@
-- SpaName is not a valid identifier for mqtt topics
-- Pull spa serial number from spa and use this as id for mqtt topics
