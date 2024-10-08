@@ -1,3 +1,4 @@
+#include "main.h"
 #include <Arduino.h>
 
 #if defined(ESP8266)
