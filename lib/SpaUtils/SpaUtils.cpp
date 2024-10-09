@@ -91,6 +91,7 @@ bool getPumpModes(SpaInterface &si, int pumpNumber, JsonObject pumps) {
 bool generateStatusJson(SpaInterface &si, String &output, bool prettyJson) {
   JsonDocument json;
 
+  json["temperatures"]["setPoint"] = si.getSTMP() / 10.0;
   json["temperatures"]["water"] = si.getWTMP() / 10.0;
   json["temperatures"]["heater"] = si.getHeaterTemperature() / 10.0;
   json["temperatures"]["case"] = si.getCaseTemperature(); 
@@ -104,7 +105,6 @@ bool generateStatusJson(SpaInterface &si, String &output, bool prettyJson) {
 
   json["status"]["heatingActive"] = si.getRB_TP_Heater()? "ON": "OFF";
   json["status"]["ozoneActive"] = si.getRB_TP_Ozone()? "ON": "OFF";
-  json["status"]["temperatureSetPoint"] = si.getSTMP() / 10.0;
   json["status"]["state"] = si.getStatus();
   json["status"]["spaMode"] = si.getMode();
 
