@@ -750,8 +750,11 @@ void mqttHaAutoDiscovery() {
   switchADPublish("Aux Heat Element","",mqttStatusTopic,"{{ value_json.heatpump.auxheat }}","heatpump_auxheat",spaName,spaSerialNumber);
   lightADPublish("Lights","",mqttStatusTopic,"{{ value_json.lights }}","lights",spaName,spaSerialNumber);
   selectADPublish("Lights Speed",{"1","2","3","4","5"},mqttStatusTopic,"{{ value_json.lights.speed }}","lights_speed",spaName, spaSerialNumber);
+  std::vector<String> sleepStrings;
+  for (const auto& pair : si.sleepMap) {
+      sleepStrings.push_back(pair.first);
+  }
 
-  std::vector<String> sleepStrings(std::begin(si.sleepStringMap), std::end(si.sleepStringMap));
   selectADPublish("Sleep Timer 1",sleepStrings,mqttStatusTopic,"{{ value_json.sleepTimers.timer1.state }}", "sleepTimers_1_state", spaName, spaSerialNumber, "config");
   selectADPublish("Sleep Timer 2",sleepStrings,mqttStatusTopic,"{{ value_json.sleepTimers.timer2.state }}", "sleepTimers_2_state", spaName, spaSerialNumber, "config");
   textADPublish("Sleep Timer 1 Begin",mqttStatusTopic,"{{ value_json.sleepTimers.timer1.begin }}", "sleepTimers_1_begin", spaName, spaSerialNumber, "config", "[0-2][0-9]:[0-9]{2}");
@@ -848,12 +851,13 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   } else if (property == "blower_mode") {
     si.setOutlet_Blower(p=="Variable"?0:1);
   } else if (property == "sleepTimers_1_state" || property == "sleepTimers_2_state") {
-    for (uint count = 0; count < sizeof(si.sleepStringMap); count++){
-      if (si.sleepStringMap[count] == p) {
+    for (const auto& pair : si.sleepMap) {
+      if (pair.first == p) {
         if (property == "sleepTimers_1_state")
-          si.setL_1SNZ_DAY(si.sleepCodeMap[count]);
+          si.setL_1SNZ_DAY(pair.second);
         else if (property == "sleepTimers_2_state")
-          si.setL_2SNZ_DAY(si.sleepCodeMap[count]);
+          si.setL_2SNZ_DAY(pair.second);
+        break;
       }
     }
   } else if (property == "sleepTimers_1_begin") {

@@ -74,7 +74,7 @@ bool getPumpModes(SpaInterface &si, int pumpNumber, JsonObject pumps) {
 
   String possibleStates = pumpState.substring(secondDash + 1);
   // Convert possibleStates into words and store them in a JSON array
-  for (int i = 0; i < possibleStates.length(); i++) {
+  for (uint i = 0; i < possibleStates.length(); i++) {
     char stateChar = possibleStates.charAt(i);
     if (stateChar == '0') {
       pumps[pumpKey]["possibleStates"].add("OFF");
@@ -143,11 +143,15 @@ bool generateStatusJson(SpaInterface &si, String &output, bool prettyJson) {
   json["blower"]["mode"] = si.getOutlet_Blower()==1? "Ramp" : "Variable";
   json["blower"]["speed"] = si.getOutlet_Blower() ==2? "0" : String(si.getVARIValue());
 
-  for (uint count = 0; count < sizeof(si.sleepCodeMap); count++){
-    if (si.sleepCodeMap[count] == si.getL_1SNZ_DAY())
-      json["sleepTimers"]["timer1"]["state"]=si.sleepStringMap[count];
-    if (si.sleepCodeMap[count] == si.getL_2SNZ_DAY())
-      json["sleepTimers"]["timer2"]["state"]=si.sleepStringMap[count];
+  for (const auto& pair : si.sleepMap) {
+      if (pair.second == si.getL_1SNZ_DAY()) {
+        json["sleepTimers"]["timer1"]["state"]=pair.first;
+        debugD("SleepTimer1: %s", pair.first.c_str());
+      }
+      if (pair.second == si.getL_2SNZ_DAY()) {
+        json["sleepTimers"]["timer2"]["state"]=pair.first;
+        debugD("SleepTimer1: %s", pair.first.c_str());
+      }
   }
   json["sleepTimers"]["timer1"]["begin"]=convertToTime(si.getL_1SNZ_BGN());
   json["sleepTimers"]["timer1"]["end"]=convertToTime(si.getL_1SNZ_END());
