@@ -259,7 +259,7 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "°C";
-  generateAdJSON(output, sensorConfig, spa, discoveryTopic, "sensor");
+  generateAdJSON(output, sensorConfig, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
@@ -270,7 +270,7 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "°C";
-  generateAdJSON(output, sensorConfig, spa, discoveryTopic, "sensor");
+  generateAdJSON(output, sensorConfig, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
@@ -281,7 +281,7 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "°C";
-  generateAdJSON(output, sensorConfig, spa, discoveryTopic, "sensor");
+  generateAdJSON(output, sensorConfig, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
@@ -292,7 +292,7 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "°C";
-  generateAdJSON(output, sensorConfig, spa, discoveryTopic, "sensor");
+  generateAdJSON(output, sensorConfig, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
@@ -303,7 +303,7 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "°C";
-  generateAdJSON(output, sensorConfig, spa, discoveryTopic, "sensor");
+  generateAdJSON(output, sensorConfig, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
@@ -314,7 +314,7 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "V";
-  generateAdJSON(output, sensorConfig, spa, discoveryTopic, "sensor");
+  generateAdJSON(output, sensorConfig, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
@@ -325,7 +325,7 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "A";
-  generateAdJSON(output, sensorConfig, spa, discoveryTopic, "sensor");
+  generateAdJSON(output, sensorConfig, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
@@ -336,7 +336,7 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "W";
-  generateAdJSON(output, sensorConfig, spa, discoveryTopic, "sensor");
+  generateAdJSON(output, sensorConfig, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
@@ -347,7 +347,7 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "diagnostic";
   sensorConfig.stateClass = "measurement";
   sensorConfig.unitOfMeasure = "kWh";
-  generateAdJSON(output, sensorConfig, spa, discoveryTopic, "sensor");
+  generateAdJSON(output, sensorConfig, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
@@ -358,7 +358,7 @@ void mqttHaAutoDiscovery() {
   sensorConfig.entityCategory = "";
   sensorConfig.stateClass = "";
   sensorConfig.unitOfMeasure = "";
-  generateAdJSON(output, sensorConfig, spa, discoveryTopic, "sensor");
+  generateAdJSON(output, sensorConfig, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
@@ -371,7 +371,7 @@ void mqttHaAutoDiscovery() {
   binaryConfig.valueTemplate = "{{ value_json.status.heatingActive }}";
   binaryConfig.propertyId = "HeatingActive";
   binaryConfig.deviceClass = "heat";
-  generateAdJSON(output, binaryConfig, spa, discoveryTopic, "binary_sensor");
+  generateAdJSON(output, binaryConfig, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
@@ -379,7 +379,7 @@ void mqttHaAutoDiscovery() {
   binaryConfig.valueTemplate = "{{ value_json.status.ozoneActive }}";
   binaryConfig.propertyId = "OzoneActive";
   binaryConfig.deviceClass = "running";
-  generateAdJSON(output, binaryConfig, spa, discoveryTopic, "binary_sensor");
+  generateAdJSON(output, binaryConfig, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
@@ -426,7 +426,7 @@ void mqttHaAutoDiscovery() {
   textConfig.propertyId = "status_datetime";
   textConfig.entityCategory = "config";
   textConfig.regex = "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}";
-  generateAdJSON(output, textConfig, spa, discoveryTopic, "text");
+  generateAdJSON(output, textConfig, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   textConfig.displayName = "Sleep Timer 1 Begin";
@@ -434,7 +434,7 @@ void mqttHaAutoDiscovery() {
   textConfig.propertyId = "sleepTimers_1_begin";
   textConfig.entityCategory = "config";
   textConfig.regex = "[0-2][0-9]:[0-9]{2}";
-  generateAdJSON(output, textConfig, spa, discoveryTopic, "text");
+  generateAdJSON(output, textConfig, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   textConfig.displayName = "Sleep Timer 1 End";
@@ -442,7 +442,7 @@ void mqttHaAutoDiscovery() {
   textConfig.propertyId = "sleepTimers_1_end";
   textConfig.entityCategory = "config";
   textConfig.regex = "[0-2][0-9]:[0-9]{2}";
-  generateAdJSON(output, textConfig, spa, discoveryTopic, "text");
+  generateAdJSON(output, textConfig, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   textConfig.displayName = "Sleep Timer 2 Begin";
@@ -450,7 +450,7 @@ void mqttHaAutoDiscovery() {
   textConfig.propertyId = "sleepTimers_2_begin";
   textConfig.entityCategory = "config";
   textConfig.regex = "[0-2][0-9]:[0-9]{2}";
-  generateAdJSON(output, textConfig, spa, discoveryTopic, "text");
+  generateAdJSON(output, textConfig, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   textConfig.displayName = "Sleep Timer 2 End";
@@ -458,7 +458,7 @@ void mqttHaAutoDiscovery() {
   textConfig.propertyId = "sleepTimers_2_end";
   textConfig.entityCategory = "config";
   textConfig.regex = "[0-2][0-9]:[0-9]{2}";
-  generateAdJSON(output, textConfig, spa, discoveryTopic, "text");
+  generateAdJSON(output, textConfig, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   fanADPublish(mqttClient, spa, "Blower", "{{ value_json.blower }}", "blower");

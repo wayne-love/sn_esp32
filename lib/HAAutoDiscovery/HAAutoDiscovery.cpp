@@ -2,10 +2,9 @@
 
 void generateAdJSON(
    String& output,
-   const BaseAdConfig& config,
+   const AdConfigVariant& configVariant,
    const SpaAdConfig& spa,
-   String& discoveryTopic,
-   String type
+   String& discoveryTopic
    ) {
 /*
 { 
@@ -25,6 +24,7 @@ void generateAdJSON(
 
    JsonDocument json;
 
+std::visit([&](auto&& config) {
    // Common fields for all types
    json["name"] = config.displayName;
    json["state_topic"] = spa.stateTopic;
@@ -38,28 +38,20 @@ void generateAdJSON(
    if (!config.entityCategory.isEmpty()) json["entity_category"] = config.entityCategory;
 
    // Check the type and add specific fields
-   if (type == "sensor") {
-     // Cast to SensorAdConfig if additional fields are needed
-     const SensorAdConfig* sensorConfig = static_cast<const SensorAdConfig*>(&config);
-     if (!sensorConfig->unitOfMeasure.isEmpty()) json["unit_of_measurement"] = sensorConfig->unitOfMeasure;
-     if (!sensorConfig->stateClass.isEmpty()) json["state_class"] = sensorConfig->stateClass;
-   } else if (type == "binary_sensor") {
-      //const BinarySensorAdConfig* sensorConfig = static_cast<const BinarySensorAdConfig*>(&config);
-   } else if (type == "text") {
-      const TextAdConfig* textConfig = static_cast<const TextAdConfig*>(&config);
+   if constexpr (std::is_same_v<std::decay_t<decltype(config)>, SensorAdConfig>) {
+     if (!config.unitOfMeasure.isEmpty()) json["unit_of_measurement"] = config.unitOfMeasure;
+     if (!config.stateClass.isEmpty()) json["state_class"] = config.stateClass;
+   } else if constexpr (std::is_same_v<std::decay_t<decltype(config)>, BinarySensorAdConfig>) {
+   } else if constexpr (std::is_same_v<std::decay_t<decltype(config)>, TextAdConfig>) {
       json["command_topic"] = spa.commandTopic + "/" + config.propertyId;
-      if (!textConfig->regex.isEmpty()) json["pattern"] = textConfig->regex;
-   } else if (type == "switch") {
-      //const SwitchAdConfig* sensorConfig = static_cast<const SwitchAdConfig*>(&config);
+      if (!config.regex.isEmpty()) json["pattern"] = config.regex;
+   } else if constexpr (std::is_same_v<std::decay_t<decltype(config)>, SwitchAdConfig>) {
       json["command_topic"] = spa.commandTopic + "/" + config.propertyId;
-   } else if ( type == "select") {
-      const SelectAdConfig* selectConfig = static_cast<const SelectAdConfig*>(&config);
+   } else if constexpr (std::is_same_v<std::decay_t<decltype(config)>, SelectAdConfig>) {
       json["command_topic"] = spa.commandTopic + "/" + config.propertyId;
       JsonArray opts = json["options"].to<JsonArray>();
-      for (const auto& o : selectConfig->options) opts.add(o);
-   } else if ( type == "fan") {
-      //const FanAdConfig* fanConfig = static_cast<const FanAdConfig*>(&config);
-
+      for (const auto& o : config.options) opts.add(o);
+   } else if constexpr (std::is_same_v<std::decay_t<decltype(config)>, FanAdConfig>) {
       // Find the last character that is not a space or curly brace
       int lastIndex = config.valueTemplate.length() - 1;
       while (lastIndex >= 0 && (config.valueTemplate[lastIndex] == ' ' || config.valueTemplate[lastIndex] == '}')) {
@@ -81,8 +73,7 @@ void generateAdJSON(
       modes.add("Ramp");
       json["speed_range_min"]=1;
       json["speed_range_max"]=5;
-   } else if (type == "light") {
-      const LightAdConfig* lightConfig = static_cast<const LightAdConfig*>(&config);
+   } else if constexpr (std::is_same_v<std::decay_t<decltype(config)>, LightAdConfig>) {
       json["brightness_state_topic"] = spa.stateTopic;
       json["color_mode_state_topic"] = spa.stateTopic;
       json["effect_state_topic"] = spa.stateTopic;
@@ -111,10 +102,10 @@ void generateAdJSON(
       json["brightness_scale"]=5;
       json["effect"] = true;
       JsonArray effect_list = json["effect_list"].to<JsonArray>();
-      for (const auto& effect: lightConfig->colorModes) effect_list.add(effect);
+      for (const auto& effect: config.colorModes) effect_list.add(effect);
       JsonArray color_modes = json["supported_color_modes"].to<JsonArray>();
       color_modes.add("hs");
-   } else if (type == "climate") {
+   } else if constexpr (std::is_same_v<std::decay_t<decltype(config)>, ClimateAdConfig>) {
       // Find the last character that is not a space or curly brace
       int lastIndex = config.valueTemplate.length() - 1;
       while (lastIndex >= 0 && (config.valueTemplate[lastIndex] == ' ' || config.valueTemplate[lastIndex] == '}')) {
@@ -141,7 +132,10 @@ void generateAdJSON(
       json["temperature_unit"]="C";
       json["temp_step"]=0.2;
    }
+   String type = config.getType();
    discoveryTopic = "homeassistant/" + type + "/" + spa.spaSerialNumber + "/" + spa.spaSerialNumber + "-" + config.propertyId + "/config";
+
+   }, configVariant);
 
    serializeJson(json, output);
 
@@ -157,7 +151,7 @@ void fanADPublish(PubSubClient& mqttClient, SpaAdConfig spa, String name, String
   config.propertyId = propertyId;
   config.entityCategory = category;
   config.deviceClass = deviceClass;
-  generateAdJSON(output, config, spa, discoveryTopic, "fan");
+  generateAdJSON(output, config, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 }
@@ -173,7 +167,7 @@ void lightADPublish(PubSubClient& mqttClient, SpaAdConfig spa, String name, Stri
   config.entityCategory = category;
   config.deviceClass = deviceClass;
   config.colorModes = colorModes;
-  generateAdJSON(output, config, spa, discoveryTopic, "light");
+  generateAdJSON(output, config, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 }
@@ -189,7 +183,7 @@ void selectADPublish(PubSubClient& mqttClient, SpaAdConfig spa, String name, Str
   config.entityCategory = category;
   config.deviceClass = deviceClass;
   config.options = options;
-  generateAdJSON(output, config, spa, discoveryTopic, "select");
+  generateAdJSON(output, config, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 }
@@ -204,7 +198,7 @@ void switchADPublish(PubSubClient& mqttClient, SpaAdConfig spa, String name, Str
   config.propertyId = propertyId;
   config.entityCategory = category;
   config.deviceClass = deviceClass;
-  generateAdJSON(output, config, spa, discoveryTopic, "switch");
+  generateAdJSON(output, config, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 }
@@ -219,7 +213,7 @@ void climateADPublish(PubSubClient& mqttClient, SpaAdConfig spa, String name, St
   config.propertyId = propertyId;
   config.entityCategory = category;
   config.deviceClass = deviceClass;
-  generateAdJSON(output, config, spa, discoveryTopic, "climate");
+  generateAdJSON(output, config, spa, discoveryTopic);
 
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 }
