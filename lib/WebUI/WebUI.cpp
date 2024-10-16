@@ -31,7 +31,7 @@ void WebUI::begin() {
         SpaInterface &si = *_spa;
         float current_temp = float(si.getWTMP()) / 10;
         String status = si.getStatus();
-        sprintf(buffer, indexPageTemplate, current_temp, status);
+        sprintf(buffer, indexPageTemplate, current_temp, status, __DATE__, __TIME__);
         server->send(200, "text/html", buffer);
     });
 
@@ -47,17 +47,52 @@ void WebUI::begin() {
         }
     });
 
+    server->on("/reboot", HTTP_GET, [&]() {
+        debugD("uri: %s", server->uri().c_str());
+        server->send(200, "text/html",
+            "<!DOCTYPE html>"
+            "<html lang=\"en\">"
+            "<head>"
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+            "<meta name=\"color-scheme\" content=\"dark light\">"
+            "<META http-equiv=\"refresh\" content=\"5;URL=/\">"
+            "<link rel=\"stylesheet\" href=\"/styles.css\">"
+            "<title>Firmware Update</title>"
+            "</head>"
+            "<body>"
+            "Rebooting ESP..."
+            "</body>"
+            "</html>");
+        writeRebootFlag(false);
+        delay(200);
+        server->client().stop();
+        ESP.restart();
+    });
+
+    server->on("/styles.css", HTTP_GET, [&]() {
+        debugD("uri: %s", server->uri().c_str());
+        server->send(200, "text/css", styleSheet);
+    });
+
     server->on("/fota", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
         server->sendHeader("Connection", "close");
         server->send(200, "text/html", fotaPage);
     });
 
-    server->on("/update", HTTP_POST, [&]() {
+    server->on("/fota", HTTP_POST, [&]() {
         debugD("uri: %s", server->uri().c_str());
-        server->sendHeader("Connection", "close");
-        server->send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
-        if (!Update.hasError()) ESP.restart();
+        if (Update.hasError()) {
+            server->sendHeader("Connection", "close");
+            server->send(200, F("text/plain"), String(F("Update error: ")) + String(getError()));
+        } else {
+            server->client().setNoDelay(true);
+            server->sendHeader("Connection", "close");
+            server->send(200, "text/plain", "OK");
+            delay(100);
+            server->client().stop();
+            ESP.restart();
+        }
     }, [&]() {
         debugD("uri: %s", server->uri().c_str());
         HTTPUpload& upload = server->upload();

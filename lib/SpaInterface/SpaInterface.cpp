@@ -384,10 +384,11 @@ bool SpaInterface::readStatus() {
     debugD("Reading registers -");
 
     int field = 0;
+    int registerCounter = 0;
     validStatusResponse = false;
     String statusResponseTmp = "";
 
-    while (field < statusResponseExpectedFields)
+    while (field < statusResponseMaxFields)
     {
         statusResponseRaw[field] = port.readStringUntil(',');
         debugV("(%i,%s)",field,statusResponseRaw[field].c_str());
@@ -402,7 +403,9 @@ bool SpaInterface::readStatus() {
             debugE("Throwing exception - field: %i, value: %s", field, statusResponseRaw[field].c_str());
             return false;
         }
-
+        if (statusResponseRaw[field][0] == ':') registerCounter++;
+        // If we reach the last register we have finished reading...
+        if (registerCounter >= 12) break;
 
         if (!_initialised) { // We only have to set these on the first read, they never change after that.
             if (statusResponseRaw[field] == "R2") R2 = field;
@@ -417,22 +420,6 @@ bool SpaInterface::readStatus() {
             else if (statusResponseRaw[field] == "RC") RC = field;
             else if (statusResponseRaw[field] == "RE") RE = field;
             else if (statusResponseRaw[field] == "RG") RG = field;
-
-            if (R3 > -1 && field == R3+7) {
-                if (statusResponseRaw[field] == "SV3") {
-                    debugI("SV3 variant detected");
-                    statusResponseExpectedFields = statusResponseCount_SV3;
-                    
-                }
-                else if (statusResponseRaw[field] == "SVM2") {
-                    debugI("SVM2 variant detected");
-                    statusResponseExpectedFields = statusResponseCount_SVM2;
-                    
-                }
-                else {
-                    debugE("Unknown variant detected");
-                }
-            }
         }
 
 
@@ -444,8 +431,8 @@ bool SpaInterface::readStatus() {
 
     statusResponse.update_Value(statusResponseTmp);
 
-    if (field < statusResponseExpectedFields) {
-        debugE("Throwing exception - %i fields read expecting at least %i",field, statusResponseExpectedFields);
+    if (field < statusResponseMinFields) {
+        debugE("Throwing exception - %i fields read expecting at least %i",field, statusResponseMinFields);
         return false;
     }
 
