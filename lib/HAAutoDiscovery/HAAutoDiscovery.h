@@ -90,6 +90,10 @@ using AdConfigVariant = std::variant<
 /// @param discoveryTopic String to retun discovrery topic
 void generateAdJSON(String& output, const AdConfigVariant& configVariant, const SpaAdConfig& spa, String &discoveryTopic);
 
+void handleFanAdJSON(JsonDocument& json, const FanAdConfig& config, const SpaAdConfig& spa);
+void handleLightAdJSON(JsonDocument& json, const LightAdConfig& config, const SpaAdConfig& spa);
+void handleClimateAdJSON(JsonDocument& json, const ClimateAdConfig& config, const SpaAdConfig& spa);
+
 void fanADPublish(PubSubClient& mqttClient, SpaAdConfig spa, String name, String valueTemplate, String propertyId, String category="", String deviceClass="");
 void lightADPublish(PubSubClient& mqttClient, SpaAdConfig spa, String name, String valueTemplate, String propertyId, String category="", String deviceClass="", std::vector<String> colorModes={});
 void selectADPublish(PubSubClient& mqttClient, SpaAdConfig spa, String name, String valueTemplate, String propertyId, String category="", String deviceClass="", std::vector<String> options={});
