@@ -2,16 +2,14 @@
 #define SPAINTERFACE_H
 
 #include <Arduino.h>
-#include <RemoteDebug.h>
 #include <functional>
 #include <stdexcept>
 #include "SpaProperties.h"
+#include "Common.h"
 
 
 #define UPDATEFREQUENCY 60000 //(ms) Frequency to poll controller when idle.
 #define FAILEDREADFREQUENCY 1000 //(ms) Frequency to retry on a failed read of the status registers.
-
-extern RemoteDebug Debug;
 
 class SpaInterface : public SpaProperties {
     private:

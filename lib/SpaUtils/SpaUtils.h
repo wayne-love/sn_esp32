@@ -2,14 +2,11 @@
 #define SPAUTILS_H
 
 #include <Arduino.h>
-#include <RemoteDebug.h>
 #include <ArduinoJson.h>
-#include <vector>
 #include <time.h>
 #include <TimeLib.h>
 #include "SpaInterface.h"
-
-extern RemoteDebug Debug;
+#include "Common.h"
 
 String convertToTime(int data);
 int convertToInteger(String &timeStr);

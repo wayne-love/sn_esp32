@@ -1,6 +1,3 @@
-#include "main.h"
-#include <Arduino.h>
-
 #if defined(ESP8266)
   #include <ESP8266WiFi.h>
   #include <ESP8266WebServer.h>
@@ -13,49 +10,24 @@
 
 #include <WiFiClient.h>
 #include <WiFiManager.h>
-#include <RemoteDebug.h>
+
 #include <PubSubClient.h>
-#include <LittleFS.h>
-//#include <ArduinoJson.h>
+
 #include <vector>
-#include <time.h>
-#include <TimeLib.h>
+
 #if defined(LED_PIN)
 #include "Blinker.h"
 #endif
 #include "WebUI.h"
-
+#include "Common.h"
 #include "SpaInterface.h"
 #include "SpaUtils.h"
 #include "HAAutoDiscovery.h"
 
-#if defined(ESP32)
-#include <Preferences.h>
-#endif
-
-#ifndef DEBUG_ENABLED
-    #define DEBUG_ENABLED
-    RemoteDebug Debug;
-#endif
-
 // Define the threshold for detecting a fast reboot (within 20 seconds)
 #define REBOOT_THRESHOLD 20
 
-#if defined(ESP8266)
-struct RTCData {
-  int16_t magicNumber;  // Use a unique number to identify valid data
-  int16_t rebootFlag;   // 1 start wifi manager on next boot
-};
-RTCData rtcData;
-const int16_t MAGIC_NUMBER = 0xAAAA;
-#endif
-
-#if defined(ESP32)
-Preferences preferences;  // For ESP32 reboot storage
-#endif
-
 unsigned long bootStartMillis;  // To track when the device started
-bool rebootFlag = false;
 
 SpaInterface si;
 
@@ -77,11 +49,6 @@ ulong statusLastPublish = millis();
 bool delayedStart = true; // Delay spa connection for 10sec after boot to allow for external debugging if required.
 bool autoDiscoveryPublished = false;
 
-String mqttServer = "";
-String mqttPort = "";
-String mqttUserName = "";
-String mqttPassword = "";
-
 String mqttBase = "";
 String mqttStatusTopic = "";
 String mqttSet = "";
@@ -91,40 +58,6 @@ String spaSerialNumber = "";
 
 void saveConfigCallback(){
   saveConfig = true;
-}
-
-bool readRebootFlag() {
-  bool retVal = false;
-
-  #if defined(ESP8266)
-    ESP.rtcUserMemoryRead(0, (uint32_t*)&rtcData, sizeof(rtcData));
-    // Check if the magic number matches
-    if (rtcData.magicNumber != MAGIC_NUMBER) {
-      debugD("Invalid or uninitialized RTC memory.");
-    } else {
-      retVal = (rtcData.rebootFlag  == 1);
-    }
-  #elif defined(ESP32)
-    preferences.begin("reboot_data", false);
-    retVal = preferences.getBool("rebootFlag", false);
-    preferences.end();
-  #endif
-  rebootFlag = retVal;
-  return retVal;
-}
-
-void writeRebootFlag(bool flagValue) {
-  rebootFlag = flagValue;
-  #if defined(ESP8266)
-    // Write MAGIC_NUMBER so we can validate the data when we read it later
-    rtcData.magicNumber = MAGIC_NUMBER;
-    rtcData.rebootFlag = flagValue?1:0;
-    ESP.rtcUserMemoryWrite(0, (uint32_t*)&rtcData, sizeof(rtcData));
-  #elif defined(ESP32)
-    preferences.begin("reboot_data", false);
-    preferences.putBool("rebootFlag", flagValue);
-    preferences.end();
-  #endif
 }
 
 void startWiFiManager(){
@@ -156,21 +89,7 @@ void startWiFiManager(){
     mqttUserName = String(custom_mqtt_username.getValue());
     mqttPassword = String(custom_mqtt_password.getValue());
 
-    debugI("Updating config file");
-    JsonDocument json;
-    json["mqtt_server"] = mqttServer;
-    json["mqtt_port"] = mqttPort;
-    json["mqtt_password"] = mqttPassword;
-    json["mqtt_username"] = mqttUserName;
-
-    File configFile = LittleFS.open("/config.json","w");
-    if (!configFile) {
-      debugE("Failed to open config file for writing");
-    } else {
-      serializeJson(json, configFile);
-      configFile.close();
-      debugI("Config file updated");
-    }
+    writeConfigFile();
   }
 }
 
@@ -1011,43 +930,14 @@ void setup() {
     LittleFS.begin();
   }
 
-  debugI("Reading config file");
-  File configFile = LittleFS.open("/config.json","r");
-  if (configFile) {
-    size_t size = configFile.size();
-    // Allocate a buffer to store contents of the file.
-    std::unique_ptr<char[]> buf(new char[size]);
-    configFile.readBytes(buf.get(), size);
-
-    JsonDocument json;
-    auto deserializeError = deserializeJson(json, buf.get());
-    serializeJson(json, Serial);
-    if ( ! deserializeError ) {
-      debugI("Parsed JSON");
-      mqttServer = json["mqtt_server"].as<String>();
-      mqttPort = json["mqtt_port"].as<String>();
-      mqttUserName = json["mqtt_username"].as<String>();
-      mqttPassword = json["mqtt_password"].as<String>();
-    } else {
-      debugW("Failed to parse config file");
-    }
-    configFile.close();
-  }
-
-
-  if (mqttServer == "") { 
-    mqttServer = "mqtt"; 
-  }
-  if (mqttPort == "") { 
-    mqttPort = "1883"; 
-  }
+  readConfigFile();
 
   mqttClient.setServer(mqttServer.c_str(),mqttPort.toInt());
   mqttClient.setCallback(mqttCallback);
   mqttClient.setBufferSize(2048);
 
-  int valueFlag = readRebootFlag();
-  debugI("readRebootFlag: %i", valueFlag);
+  bool valueFlag = readRebootFlag();
+  debugI("readRebootFlag: %s", valueFlag ? "true" : "false");
   bootStartMillis = millis();  // Record the current boot time in milliseconds
 
   // If rebootFlag is true, the device rebooted within the threshold

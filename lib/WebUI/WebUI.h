@@ -2,7 +2,6 @@
 #define WEBUI_H
 
 #include <Arduino.h>
-#include <RemoteDebug.h>
 
 #if defined(ESP8266)
   #include <ESP8266WebServer.h>
@@ -13,9 +12,7 @@
 
 #include "SpaInterface.h"
 #include "SpaUtils.h"
-#include "../../src/main.h"
-
-extern RemoteDebug Debug;
+#include "Common.h"
 
 class WebUI {
     public:
