@@ -459,7 +459,7 @@ void SpaInterface::updateStatus() {
     _nextUpdateDue = millis() + FAILEDREADFREQUENCY;    
     if (readStatus()) {
         debugD("readStatus returned true");
-        _nextUpdateDue = millis() + UPDATEFREQUENCY;
+        _nextUpdateDue = millis() + (updateFrequency * 1000);
         _initialised = true;
         if (updateCallback != nullptr) { updateCallback(); }
     }

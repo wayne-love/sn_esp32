@@ -115,6 +115,36 @@ void WebUI::begin() {
         }
     });
 
+    server->on("/config", HTTP_GET, [&]() {
+        debugD("uri: %s", server->uri().c_str());
+        readConfigFile();
+        const size_t bufferSize = strlen(configPageTemplate) + 300;  // Add 300 for variables
+        char pageContent[bufferSize];
+        snprintf(pageContent, bufferSize, configPageTemplate, spaName.c_str(), mqttServer.c_str(), mqttPort.c_str(), mqttUserName.c_str(), mqttPassword.c_str(), updateFrequency);
+        server->sendHeader("Connection", "close");
+        server->send(200, "text/html", pageContent);
+    });
+
+    server->on("/config", HTTP_POST, [&]() {
+        debugD("uri: %s", server->uri().c_str());
+        if (server->hasArg("spaName")) spaName = server->arg("spaName");
+        if (server->hasArg("mqttServer")) mqttServer = server->arg("mqttServer");
+        if (server->hasArg("mqttPort")) mqttPort = server->arg("mqttPort");
+        if (server->hasArg("mqttUsername")) mqttUserName = server->arg("mqttUsername");
+        if (server->hasArg("mqttPassword")) mqttPassword = server->arg("mqttPassword");
+        if (server->hasArg("updateFrequency")) updateFrequency = (server->arg("updateFrequency")).toInt();
+        writeConfigFile();
+        server->sendHeader("Connection", "close");
+        server->send(200, "text/plain", "Updated");
+    });
+
+    server->on("/wifi-manager", HTTP_GET, [&]() {
+        debugD("uri: %s", server->uri().c_str());
+        triggerWiFiManager = true;
+        server->sendHeader("Connection", "close");
+        server->send(200, "text/plain", "WiFi Manager launching, connect to ESP WiFi...");
+    });
+
     server->begin();
 
     initialised = true;

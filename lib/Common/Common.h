@@ -12,6 +12,8 @@ extern String mqttPort;
 extern String mqttUserName;
 extern String mqttPassword;
 extern bool rebootFlag;
+extern String spaName;
+extern int updateFrequency;
 
 #ifndef DEBUG_ENABLED
     extern RemoteDebug Debug;

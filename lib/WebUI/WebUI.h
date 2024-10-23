@@ -53,6 +53,7 @@ class WebUI {
             "<p>Spa temperature is - %.1f&deg;C</p>"
             "<p>Spa status is - %s</p>"
             "<p><a href=\"/json\">Status JSON</button></p>"
+            "<p><a href=\"/config\">Configuration</button></p>"
             "<p><a href=\"/fota\">Firmware Update</a></p>"
             "<p><a href=\"#\" onclick=\"confirmAction('/reboot'); return false;\">Reboot ESP</a></p>"
             "<p>Build: %s %s</p>"
@@ -138,6 +139,65 @@ class WebUI {
             "input[type=file]::file-selector-button:hover, input[type=\"submit\"]:hover, a:hover, button:hover {\n"
             "  background-color: #0056b3;\n"
             "}";
+        const char *rebootPage =
+R"(<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark light">
+<META http-equiv="refresh" content="5;URL=/">
+<link rel="stylesheet" href="/styles.css">
+<title>Firmware Update</title>
+</head>
+<body>
+Rebooting ESP...
+</body>
+</html>)";
+
+        const char *configPageTemplate =
+R"(<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark light">
+<link rel="stylesheet" href="/styles.css">
+<title>Configuration</title>
+</head>
+<body>
+<h1>Configuration</h1>
+<form id='config_form' action='#' method='POST'>
+<table>
+<tr><td>Spa Name:</td><td><input type='text' name='spaName' value='%s'></td></tr>
+<tr><td>MQTT Server:</td><td><input type='text' name='mqttServer' value='%s'></td></tr>
+<tr><td>MQTT Port:</td><td><input type='number' name='mqttPort' value='%s'></td></tr>
+<tr><td>MQTT Username:</td><td><input type='text' name='mqttUsername' value='%s'></td></tr>
+<tr><td>MQTT Password:</td><td><input type='text' name='mqttPassword' value='%s'></td></tr>
+<tr><td>Poll Frequency (seconds):</td><td><input type='number' name='updateFrequency' value='%i'></td></tr>
+</table>
+<input type='submit' value='Save'>
+</form>
+<div id='msg'></div>  // Message div for success or error messages
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+<script>
+$('#config_form').submit(function(e) {
+    e.preventDefault();
+    $.ajax({
+    url: '/config',
+    type: 'POST',
+    data: $('#config_form').serialize(),
+    success: function(response) {
+        $('#msg').html('<p style="color:green;">Configuration updated successfully!</p>');
+        setTimeout(function() { $('#msg').html(''); }, 3000);  // Clear message after 3 seconds
+    },
+    error: function() {
+        $('#msg').html('<p style="color:red;">Error updating configuration.</p>');
+    }
+    });
+});
+</script>
+</body>
+</html>)";
+
 };
 
 #endif

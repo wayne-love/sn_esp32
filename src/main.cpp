@@ -67,10 +67,12 @@ void startWiFiManager(){
   }
 
   WiFiManager wm;
+  WiFiManagerParameter custom_spa_name("spa_name", "Spa Name", spaName.c_str(), 40);
   WiFiManagerParameter custom_mqtt_server("server", "MQTT server", mqttServer.c_str(), 40);
   WiFiManagerParameter custom_mqtt_port("port", "MQTT port", mqttPort.c_str(), 6);
   WiFiManagerParameter custom_mqtt_username("username", "MQTT Username", mqttUserName.c_str(), 20 );
   WiFiManagerParameter custom_mqtt_password("password", "MQTT Password", mqttPassword.c_str(), 40 );
+  wm.addParameter(&custom_spa_name);
   wm.addParameter(&custom_mqtt_server);
   wm.addParameter(&custom_mqtt_port);
   wm.addParameter(&custom_mqtt_username);
@@ -84,6 +86,7 @@ void startWiFiManager(){
   debugI("Exiting Portal");
 
   if (saveConfig) {
+    spaName = String(custom_spa_name.getValue());
     mqttServer = String(custom_mqtt_server.getValue());
     mqttPort = String(custom_mqtt_port.getValue());
     mqttUserName = String(custom_mqtt_username.getValue());
@@ -490,9 +493,6 @@ void lightADPublish (String name, String deviceClass, String stateTopic, String 
 */
 
 void mqttHaAutoDiscovery() {
-  String spaName = "MySpa"; //TODO - This needs to be a settable parameter.
-
-
   debugI("Publishing Home Assistant auto discovery");
 
   String output;
