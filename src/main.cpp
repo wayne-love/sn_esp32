@@ -223,9 +223,9 @@ bool shouldStartWiFiManager() {
   return (isSelectedRebootReason && rebootFlag);
 }
 
-
+/*
 void climateADPublish(String name, String propertyId, String deviceName, String deviceIdentifier ) {
-
+*/
 /*
 { 
    "device_class":"temperature",
@@ -241,7 +241,7 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
    }
 }"
 */
-
+/*
   JsonDocument json;
   String uniqueID = spaSerialNumber + "-" + propertyId;
 
@@ -286,7 +286,7 @@ void climateADPublish(String name, String propertyId, String deviceName, String 
 }
 
 void fanADPublish(String name, String propertyId, String deviceName, String deviceIdentifier ) {
-
+*/
 /*
 # Example using percentage based speeds with preset modes configuration.yaml
 mqtt:
@@ -316,7 +316,7 @@ mqtt:
       speed_range_min: 1
       speed_range_max: 10
 */
-
+/*
   JsonDocument json;
   String uniqueID = spaSerialNumber + "-" + propertyId;
 
@@ -359,6 +359,7 @@ mqtt:
 
 
 void switchADPublish (String name, String deviceClass, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier) {
+*/
 /*
 {
    "name":"Irrigation",
@@ -372,7 +373,7 @@ void switchADPublish (String name, String deviceClass, String stateTopic, String
       "name":"Garden"
    }
 }*/
-
+/*
   JsonDocument json;
 
   if (deviceClass != "") { json["device_class"] = deviceClass; }
@@ -399,6 +400,7 @@ void switchADPublish (String name, String deviceClass, String stateTopic, String
 
 
 void selectADPublish (String name, std::vector<String> options, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier, String category="") {
+*/
 /*
 {
    "name":"Irrigation",
@@ -412,7 +414,7 @@ void selectADPublish (String name, std::vector<String> options, String stateTopi
       "name":"Garden"
    }
 }*/
-
+/*
   JsonDocument json;
 
   if (category != "") json["entity_category"] = category;
@@ -443,6 +445,7 @@ void selectADPublish (String name, std::vector<String> options, String stateTopi
 
 
 void textADPublish (String name, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier, String category="", String regex="") {
+*/
 /*{
   "availability": {
       "topic": "sn_esp32/21110001-20000337/available"
@@ -461,6 +464,7 @@ void textADPublish (String name, String stateTopic, String valueTemplate, String
   "unique_id": "21110001-20000337-datetime",
   "value_template": "{{ value_json.datetime }}"
 }*/
+/*
   JsonDocument json;
 
   JsonObject availability = json["availability"].to<JsonObject>();
@@ -495,6 +499,7 @@ void textADPublish (String name, String stateTopic, String valueTemplate, String
 
 
 void lightADPublish (String name, String deviceClass, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier) {
+*/
 /*
 {
    "name":"Irrigation",
@@ -508,7 +513,7 @@ void lightADPublish (String name, String deviceClass, String stateTopic, String 
       "name":"Garden"
    }
 }*/
-
+/*
   JsonDocument json;
 
   if (deviceClass != "") { json["device_class"] = deviceClass; }
@@ -563,6 +568,7 @@ void lightADPublish (String name, String deviceClass, String stateTopic, String 
   mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
 
 }
+*/
 
 void mqttHaAutoDiscovery() {
   String spaName = "MySpa"; //TODO - This needs to be a settable parameter.
