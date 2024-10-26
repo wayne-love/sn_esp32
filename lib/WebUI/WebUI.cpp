@@ -27,14 +27,7 @@ void WebUI::begin() {
     server->on("/", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
         server->sendHeader("Connection", "close");
-        SpaInterface &si = *_spa;
-        float current_temp = float(si.getWTMP()) / 10;
-        String status = si.getStatus();
-
-        const size_t bufferSize = strlen(indexPageTemplate) + 100;  // Add 100 for variables
-        char pageContent[bufferSize];
-        snprintf(pageContent, bufferSize, indexPageTemplate, current_temp, status, __DATE__, __TIME__);
-        server->send(200, "text/html", pageContent);
+        server->send(200, "text/html", WebUI::indexPageTemplate);
     });
 
     server->on("/json", HTTP_GET, [&]() {
@@ -61,13 +54,13 @@ void WebUI::begin() {
 
     server->on("/styles.css", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
-        server->send(200, "text/css", styleSheet);
+        server->send(200, "text/css", WebUI::styleSheet);
     });
 
     server->on("/fota", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
         server->sendHeader("Connection", "close");
-        server->send(200, "text/html", fotaPage);
+        server->send(200, "text/html", WebUI::fotaPage);
     });
 
     server->on("/fota", HTTP_POST, [&]() {
@@ -108,12 +101,8 @@ void WebUI::begin() {
 
     server->on("/config", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
-        readConfigFile();
-        const size_t bufferSize = strlen(configPageTemplate) + 300;  // Add 300 for variables
-        char pageContent[bufferSize];
-        snprintf(pageContent, bufferSize, configPageTemplate, spaName.c_str(), mqttServer.c_str(), mqttPort.c_str(), mqttUserName.c_str(), mqttPassword.c_str(), updateFrequency);
         server->sendHeader("Connection", "close");
-        server->send(200, "text/html", pageContent);
+        server->send(200, "text/html", WebUI::configPageTemplate);
     });
 
     server->on("/config", HTTP_POST, [&]() {
@@ -127,6 +116,20 @@ void WebUI::begin() {
         writeConfigFile();
         server->sendHeader("Connection", "close");
         server->send(200, "text/plain", "Updated");
+    });
+
+    server->on("/json/config", HTTP_GET, [&]() {
+        debugD("uri: %s", server->uri().c_str());
+        readConfigFile();
+        String configJson = "{";
+        configJson += "\"spaName\":\"" + spaName + "\",";
+        configJson += "\"mqttServer\":\"" + mqttServer + "\",";
+        configJson += "\"mqttPort\":\"" + mqttPort + "\",";
+        configJson += "\"mqttUsername\":\"" + mqttUserName + "\",";
+        configJson += "\"mqttPassword\":\"" + mqttPassword + "\",";
+        configJson += "\"updateFrequency\":" + String(updateFrequency);
+        configJson += "}";
+        server->send(200, "application/json", configJson);
     });
 
     server->on("/wifi-manager", HTTP_GET, [&]() {
