@@ -14,6 +14,7 @@ extern String mqttPassword;
 extern bool rebootFlag;
 extern String spaName;
 extern int updateFrequency;
+extern bool triggerWiFiManager;
 
 #ifndef DEBUG_ENABLED
     extern RemoteDebug Debug;

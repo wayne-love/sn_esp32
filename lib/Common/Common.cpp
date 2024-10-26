@@ -7,6 +7,7 @@ String mqttPassword = "";
 bool rebootFlag = false;
 String spaName = "MySpa";
 int updateFrequency = 60;
+bool triggerWiFiManager = false;
 
 #ifndef DEBUG_ENABLED
     #define DEBUG_ENABLED

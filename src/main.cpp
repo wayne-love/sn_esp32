@@ -110,6 +110,10 @@ void checkButton(){
     }
   }
 #endif
+if (triggerWiFiManager) {
+  triggerWiFiManager = false;
+  startWiFiManager();
+}
 }
 
 void checkRebootThreshold(){

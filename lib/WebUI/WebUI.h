@@ -55,6 +55,7 @@ class WebUI {
             "<p><a href=\"/json\">Status JSON</button></p>"
             "<p><a href=\"/config\">Configuration</button></p>"
             "<p><a href=\"/fota\">Firmware Update</a></p>"
+            "<p><a href=\"#\" onclick=\"confirmAction('/wifi-manager'); return false;\">Wi-Fi Manager</a></p>"
             "<p><a href=\"#\" onclick=\"confirmAction('/reboot'); return false;\">Reboot ESP</a></p>"
             "<p>Build: %s %s</p>"
             "</body>"
