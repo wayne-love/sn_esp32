@@ -56,6 +56,17 @@ function fetchStatus() {
     })
     .catch(error => console.error('Error fetching status:', error));
 }
+function updateTempSetPoint() {
+  const temperatures_setPoint = document.getElementById('temperatures_setPoint').value;
+  fetch('/set', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'temperatures_setPoint=' + temperatures_setPoint
+  })
+  .then(response => response.text())
+  .then(result => console.log(result))
+  .catch(error => console.error('Error setting temperature:', error));
+}
 window.onload = function() {
     fetchStatus();
     setInterval(fetchStatus, 10000);
@@ -66,6 +77,8 @@ window.onload = function() {
 <h1>ESP32 Spa Controller</h1>
 <p>Spa temperature is - <span id="temperatures_water">Loading...</span></p>
 <p>Spa status is - <span id="status_state">Loading...</span></p>
+<p>Set Temperature: <input type="number" id="temperatures_setPoint" step="0.2" min="10" max="41">
+<button onclick="updateTempSetPoint();">Set</button></p>
 <p><a href="/json">Status JSON</a></p>
 <p><a href="/config">Configuration</a></p>
 <p><a href="/fota">Firmware Update</a></p>
