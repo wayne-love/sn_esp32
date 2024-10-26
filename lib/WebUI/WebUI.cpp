@@ -27,12 +27,14 @@ void WebUI::begin() {
     server->on("/", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
         server->sendHeader("Connection", "close");
-        char buffer[1024];
         SpaInterface &si = *_spa;
         float current_temp = float(si.getWTMP()) / 10;
         String status = si.getStatus();
-        sprintf(buffer, indexPageTemplate, current_temp, status, __DATE__, __TIME__);
-        server->send(200, "text/html", buffer);
+
+        const size_t bufferSize = strlen(indexPageTemplate) + 100;  // Add 100 for variables
+        char pageContent[bufferSize];
+        snprintf(pageContent, bufferSize, indexPageTemplate, current_temp, status, __DATE__, __TIME__);
+        server->send(200, "text/html", pageContent);
     });
 
     server->on("/json", HTTP_GET, [&]() {
@@ -49,21 +51,9 @@ void WebUI::begin() {
 
     server->on("/reboot", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
-        server->send(200, "text/html",
-            "<!DOCTYPE html>"
-            "<html lang=\"en\">"
-            "<head>"
-            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
-            "<meta name=\"color-scheme\" content=\"dark light\">"
-            "<META http-equiv=\"refresh\" content=\"5;URL=/\">"
-            "<link rel=\"stylesheet\" href=\"/styles.css\">"
-            "<title>Firmware Update</title>"
-            "</head>"
-            "<body>"
-            "Rebooting ESP..."
-            "</body>"
-            "</html>");
+        server->send(200, "text/html", WebUI::rebootPage);
         writeRebootFlag(false);
+        debugD("Rebooting...");
         delay(200);
         server->client().stop();
         ESP.restart();
@@ -89,6 +79,7 @@ void WebUI::begin() {
             server->client().setNoDelay(true);
             server->sendHeader("Connection", "close");
             server->send(200, "text/plain", "OK");
+            debugD("Rebooting...");
             delay(100);
             server->client().stop();
             ESP.restart();
@@ -108,7 +99,7 @@ void WebUI::begin() {
             }
         } else if (upload.status == UPLOAD_FILE_END) {
             if (Update.end(true)) { //true to set the size to the current progress
-                debugD("Update Success: %u\nRebooting...\n", upload.totalSize);
+                debugD("Update Success: %u\n", upload.totalSize);
             } else {
                 debugD("Update Error: %s",getError());
             }
