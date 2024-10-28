@@ -152,6 +152,12 @@ void WebUI::begin() {
         server->send(200, "text/plain", "WiFi Manager launching, connect to ESP WiFi...");
     });
 
+    server->on("/json.html", HTTP_GET, [&]() {
+        debugD("uri: %s", server->uri().c_str());
+        server->sendHeader("Connection", "close");
+        server->send(200, "text/html", WebUI::jsonHTMLTemplate);
+    });
+
     server->begin();
 
     initialised = true;
