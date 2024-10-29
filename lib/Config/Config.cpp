@@ -1,4 +1,4 @@
-#include "Common.h"
+#include "Config.h"
 
 String mqttServer = "mqtt";
 String mqttPort = "1883";

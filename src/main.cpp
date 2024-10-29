@@ -17,7 +17,7 @@
 #include "Blinker.h"
 #endif
 #include "WebUI.h"
-#include "Common.h"
+#include "Config.h"
 #include "SpaInterface.h"
 #include "SpaUtils.h"
 #include "HAAutoDiscovery.h"

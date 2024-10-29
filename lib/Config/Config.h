@@ -1,5 +1,5 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef CONFIG_H
+#define CONFIG_H
 
 
 #include <Arduino.h>
@@ -42,4 +42,4 @@ void writeRebootFlag(bool flagValue);
 void readConfigFile();
 void writeConfigFile();
 
-#endif
+#endif // CONFIG_H

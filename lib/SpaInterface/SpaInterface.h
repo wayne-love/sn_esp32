@@ -5,7 +5,7 @@
 #include <functional>
 #include <stdexcept>
 #include "SpaProperties.h"
-#include "Common.h"
+#include "Config.h"
 
 
 #define FAILEDREADFREQUENCY 1000 //(ms) Frequency to retry on a failed read of the status registers.

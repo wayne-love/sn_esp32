@@ -14,7 +14,7 @@
 
 #include "SpaInterface.h"
 #include "SpaUtils.h"
-#include "Common.h"
+#include "Config.h"
 
 class WebUI {
     public:
