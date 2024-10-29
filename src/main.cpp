@@ -22,9 +22,6 @@
 #include "SpaUtils.h"
 #include "HAAutoDiscovery.h"
 
-// Define the threshold for detecting a fast reboot (within 20 seconds)
-#define REBOOT_THRESHOLD 20
-
 unsigned long bootStartMillis;  // To track when the device started
 
 SpaInterface si;
@@ -59,7 +56,6 @@ void saveConfigCallback(){
 }
 
 void startWiFiManager(){
-  writeRebootFlag(false);
   if (ui.initialised) {
     ui.server->stop();
   }
@@ -112,39 +108,6 @@ if (triggerWiFiManager) {
   triggerWiFiManager = false;
   startWiFiManager();
 }
-}
-
-void checkRebootThreshold(){
-  // Check if REBOOT_THRESHOLD seconds have passed since the boot time, then clear the reboot flag
-  if (rebootFlag && millis() - bootStartMillis > (REBOOT_THRESHOLD * 1000)) {
-    debugI("Clear reboot flag after %i seconds.", REBOOT_THRESHOLD);
-    writeRebootFlag(false);
-  }
-}
-
-bool shouldStartWiFiManager() {
-  bool isSelectedRebootReason = false;
-
-  #if defined(ESP8266)
-    uint32_t resetReason = ESP.getResetInfoPtr()->reason;
-    debugI("ESP8266 Reset Reason: %d", resetReason);
-
-    // Check selected reset reasons for ESP8266
-    if (resetReason == REASON_SOFT_RESTART || resetReason == REASON_EXT_SYS_RST) {
-      isSelectedRebootReason = true;
-    }
-
-  #elif defined(ESP32)
-    esp_reset_reason_t resetReason = esp_reset_reason();
-    debugI("ESP32 Reset Reason: %d", resetReason);
-
-    // Check selected reset reasons for ESP32
-    if (resetReason == ESP_RST_POWERON || resetReason == ESP_RST_EXT || resetReason == ESP_RST_SW) {
-      isSelectedRebootReason = true;
-    }
-  #endif
-
-  return (isSelectedRebootReason && rebootFlag);
 }
 
 /*
@@ -934,20 +897,7 @@ void setup() {
   mqttClient.setCallback(mqttCallback);
   mqttClient.setBufferSize(2048);
 
-  bool valueFlag = readRebootFlag();
-  debugI("readRebootFlag: %s", valueFlag ? "true" : "false");
   bootStartMillis = millis();  // Record the current boot time in milliseconds
-
-  // If rebootFlag is true, the device rebooted within the threshold
-  if (shouldStartWiFiManager()) {
-    debugI("Detected reboot within the last %i seconds. Starting WiFiManager...", REBOOT_THRESHOLD);
-    startWiFiManager();
-    ESP.restart();
-  } else {
-    debugI("Normal boot, no WiFiManager needed.");
-    // Set the reboot flag to true
-    writeRebootFlag(true);
-  }
 
   ui.begin();
 
@@ -960,7 +910,6 @@ void loop() {
 
 
   checkButton();
-  checkRebootThreshold();
   #if defined(LED_PIN)
   led.tick();
   #endif

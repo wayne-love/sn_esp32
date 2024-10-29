@@ -4,7 +4,6 @@ String mqttServer = "mqtt";
 String mqttPort = "1883";
 String mqttUserName = "";
 String mqttPassword = "";
-bool rebootFlag = false;
 String spaName = "MySpa";
 int updateFrequency = 60;
 bool triggerWiFiManager = false;
@@ -13,49 +12,6 @@ bool triggerWiFiManager = false;
     #define DEBUG_ENABLED
     RemoteDebug Debug;
 #endif
-
-#if defined(ESP8266)
-  RTCData rtcData;
-  const int16_t MAGIC_NUMBER = 0xAAAA;
-#endif
-
-#if defined(ESP32)
-  Preferences preferences;  // For ESP32 reboot storage
-#endif
-
-bool readRebootFlag() {
-  bool retVal = false;
-
-  #if defined(ESP8266)
-    ESP.rtcUserMemoryRead(0, (uint32_t*)&rtcData, sizeof(rtcData));
-    // Check if the magic number matches
-    if (rtcData.magicNumber != MAGIC_NUMBER) {
-      debugD("Invalid or uninitialized RTC memory.");
-    } else {
-      retVal = (rtcData.rebootFlag  == 1);
-    }
-  #elif defined(ESP32)
-    preferences.begin("reboot_data", false);
-    retVal = preferences.getBool("rebootFlag", false);
-    preferences.end();
-  #endif
-  rebootFlag = retVal;
-  return retVal;
-}
-
-void writeRebootFlag(bool flagValue) {
-  rebootFlag = flagValue;
-  #if defined(ESP8266)
-    // Write MAGIC_NUMBER so we can validate the data when we read it later
-    rtcData.magicNumber = MAGIC_NUMBER;
-    rtcData.rebootFlag = flagValue?1:0;
-    ESP.rtcUserMemoryWrite(0, (uint32_t*)&rtcData, sizeof(rtcData));
-  #elif defined(ESP32)
-    preferences.begin("reboot_data", false);
-    preferences.putBool("rebootFlag", flagValue);
-    preferences.end();
-  #endif
-}
 
 void readConfigFile() {
   debugI("Reading config file");

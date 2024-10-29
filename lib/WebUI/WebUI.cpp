@@ -45,7 +45,6 @@ void WebUI::begin() {
     server->on("/reboot", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
         server->send(200, "text/html", WebUI::rebootPage);
-        writeRebootFlag(false);
         debugD("Rebooting...");
         delay(200);
         server->client().stop();
