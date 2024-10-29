@@ -5,6 +5,9 @@ String mqttPort = "1883";
 String mqttUserName = "";
 String mqttPassword = "";
 bool rebootFlag = false;
+String spaName = "MySpa";
+int updateFrequency = 60;
+bool triggerWiFiManager = false;
 
 #ifndef DEBUG_ENABLED
     #define DEBUG_ENABLED
@@ -76,12 +79,19 @@ void readConfigFile() {
       }
       mqttUserName = json["mqtt_username"].as<String>();
       mqttPassword = json["mqtt_password"].as<String>();
+      if (json["spa_name"].is<String>()) {
+        spaName = json["spa_name"].as<String>();
+      }
+      if (json["update_frequency"].is<int>()) {
+        updateFrequency = json["update_frequency"].as<int>();
+      }
     } else {
       debugW("Failed to parse config file");
     }
     configFile.close();
   }
 
+  if (updateFrequency < 10) updateFrequency = 10;
 }
 
 void writeConfigFile() {
@@ -91,6 +101,8 @@ void writeConfigFile() {
   json["mqtt_port"] = mqttPort;
   json["mqtt_password"] = mqttPassword;
   json["mqtt_username"] = mqttUserName;
+  json["spa_name"] = spaName;
+  json["update_frequency"] = updateFrequency;
 
   File configFile = LittleFS.open("/config.json","w");
   if (!configFile) {
