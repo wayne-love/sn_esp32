@@ -6,7 +6,6 @@
 #include <time.h>
 #include <TimeLib.h>
 #include <array>
-#include <vector>
 
 
 template <typename T>
@@ -1175,6 +1174,7 @@ public:
 
     int getLSPDValue() { return LSPDValue.getValue(); }
     void setLSPDValueCallback(void (*callback)(int)) { LSPDValue.setCallback(callback); }
+    const std::array <String, 5> lightSpeedMap = {"1","2","3","4","5"};
 
     int getFiltSetHrs() { return FiltSetHrs.getValue(); }
     void setFiltSetHrsCallback(void (*callback)(int)) { FiltSetHrs.setCallback(callback); }
@@ -1201,19 +1201,8 @@ public:
 
     int getL_1SNZ_DAY() { return L_1SNZ_DAY.getValue(); }
     void setL_1SNZ_DAYCallback(void (*callback)(int)) { L_1SNZ_DAY.setCallback(callback); }
-    const std::vector<std::pair<String, int>> sleepMap = {
-        {"Off", 128},
-        {"Everyday", 127},
-        {"Weekends", 96},
-        {"Weekdays", 31},
-        {"Monday", 16},
-        {"Tuesday", 8},
-        {"Wednesday", 4},
-        {"Thursday", 2},
-        {"Friday", 1},
-        {"Saturday", 64},
-        {"Sunday", 32}
-    };
+    const std::array <String, 11> sleepSelection = {"Off", "Everyday", "Weekends", "Weekdays", "Monday", "Tuesday", "Wednesday", "Thuesday", "Friday", "Saturday", "Sunday"};
+    const std::array <byte, 11> sleepBitmap = {128, 127, 96, 31, 16, 8, 4, 2, 1, 64, 32}; 
 
     int getL_2SNZ_DAY() { return L_2SNZ_DAY.getValue(); }
     void setL_2SNZ_DAYCallback(void (*callback)(int)) { L_2SNZ_DAY.setCallback(callback); }
