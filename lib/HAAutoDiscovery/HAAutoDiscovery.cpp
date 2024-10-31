@@ -75,7 +75,8 @@ void generateSwitchAdJSON(String& output, const AutoDiscoveryConfig& config, con
    serializeJson(json, output);
 }
 
-void generateSelectAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, std::vector<String> options) {
+template <typename T, size_t N>
+void generateSelectAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, const std::array<T, N>& options) {
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "select");
 

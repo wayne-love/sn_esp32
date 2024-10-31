@@ -635,7 +635,7 @@ void mqttHaAutoDiscovery() {
   config.propertyId = "heatpump_mode";
   config.deviceClass = "";
   config.entityCategory = "";
-  generateSelectAdJSON(output, config, spa, discoveryTopic, {"Auto","Heat","Cool","Off"});
+  generateSelectAdJSON(output, config, spa, discoveryTopic, si.HPMPStrings);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
 

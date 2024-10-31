@@ -35,7 +35,9 @@ void generateSensorAdJSON(String& output, const AutoDiscoveryConfig& config, con
 void generateBinarySensorAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic);
 void generateTextAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, String regex="");
 void generateSwitchAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic);
-void generateSelectAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, std::vector<String> options={});
+
+template <typename T, size_t N>
+void generateSelectAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, const std::array<T, N>& options);
 void generateFanAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic);
 void generateLightAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, std::vector<String> colorModes={});
 void generateClimateAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic);
