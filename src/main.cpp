@@ -13,8 +13,6 @@
 
 #include <PubSubClient.h>
 
-#include <vector>
-
 #if defined(LED_PIN)
 #include "Blinker.h"
 #endif
@@ -635,7 +633,7 @@ void mqttHaAutoDiscovery() {
   config.propertyId = "heatpump_mode";
   config.deviceClass = "";
   config.entityCategory = "";
-  generateSelectAdJSON(output, config, spa, discoveryTopic, {"Auto","Heat","Cool","Off"});
+  generateSelectAdJSON(output, config, spa, discoveryTopic, si.HPMPStrings);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
 
@@ -696,14 +694,13 @@ void mqttHaAutoDiscovery() {
   generateSwitchAdJSON(output, config, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  std::vector<String> colorModeStrings(std::begin(si.colorModeStrings), std::end(si.colorModeStrings));
   //lightADPublish(mqttClient, spa, "Lights", "{{ value_json.lights }}", "lights", "", "", colorModeStrings);
   config.displayName = "Lights";
   config.valueTemplate = "{{ value_json.lights }}";
   config.propertyId = "lights";
   config.deviceClass = "";
   config.entityCategory = "";
-  generateLightAdJSON(output, config, spa, discoveryTopic, colorModeStrings);
+  generateLightAdJSON(output, config, spa, discoveryTopic, si.colorModeStrings);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //selectADPublish(mqttClient, spa, "Lights Speed","{{ value_json.lights.speed }}","lights_speed", "", "", {"1","2","3","4","5"});
@@ -712,13 +709,9 @@ void mqttHaAutoDiscovery() {
   config.propertyId = "lights_speed";
   config.deviceClass = "";
   config.entityCategory = "";
-  generateSelectAdJSON(output, config, spa, discoveryTopic, {"1","2","3","4","5"});
+  generateSelectAdJSON(output, config, spa, discoveryTopic, si.lightSpeedMap );
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  std::vector<String> sleepStrings;
-  for (const auto& pair : si.sleepMap) {
-      sleepStrings.push_back(pair.first);
-  }
   //selectADPublish(mqttClient, spa, "Sleep Timer 1","{{ value_json.sleepTimers.timer1.state }}", "sleepTimers_1_state", "config", "", sleepStrings);
   //selectADPublish(mqttClient, spa, "Sleep Timer 2","{{ value_json.sleepTimers.timer2.state }}", "sleepTimers_2_state", "config", "", sleepStrings);
   config.displayName = "Sleep Timer 1";
@@ -726,7 +719,7 @@ void mqttHaAutoDiscovery() {
   config.propertyId = "sleepTimers_1_state";
   config.deviceClass = "";
   config.entityCategory = "config";
-  generateSelectAdJSON(output, config, spa, discoveryTopic, sleepStrings);
+  generateSelectAdJSON(output, config, spa, discoveryTopic, si.sleepSelection);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   config.displayName = "Sleep Timer 2";
@@ -734,7 +727,7 @@ void mqttHaAutoDiscovery() {
   config.propertyId = "sleepTimers_2_state";
   config.deviceClass = "";
   config.entityCategory = "config";
-  generateSelectAdJSON(output, config, spa, discoveryTopic, sleepStrings);
+  generateSelectAdJSON(output, config, spa, discoveryTopic, si.sleepSelection);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   config.displayName = "Date Time";
@@ -786,14 +779,13 @@ void mqttHaAutoDiscovery() {
   generateFanAdJSON(output, config, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  std::vector<String> spaModeStrings(std::begin(si.spaModeStrings), std::end(si.spaModeStrings));
   //selectADPublish(mqttClient, spa, "Spa Mode", "{{ value_json.status.spaMode }}", "status_spaMode", "", "", spaModeStrings);
   config.displayName = "Spa Mode";
   config.valueTemplate = "{{ value_json.status.spaMode }}";
   config.propertyId = "status_spaMode";
   config.deviceClass = "";
   config.entityCategory = "";
-  generateSelectAdJSON(output, config, spa, discoveryTopic, spaModeStrings);
+  generateSelectAdJSON(output, config, spa, discoveryTopic, si.spaModeStrings);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
 }
@@ -878,14 +870,16 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   } else if (property == "blower_mode") {
     si.setOutlet_Blower(p=="Variable"?0:1);
   } else if (property == "sleepTimers_1_state" || property == "sleepTimers_2_state") {
-    for (const auto& pair : si.sleepMap) {
-      if (pair.first == p) {
+    int member=0;
+    for (const auto& i : si.sleepSelection) {
+      if (i == p) {
         if (property == "sleepTimers_1_state")
-          si.setL_1SNZ_DAY(pair.second);
+          si.setL_1SNZ_DAY(si.sleepBitmap[member]);
         else if (property == "sleepTimers_2_state")
-          si.setL_2SNZ_DAY(pair.second);
+          si.setL_2SNZ_DAY(si.sleepBitmap[member]);
         break;
       }
+      member++;
     }
   } else if (property == "sleepTimers_1_begin") {
     si.setL_1SNZ_BGN(convertToInteger(p));

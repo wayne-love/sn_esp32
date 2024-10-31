@@ -143,15 +143,17 @@ bool generateStatusJson(SpaInterface &si, String &output, bool prettyJson) {
   json["blower"]["mode"] = si.getOutlet_Blower()==1? "Ramp" : "Variable";
   json["blower"]["speed"] = si.getOutlet_Blower() ==2? "0" : String(si.getVARIValue());
 
-  for (const auto& pair : si.sleepMap) {
-      if (pair.second == si.getL_1SNZ_DAY()) {
-        json["sleepTimers"]["timer1"]["state"]=pair.first;
-        debugD("SleepTimer1: %s", pair.first.c_str());
+  int member = 0;
+  for (const auto& pair : si.sleepBitmap) {
+      if (pair == si.getL_1SNZ_DAY()) {
+        json["sleepTimers"]["timer1"]["state"]=si.sleepSelection[member];
+        debugD("SleepTimer1: %s", si.sleepSelection[member].c_str());
       }
-      if (pair.second == si.getL_2SNZ_DAY()) {
-        json["sleepTimers"]["timer2"]["state"]=pair.first;
-        debugD("SleepTimer1: %s", pair.first.c_str());
+      if (pair == si.getL_2SNZ_DAY()) {
+        json["sleepTimers"]["timer2"]["state"]=si.sleepSelection[member];
+        debugD("SleepTimer2: %s", si.sleepSelection[member].c_str());
       }
+      member++;
   }
   json["sleepTimers"]["timer1"]["begin"]=convertToTime(si.getL_1SNZ_BGN());
   json["sleepTimers"]["timer1"]["end"]=convertToTime(si.getL_1SNZ_END());

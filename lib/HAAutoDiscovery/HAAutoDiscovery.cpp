@@ -75,16 +75,7 @@ void generateSwitchAdJSON(String& output, const AutoDiscoveryConfig& config, con
    serializeJson(json, output);
 }
 
-void generateSelectAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, std::vector<String> options) {
-   JsonDocument json;
-   generateCommonAdJSON(json, config, spa, discoveryTopic, "select");
 
-   json["command_topic"] = spa.commandTopic + "/" + config.propertyId;
-   JsonArray opts = json["options"].to<JsonArray>();
-   for (const auto& o : options) opts.add(o);
-
-   serializeJson(json, output);
-}
 
 void generateFanAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic) {
    JsonDocument json;
@@ -115,44 +106,7 @@ void generateFanAdJSON(String& output, const AutoDiscoveryConfig& config, const 
    serializeJson(json, output);
 }
 
-void generateLightAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, std::vector<String> colorModes) {
-   JsonDocument json;
-   generateCommonAdJSON(json, config, spa, discoveryTopic, "light");
 
-   json["brightness_state_topic"] = spa.stateTopic;
-   json["color_mode_state_topic"] = spa.stateTopic;
-   json["effect_state_topic"] = spa.stateTopic;
-   json["hs_state_topic"] = spa.stateTopic;
-
-   json["command_topic"] = spa.commandTopic + "/" + config.propertyId + "_state";
-   json["brightness_command_topic"] = spa.commandTopic + "/" + config.propertyId + "_brightness";
-   json["effect_command_topic"] = spa.commandTopic + "/" + config.propertyId + "_effect";
-   json["hs_command_topic"] = spa.commandTopic + "/" + config.propertyId + "_color";
-
-   // Find the last character that is not a space or curly brace
-   int lastIndex = config.valueTemplate.length() - 1;
-   while (lastIndex >= 0 && (config.valueTemplate[lastIndex] == ' ' || config.valueTemplate[lastIndex] == '}')) {
-      lastIndex--;
-   }
-
-   // Value templates to extract values from the same topic
-   json["state_value_template"] = config.valueTemplate.substring(0, lastIndex + 1) + ".state" + config.valueTemplate.substring(lastIndex + 1);
-   json["brightness_value_template"] = config.valueTemplate.substring(0, lastIndex + 1) + ".brightness" + config.valueTemplate.substring(lastIndex + 1);
-   json["effect_value_template"] = config.valueTemplate.substring(0, lastIndex + 1) + ".effect" + config.valueTemplate.substring(lastIndex + 1);
-   json["hs_value_template"] = config.valueTemplate.substring(0, lastIndex + 1) + ".color.h" + config.valueTemplate.substring(lastIndex + 1) + ","
-                              + config.valueTemplate.substring(0, lastIndex + 1) + ".color.s" + config.valueTemplate.substring(lastIndex + 1);
-   json["color_mode_value_template"] = config.valueTemplate.substring(0, lastIndex + 1) + ".color_mode" + config.valueTemplate.substring(lastIndex + 1);
-
-   json["brightness"] = true;
-   json["brightness_scale"]=5;
-   json["effect"] = true;
-   JsonArray effect_list = json["effect_list"].to<JsonArray>();
-   for (const auto& effect: colorModes) effect_list.add(effect);
-   JsonArray color_modes = json["supported_color_modes"].to<JsonArray>();
-   color_modes.add("hs");
-
-   serializeJson(json, output);
-}
 
 void generateClimateAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic) {
    JsonDocument json;
