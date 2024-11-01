@@ -16,6 +16,8 @@
 #include "SpaUtils.h"
 #include "Config.h"
 
+extern RemoteDebug Debug;
+
 class WebUI {
     public:
         #if defined(ESP8266)

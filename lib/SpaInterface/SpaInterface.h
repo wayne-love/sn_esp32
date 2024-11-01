@@ -4,10 +4,11 @@
 #include <Arduino.h>
 #include <functional>
 #include <stdexcept>
+#include <RemoteDebug.h>
 #include "SpaProperties.h"
 #include "Config.h"
 
-
+extern RemoteDebug Debug;
 #define FAILEDREADFREQUENCY 1000 //(ms) Frequency to retry on a failed read of the status registers.
 
 class SpaInterface : public SpaProperties {

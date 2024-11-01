@@ -9,8 +9,8 @@
 #endif
 
 #include <WiFiClient.h>
+#include <RemoteDebug.h>
 #include <WiFiManager.h>
-
 #include <PubSubClient.h>
 
 #if defined(LED_PIN)
@@ -23,6 +23,7 @@
 #include "HAAutoDiscovery.h"
 
 unsigned long bootStartMillis;  // To track when the device started
+RemoteDebug Debug;
 
 SpaInterface si;
 

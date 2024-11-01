@@ -3,10 +3,13 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <RemoteDebug.h>
 #include <time.h>
 #include <TimeLib.h>
 #include "SpaInterface.h"
 #include "Config.h"
+
+extern RemoteDebug Debug;
 
 String convertToTime(int data);
 int convertToInteger(String &timeStr);

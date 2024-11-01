@@ -15,9 +15,7 @@ extern String spaName;
 extern int updateFrequency;
 extern bool triggerWiFiManager;
 
-#ifndef DEBUG_ENABLED
-    extern RemoteDebug Debug;
-#endif
+extern RemoteDebug Debug;
 
 void readConfigFile();
 void writeConfigFile();
