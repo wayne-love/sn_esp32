@@ -17,7 +17,7 @@ class SpaInterface : public SpaProperties {
     private:
 
         /// @brief Number of fields that we can expect to read.
-        int statusResponseMinFields = 289;
+        int statusResponseMinFields = 288;
         static const int statusResponseMaxFields = 295;
         
         /// @brief Each field of the RF cmd response as seperate elements.

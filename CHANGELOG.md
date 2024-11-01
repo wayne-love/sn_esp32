@@ -1,1 +1,1 @@
-Testing github build and release.
+Change statusResponseMinFields to 288 to support SVM1.
