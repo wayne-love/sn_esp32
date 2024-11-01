@@ -30,7 +30,7 @@ def merge_bin_action(source, target, env):
             "-o",
             merged_bin,
             "--flash_mode",
-            board_config.get("build.flash_mode", "dio"),
+            "${__get_board_flash_mode(__env__)}",
             "--flash_freq",
             "${__get_board_f_flash(__env__)}",
             "--flash_size",
