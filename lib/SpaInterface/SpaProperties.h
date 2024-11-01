@@ -1166,7 +1166,7 @@ public:
 
     int getCurrClr() { return CurrClr.getValue(); }
     void setCurrClrCallback(void (*callback)(int)) { CurrClr.setCallback(callback); }
-    const std::array <byte, 25> colorMap = {0, 4, 4, 19, 13, 25, 25, 16, 10, 7, 2, 8, 5, 3, 6, 6, 21, 21, 21, 18, 18, 9, 9, 1, 1};
+    const std::array <int, 25> colorMap = {0, 4, 4, 19, 13, 25, 25, 16, 10, 7, 2, 8, 5, 3, 6, 6, 21, 21, 21, 18, 18, 9, 9, 1, 1};
 
     int getColorMode() { return ColorMode.getValue(); }
     void setColorModeCallback(void (*callback)(int)) { ColorMode.setCallback(callback); }
@@ -1174,6 +1174,7 @@ public:
 
     int getLSPDValue() { return LSPDValue.getValue(); }
     void setLSPDValueCallback(void (*callback)(int)) { LSPDValue.setCallback(callback); }
+    const std::array <String, 5> lightSpeedMap = {"1","2","3","4","5"};
 
     int getFiltSetHrs() { return FiltSetHrs.getValue(); }
     void setFiltSetHrsCallback(void (*callback)(int)) { FiltSetHrs.setCallback(callback); }
@@ -1200,8 +1201,8 @@ public:
 
     int getL_1SNZ_DAY() { return L_1SNZ_DAY.getValue(); }
     void setL_1SNZ_DAYCallback(void (*callback)(int)) { L_1SNZ_DAY.setCallback(callback); }
-    const std::array <byte, 11> sleepCodeMap = {128,127,96,31,16,8,4,2,1,64,32};  // TODO #36
-    const std::array <String, 11> sleepStringMap = {"Off","Everyday","Weekends","Weekdays","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"};
+    const std::array <String, 11> sleepSelection = {"Off", "Everyday", "Weekends", "Weekdays", "Monday", "Tuesday", "Wednesday", "Thuesday", "Friday", "Saturday", "Sunday"};
+    const std::array <byte, 11> sleepBitmap = {128, 127, 96, 31, 16, 8, 4, 2, 1, 64, 32}; 
 
     int getL_2SNZ_DAY() { return L_2SNZ_DAY.getValue(); }
     void setL_2SNZ_DAYCallback(void (*callback)(int)) { L_2SNZ_DAY.setCallback(callback); }

@@ -2,22 +2,21 @@
 #define SPAINTERFACE_H
 
 #include <Arduino.h>
-#include <RemoteDebug.h>
 #include <functional>
 #include <stdexcept>
 #include "SpaProperties.h"
+#include "Common.h"
 
 
-#define UPDATEFREQUENCY 60000 //(ms) Frequency to poll controller when idle.
 #define FAILEDREADFREQUENCY 1000 //(ms) Frequency to retry on a failed read of the status registers.
-
-extern RemoteDebug Debug;
 
 class SpaInterface : public SpaProperties {
     private:
 
         /// @brief Number of fields that we can expect to read.
+
         int statusResponseMinFields = 288;
+
         static const int statusResponseMaxFields = 295;
         
         /// @brief Each field of the RF cmd response as seperate elements.
@@ -225,6 +224,19 @@ class SpaInterface : public SpaProperties {
         /// @return Returns True if succesful
         bool setMode(int mode);
         bool setMode(String mode);
+};
+
+
+// Define the function pointer type for getPumpInstallState functions
+typedef String (SpaInterface::*GetPumpStateFunction)();
+
+// Declare the array of function pointers for each pump's install state as static
+static GetPumpStateFunction pumpStateFunctions[] = {
+  &SpaInterface::getPump1InstallState,
+  &SpaInterface::getPump2InstallState,
+  &SpaInterface::getPump3InstallState,
+  &SpaInterface::getPump4InstallState,
+  &SpaInterface::getPump5InstallState
 };
 
 #endif
