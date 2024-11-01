@@ -145,6 +145,13 @@ void WebUI::begin() {
         server->send(200, "text/html", WebUI::jsonHTMLTemplate);
     });
 
+    server->on("/status", HTTP_GET, [&]() {
+        debugD("uri: %s", server->uri().c_str());
+        SpaInterface &si = *_spa;
+        server->sendHeader("Connection", "close");
+        server->send(200, "text/plain", si.statusResponse.getValue());
+    });
+
     server->begin();
 
     initialised = true;
