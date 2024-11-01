@@ -14,7 +14,9 @@ class SpaInterface : public SpaProperties {
     private:
 
         /// @brief Number of fields that we can expect to read.
-        int statusResponseMinFields = 289;
+
+        int statusResponseMinFields = 288;
+
         static const int statusResponseMaxFields = 295;
         
         /// @brief Each field of the RF cmd response as seperate elements.
@@ -223,6 +225,7 @@ class SpaInterface : public SpaProperties {
         bool setMode(int mode);
         bool setMode(String mode);
 };
+
 
 // Define the function pointer type for getPumpInstallState functions
 typedef String (SpaInterface::*GetPumpStateFunction)();
