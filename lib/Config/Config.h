@@ -17,7 +17,7 @@ extern bool triggerWiFiManager;
 
 extern RemoteDebug Debug;
 
-void readConfigFile();
+bool readConfigFile();
 void writeConfigFile();
 
 #endif // CONFIG_H

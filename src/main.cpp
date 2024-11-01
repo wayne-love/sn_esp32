@@ -108,6 +108,7 @@ void checkButton(){
 if (triggerWiFiManager) {
   triggerWiFiManager = false;
   startWiFiManager();
+  ESP.restart();  // restart, dirty but easier than trying to restart services one by one
 }
 }
 
@@ -892,7 +893,11 @@ void setup() {
     LittleFS.begin();
   }
 
-  readConfigFile();
+  if (!readConfigFile()) {
+    debugW("Failed to open config.json, starting Wi-Fi Manager");
+    startWiFiManager();
+    //I'm not sure if we need a reboot here - probably not
+  }
 
   mqttClient.setServer(mqttServer.c_str(),mqttPort.toInt());
   mqttClient.setCallback(mqttCallback);

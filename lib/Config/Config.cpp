@@ -8,10 +8,12 @@ String spaName = "MySpa";
 int updateFrequency = 60;
 bool triggerWiFiManager = false;
 
-void readConfigFile() {
+bool readConfigFile() {
   debugI("Reading config file");
   File configFile = LittleFS.open("/config.json","r");
-  if (configFile) {
+  if (!configFile) {
+    return false;
+  } else {
     size_t size = configFile.size();
     // Allocate a buffer to store contents of the file.
     std::unique_ptr<char[]> buf(new char[size]);
@@ -43,6 +45,7 @@ void readConfigFile() {
   }
 
   if (updateFrequency < 10) updateFrequency = 10;
+  return true;
 }
 
 void writeConfigFile() {
