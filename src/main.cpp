@@ -112,352 +112,41 @@ if (triggerWiFiManager) {
 }
 }
 
-/*
-void climateADPublish(String name, String propertyId, String deviceName, String deviceIdentifier ) {
-*/
-/*
-{ 
-   "device_class":"temperature",
-   "state_topic":"homeassistant/sensor/sensorBedroom/state",
-   "unit_of_measurement":"°C",
-   "value_template":"{{ value_json.temperature}}",
-   "unique_id":"temp01ae",
-   "device":{
-      "identifiers":[
-         "bedroom01ae"
-      ],
-      "name":"Bedroom"
-   }
-}"
-*/
-/*
-  JsonDocument json;
-  String uniqueID = spaSerialNumber + "-" + propertyId;
 
-  if (name != "") { json["name"]=name; }
-
-  json["current_temperature_topic"]=mqttStatusTopic;;
-  json["current_temperature_template"]="{{ value_json.temperatures.water }}";
-
-  JsonObject device = json["device"].to<JsonObject>();
-  device["name"] = deviceName;
-  JsonArray identifiers = device["identifiers"].to<JsonArray>();
-  identifiers.add(deviceIdentifier);
-
-  json["initial"]=36;
-  json["max_temp"]=41;
-  json["min_temp"]=10;
-  JsonArray modes = json["modes"].to<JsonArray>();
-  modes.add("auto"); // the actual modes of the heat pump are controlled through a select control to avoid accidently turning off the HP and using the resistance heater
-  json["mode_state_template"]="auto";
-  json["mode_state_topic"]=mqttStatusTopic;
-
-  json["action_topic"]=mqttStatusTopic;
-  json["action_template"]="{% if value_json.status.heatingActive == 'ON' %}heating{% else %}off{% endif %}";
-  
-  json["temperature_command_topic"]=mqttSet+"/status_temperatureSetPoint";
-  json["temperature_state_template"]="{{ value_json.status.temperatureSetPoint }}";
-  json["temperature_state_topic"]=mqttStatusTopic;
-  json["temperature_unit"]="C";
-  json["temp_step"]=0.2;
-
-  json["unique_id"] = uniqueID;
-
-  JsonObject availability = json["availability"].to<JsonObject>();
-  availability["topic"] =mqttAvailability;
-
-  // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
-  String discoveryTopic = "homeassistant/climate/"+ spaSerialNumber + "/" + uniqueID + "/config";
-  String output = "";
-  serializeJson(json,output);
-  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
-
-}
-
-void fanADPublish(String name, String propertyId, String deviceName, String deviceIdentifier ) {
-*/
-/*
-# Example using percentage based speeds with preset modes configuration.yaml
-mqtt:
-  - fan:
-      name: "Bedroom Fan"
-      state_topic: "bedroom_fan/on/state"
-      command_topic: "bedroom_fan/on/set"
-      direction_state_topic: "bedroom_fan/direction/state"
-      direction_command_topic: "bedroom_fan/direction/set"
-      oscillation_state_topic: "bedroom_fan/oscillation/state"
-      oscillation_command_topic: "bedroom_fan/oscillation/set"
-      percentage_state_topic: "bedroom_fan/speed/percentage_state"
-      percentage_command_topic: "bedroom_fan/speed/percentage"
-      preset_mode_state_topic: "bedroom_fan/preset/preset_mode_state"
-      preset_mode_command_topic: "bedroom_fan/preset/preset_mode"
-      preset_modes:
-        -  "auto"
-        -  "smart"
-        -  "whoosh"
-        -  "eco"
-        -  "breeze"
-      qos: 0
-      payload_on: "true"
-      payload_off: "false"
-      payload_oscillation_on: "true"
-      payload_oscillation_off: "false"
-      speed_range_min: 1
-      speed_range_max: 10
-*/
-/*
-  JsonDocument json;
-  String uniqueID = spaSerialNumber + "-" + propertyId;
-
-  if (name != "") { json["name"]=name; }
-  JsonObject device = json["device"].to<JsonObject>();
-  device["name"] = deviceName;
-  JsonArray identifiers = device["identifiers"].to<JsonArray>();
-  identifiers.add(deviceIdentifier);
-
-
-  json["state_topic"] = mqttStatusTopic;
-  json["state_value_template"] = "{{ value_json."+propertyId+".state }}";
-
-  json["command_topic"] = mqttSet + "/" + propertyId + "_state";
-  
-  json["percentage_state_topic"] = mqttStatusTopic;
-  json["percentage_command_topic"] = mqttSet + "/" + propertyId + "_speed";
-  json["percentage_value_template"] = "{{ value_json."+ propertyId + ".speed }}";
-  
-  json["preset_mode_state_topic"] = mqttStatusTopic;
-  json["preset_mode_command_topic"] = mqttSet + "/" + propertyId + "_mode";
-  json["preset_mode_value_template"] = "{{ value_json."+ propertyId + ".mode }}";
-  
-  JsonArray modes = json["preset_modes"].to<JsonArray>();
-  modes.add("Variable");
-  modes.add("Ramp");
-  json["speed_range_min"]=1;
-  json["speed_range_max"]=5;
-
-  json["unique_id"] = uniqueID;
-
-  JsonObject availability = json["availability"].to<JsonObject>();
-  availability["topic"] =mqttAvailability;
-
-  String discoveryTopic = "homeassistant/fan/"+ spaSerialNumber + "/" + uniqueID + "/config";
-  String output = "";
-  serializeJson(json,output);
-  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
-}
-
-
-void switchADPublish (String name, String deviceClass, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier) {
-*/
-/*
-{
-   "name":"Irrigation",
-   "command_topic":"homeassistant/switch/irrigation/set",
-   "state_topic":"homeassistant/switch/irrigation/state",
-   "unique_id":"irr01ad",
-   "device":{
-      "identifiers":[
-         "garden01ad"
-      ],
-      "name":"Garden"
-   }
-}*/
-/*
-  JsonDocument json;
-
-  if (deviceClass != "") { json["device_class"] = deviceClass; }
-  json["name"]=name;
-  json["state_topic"] = stateTopic;
-  json["value_template"] = valueTemplate;
-  json["command_topic"] = mqttSet + "/" + propertyId;
-  json["unique_id"] = spaSerialNumber + "-" + propertyId;
-  JsonObject device = json["device"].to<JsonObject>();
-  device["name"] = deviceName;
-  JsonArray identifiers = device["identifiers"].to<JsonArray>();
-  identifiers.add(deviceIdentifier);
-
-  JsonObject availability = json["availability"].to<JsonObject>();
-  availability["topic"] =mqttAvailability;
-
-  // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
-  String discoveryTopic = "homeassistant/switch/" + spaSerialNumber + "/" + spaSerialNumber + "-" + propertyId + "/config";
-  String output = "";
-  serializeJson(json,output);
-  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
-
-}
-
-
-void selectADPublish (String name, std::vector<String> options, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier, String category="") {
-*/
-/*
-{
-   "name":"Irrigation",
-   "command_topic":"homeassistant/switch/irrigation/set",
-   "state_topic":"homeassistant/switch/irrigation/state",
-   "unique_id":"irr01ad",
-   "device":{
-      "identifiers":[
-         "garden01ad"
-      ],
-      "name":"Garden"
-   }
-}*/
-/*
-  JsonDocument json;
-
-  if (category != "") json["entity_category"] = category;
-  json["name"]=name;
-  json["state_topic"] = stateTopic;
-  json["value_template"] = valueTemplate;
-  json["command_topic"] = mqttSet + "/" + propertyId;
-  json["unique_id"] = spaSerialNumber + "-" + propertyId;
-  JsonObject device = json["device"].to<JsonObject>();
-  device["name"] = deviceName;
-  JsonArray identifiers = device["identifiers"].to<JsonArray>();
-  identifiers.add(deviceIdentifier);
-
-  JsonObject availability = json["availability"].to<JsonObject>();
-  availability["topic"] =mqttAvailability;
-
-  JsonArray opts = json["options"].to<JsonArray>();
-  for (auto o : options) opts.add(o);
-  
-  // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
-  String discoveryTopic = "homeassistant/select/" + spaSerialNumber + "/" + spaSerialNumber + "-" + propertyId + "/config";
-  String output = "";
-  serializeJson(json,output);
-  debugV("json: %s", output.c_str());
-  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
-
-}
-
-
-void textADPublish (String name, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier, String category="", String regex="") {
-*/
-/*{
-  "availability": {
-      "topic": "sn_esp32/21110001-20000337/available"
-  },
-  "command_topic": "sn_esp32/21110001-20000337/set/datetime",
-  "device": {
-      "identifiers": [
-          "21110001-20000337"
-      ],
-      "name": "MySpa"
-  },
-	"entity_category": "config",
-	"pattern": "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}",
-  "name": "Date Time",
-  "state_topic": "sn_esp32/21110001-20000337/status",
-  "unique_id": "21110001-20000337-datetime",
-  "value_template": "{{ value_json.datetime }}"
-}*/
-/*
-  JsonDocument json;
-
-  JsonObject availability = json["availability"].to<JsonObject>();
-  availability["topic"] =mqttAvailability;
-
-  json["command_topic"] = mqttSet + "/" + propertyId;
-
-  JsonObject device = json["device"].to<JsonObject>();
-  device["name"] = deviceName;
-  JsonArray identifiers = device["identifiers"].to<JsonArray>();
-  identifiers.add(deviceIdentifier);
-
-  if (category != "") json["entity_category"] = category;
-  
-  if (regex != "") json["pattern"] = regex;
-
-  json["name"]=name;
-
-  json["state_topic"] = stateTopic;
-
-  json["unique_id"] = spaSerialNumber + "-" + propertyId;
-
-  json["value_template"] = valueTemplate;
-
-  // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
-  String discoveryTopic = "homeassistant/text/" + spaSerialNumber + "/" + spaSerialNumber + "-" + propertyId + "/config";
-  String output = "";
-  serializeJson(json,output);
-  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
-
-}
-
-
-void lightADPublish (String name, String deviceClass, String stateTopic, String valueTemplate, String propertyId, String deviceName, String deviceIdentifier) {
-*/
-/*
-{
-   "name":"Irrigation",
-   "command_topic":"homeassistant/switch/irrigation/set",
-   "state_topic":"homeassistant/switch/irrigation/state",
-   "unique_id":"irr01ad",
-   "device":{
-      "identifiers":[
-         "garden01ad"
-      ],
-      "name":"Garden"
-   }
-}*/
-/*
-  JsonDocument json;
-
-  if (deviceClass != "") { json["device_class"] = deviceClass; }
-  json["name"]=name;
-  //json["schema"] = "json";
-  json["state_topic"] = stateTopic;
-  json["brightness_state_topic"] = stateTopic;
-  json["color_mode_state_topic"] = stateTopic;
-  json["effect_state_topic"] = stateTopic;
-  json["hs_state_topic"] = stateTopic;
-
-  json["command_topic"] = mqttSet + "/" + propertyId + "_state";
-  json["brightness_command_topic"] = mqttSet + "/" + propertyId + "_brightness";
-  json["effect_command_topic"] = mqttSet + "/" + propertyId + "_effect";
-  json["hs_command_topic"] = mqttSet + "/" + propertyId + "_color";
-
-  // Find the last character that is not a space or curly brace
-  int lastIndex = valueTemplate.length() - 1;
-  while (lastIndex >= 0 && (valueTemplate[lastIndex] == ' ' || valueTemplate[lastIndex] == '}')) {
-    lastIndex--;
+void checkRebootThreshold(){
+  // Check if REBOOT_THRESHOLD seconds have passed since the boot time, then clear the reboot flag
+  if (rebootFlag && millis() - bootStartMillis > (REBOOT_THRESHOLD * 1000)) {
+    debugI("Clear reboot flag after %i seconds.", REBOOT_THRESHOLD);
+    writeRebootFlag(false);
   }
-
-  // Value templates to extract values from the same topic
-  json["state_value_template"] = valueTemplate.substring(0, lastIndex + 1) + ".state" + valueTemplate.substring(lastIndex + 1);
-  json["brightness_value_template"] = valueTemplate.substring(0, lastIndex + 1) + ".brightness" + valueTemplate.substring(lastIndex + 1);
-  json["effect_value_template"] = valueTemplate.substring(0, lastIndex + 1) + ".effect" + valueTemplate.substring(lastIndex + 1);
-  json["hs_value_template"] = valueTemplate.substring(0, lastIndex + 1) + ".color.h" + valueTemplate.substring(lastIndex + 1) + ","
-                            + valueTemplate.substring(0, lastIndex + 1) + ".color.s" + valueTemplate.substring(lastIndex + 1);
-  json["color_mode_value_template"] = valueTemplate.substring(0, lastIndex + 1) + ".color_mode" + valueTemplate.substring(lastIndex + 1);
-
-  json["unique_id"] = spaSerialNumber + "-" + propertyId;
-  JsonObject device = json["device"].to<JsonObject>();
-  device["name"] = deviceName;
-  JsonArray identifiers = device["identifiers"].to<JsonArray>();
-  identifiers.add(deviceIdentifier);
-
-  JsonObject availability = json["availability"].to<JsonObject>();
-  availability["topic"] =mqttAvailability;
-
-  json["brightness"] = true;
-  json["brightness_scale"]=5;
-  json["effect"] = true;
-  JsonArray effect_list = json["effect_list"].to<JsonArray>();
-  for (auto effect: si.colorModeStrings) effect_list.add(effect);
-  JsonArray color_modes = json["supported_color_modes"].to<JsonArray>();
-  color_modes.add("hs");
-
-  // <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
-  String discoveryTopic = "homeassistant/light/" + spaSerialNumber + "/" + spaSerialNumber + "-" + propertyId + "/config";
-  String output = "";
-  serializeJson(json,output);
-  mqttClient.publish(discoveryTopic.c_str(),output.c_str(),true);
-
 }
-*/
+
+bool shouldStartWiFiManager() {
+  bool isSelectedRebootReason = false;
+
+  #if defined(ESP8266)
+    uint32_t resetReason = ESP.getResetInfoPtr()->reason;
+    debugI("ESP8266 Reset Reason: %d", resetReason);
+
+    // Check selected reset reasons for ESP8266
+    if (resetReason == REASON_SOFT_RESTART || resetReason == REASON_EXT_SYS_RST) {
+      isSelectedRebootReason = true;
+    }
+
+  #elif defined(ESP32)
+    esp_reset_reason_t resetReason = esp_reset_reason();
+    debugI("ESP32 Reset Reason: %d", resetReason);
+
+    // Check selected reset reasons for ESP32
+    if (resetReason == ESP_RST_POWERON || resetReason == ESP_RST_EXT || resetReason == ESP_RST_SW) {
+      isSelectedRebootReason = true;
+    }
+  #endif
+
+  return (isSelectedRebootReason && rebootFlag);
+}
+
+
 
 void mqttHaAutoDiscovery() {
   debugI("Publishing Home Assistant auto discovery");
@@ -550,7 +239,7 @@ void mqttHaAutoDiscovery() {
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   config.displayName = "Total Energy";
-  config.valueTemplate = "{{ value_json.power.totalEnergy }}";
+  config.valueTemplate = "{{ value_json.power.totalenergy }}";
   config.propertyId = "TotalEnergy";
   config.deviceClass = "energy";
   config.entityCategory = "diagnostic";
@@ -584,7 +273,7 @@ void mqttHaAutoDiscovery() {
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //climateADPublish(mqttClient, spa, spaName, "{{ value_json.temperatures }}", "Heating");
-  config.displayName = spaName;
+  config.displayName = "Heat Set Point";
   config.valueTemplate = "{{ value_json.temperatures }}";
   config.propertyId = "Heating";
   config.deviceClass = "";
