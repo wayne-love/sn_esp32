@@ -5,12 +5,8 @@
 
 #include <Arduino.h>
 
-#if defined(ESP8266)
-  #include <ESP8266WebServer.h>
-#elif defined(ESP32)
-  #include <WebServer.h>
-  #include <Update.h>
-#endif
+#include <WebServer.h>
+#include <Update.h>
 
 #include "SpaInterface.h"
 #include "SpaUtils.h"
@@ -20,12 +16,7 @@ extern RemoteDebug Debug;
 
 class WebUI {
     public:
-        #if defined(ESP8266)
-            std::unique_ptr<ESP8266WebServer> server;
-        #elif defined(ESP32)
-            std::unique_ptr<WebServer> server;
-        #endif
-
+        std::unique_ptr<WebServer> server;
         WebUI(SpaInterface *spa);
         void begin();
         bool initialised = false;
