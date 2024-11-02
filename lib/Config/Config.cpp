@@ -6,7 +6,6 @@ String mqttUserName = "";
 String mqttPassword = "";
 String spaName = "MySpa";
 int updateFrequency = 60;
-bool triggerWiFiManager = false;
 
 bool readConfigFile() {
   debugI("Reading config file");

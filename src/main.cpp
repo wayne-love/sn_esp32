@@ -100,11 +100,12 @@ void checkButton(){
     }
   }
 #endif
-if (triggerWiFiManager) {
-  triggerWiFiManager = false;
-  startWiFiManager();
-  ESP.restart();  // restart, dirty but easier than trying to restart services one by one
 }
+
+void startWifiManagerCallback() {
+  debugD("Starting Wi-Fi Manager...");
+  startWiFiManager();
+  ESP.restart(); //do we need to reboot here??
 }
 
 void mqttHaAutoDiscovery() {
@@ -548,6 +549,7 @@ void setup() {
   bootStartMillis = millis();  // Record the current boot time in milliseconds
 
   ui.begin();
+  ui.setWifiManagerCallback(startWifiManagerCallback);
 
 }
 

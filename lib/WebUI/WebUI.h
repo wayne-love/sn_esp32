@@ -18,11 +18,16 @@ class WebUI {
     public:
         std::unique_ptr<WebServer> server;
         WebUI(SpaInterface *spa);
+
+        /// @brief Set the function to be called when properties have been updated.
+        /// @param f
+        void setWifiManagerCallback(void (*f)());
         void begin();
         bool initialised = false;
 
     private:
         SpaInterface *_spa;
+        void (*_wifiManagerCallback)() = nullptr;
 
         const char* getError();
 

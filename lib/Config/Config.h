@@ -13,7 +13,6 @@ extern String mqttUserName;
 extern String mqttPassword;
 extern String spaName;
 extern int updateFrequency;
-extern bool triggerWiFiManager;
 
 extern RemoteDebug Debug;
 

@@ -4,6 +4,10 @@ WebUI::WebUI(SpaInterface *spa) {
     _spa = spa;
 }
 
+void WebUI::setWifiManagerCallback(void (*f)()) {
+    _wifiManagerCallback = f;
+}
+
 const char * WebUI::getError() {
     return Update.errorString();
 }
@@ -134,9 +138,9 @@ void WebUI::begin() {
 
     server->on("/wifi-manager", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
-        triggerWiFiManager = true;
         server->sendHeader("Connection", "close");
         server->send(200, "text/plain", "WiFi Manager launching, connect to ESP WiFi...");
+        if (_wifiManagerCallback != nullptr) { _wifiManagerCallback(); }
     });
 
     server->on("/json.html", HTTP_GET, [&]() {
