@@ -112,14 +112,7 @@ void generateClimateAdJSON(String& output, const AutoDiscoveryConfig& config, co
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "climate");
 
-   /*
-      Previous releases defaulted to calling the climate control to device name (MySpa).
-      setting the climate device name and an display name both to "MySpa" resulted in the
-      climate entity being called "climate.myspa_myspa" and the display name being "MySpa MySpa".
-      We don't want to change the old behaviour, but if the user chooses a new name, we'll set the
-      entity name to "". Thus, giving a clean name to the climate device in Home Assistant.
-   */
-   if (config.displayName != "MySpa") json["name"]="";
+   json["name"]="";  ///TODO #49 - Need to work out how get HA to create climate.myspa without this.
 
    // Find the last character that is not a space or curly brace
    int lastIndex = config.valueTemplate.length() - 1;
