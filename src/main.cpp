@@ -550,6 +550,7 @@ void setup() {
 
   ui.begin();
   ui.setWifiManagerCallback(startWifiManagerCallback);
+  si.setUpdateFrequency(updateFrequency);
 
 }
 

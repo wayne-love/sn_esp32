@@ -12,7 +12,9 @@ SpaInterface::SpaInterface() : port(SPA_SERIAL) {
 SpaInterface::~SpaInterface() {}
 
 
-
+void SpaInterface::setUpdateFrequency(int updateFrequency) {
+    _updateFrequency = updateFrequency;
+}
 
 void SpaInterface::flushSerialReadBuffer() {
     int x = 0;
@@ -453,7 +455,7 @@ void SpaInterface::updateStatus() {
     _nextUpdateDue = millis() + FAILEDREADFREQUENCY;    
     if (readStatus()) {
         debugD("readStatus returned true");
-        _nextUpdateDue = millis() + (updateFrequency * 1000);
+        _nextUpdateDue = millis() + (_updateFrequency * 1000);
         _initialised = true;
         if (updateCallback != nullptr) { updateCallback(); }
     }
