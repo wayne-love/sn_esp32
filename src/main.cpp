@@ -240,7 +240,7 @@ void mqttHaAutoDiscovery() {
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   config.displayName = "Total Energy";
-  config.valueTemplate = "{{ value_json.power.totalEnergy }}";
+  config.valueTemplate = "{{ value_json.power.totalenergy }}";
   config.propertyId = "TotalEnergy";
   config.deviceClass = "energy";
   config.entityCategory = "diagnostic";

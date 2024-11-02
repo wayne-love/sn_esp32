@@ -100,7 +100,7 @@ bool generateStatusJson(SpaInterface &si, String &output, bool prettyJson) {
 
   json["power"]["voltage"] = si.getMainsVoltage();
   json["power"]["current"]= si.getMainsCurrent() / 10.0;
-  json["power"]["energy"] = si.getPower() / 10.0;
+  json["power"]["power"] = si.getPower() / 10.0;
   json["power"]["totalenergy"]= si.getPower_kWh() / 100.0; // convert to kWh to Wh.
 
   json["status"]["heatingActive"] = si.getRB_TP_Heater()? "ON": "OFF";
