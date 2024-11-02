@@ -1,28 +1,16 @@
 #include "WebUI.h"
 
-#if defined(ESP8266)
-    #define UPDATE_SIZE_UNKNOWN 0XFFFFFFFF
-#endif
-
 WebUI::WebUI(SpaInterface *spa) {
     _spa = spa;
 }
 
 const char * WebUI::getError() {
-    #if defined(ESP8266)
-        return Update.getErrorString().c_str();
-    #elif defined(ESP32)
-        return Update.errorString();
-    #endif
+    return Update.errorString();
 }
 
 void WebUI::begin() {
         
-    #if defined(ESP8266)
-        server.reset(new ESP8266WebServer(80));
-    #elif defined(ESP32)
-        server.reset(new WebServer(80));
-    #endif
+    server.reset(new WebServer(80));
 
     server->on("/", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());

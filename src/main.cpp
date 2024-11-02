@@ -1,12 +1,5 @@
-#if defined(ESP8266)
-  #include <ESP8266WiFi.h>
-  #include <ESP8266WebServer.h>
-
-#elif defined(ESP32)
-  #include <WiFi.h>
-  #include <WebServer.h>
-
-#endif
+#include <WiFi.h>
+#include <WebServer.h>
 
 #include <WiFiClient.h>
 #include <RemoteDebug.h>
@@ -14,8 +7,9 @@
 #include <PubSubClient.h>
 
 #if defined(LED_PIN)
-#include "Blinker.h"
+  #include "Blinker.h"
 #endif
+
 #include "WebUI.h"
 #include "Config.h"
 #include "SpaInterface.h"
@@ -28,8 +22,9 @@ RemoteDebug Debug;
 SpaInterface si;
 
 #if defined(LED_PIN)
-Blinker led(LED_PIN);
+  Blinker led(LED_PIN);
 #endif
+
 WiFiClient wifi;
 PubSubClient mqttClient(wifi);
 
@@ -522,12 +517,6 @@ void setup() {
     pinMode(EN_PIN, INPUT_PULLUP);
   #endif
 
-  #if !defined(ESP8266) or defined(ENABLE_SERIAL)
-    Serial.begin(115200);
-    Serial.setDebugOutput(true);
-    Debug.setSerialEnabled(true);
-  #endif
-
   delay(200);
   debugA("Starting... %s", WiFi.getHostname());
 
@@ -570,7 +559,7 @@ void loop() {
 
   checkButton();
   #if defined(LED_PIN)
-  led.tick();
+    led.tick();
   #endif
   mqttClient.loop();
   Debug.handle();
@@ -582,7 +571,7 @@ void loop() {
   if (WiFi.status() != WL_CONNECTED) {
     //wifi not connected
     #if defined(LED_PIN)
-    led.setInterval(100);
+      led.setInterval(100);
     #endif
 
     if (millis()-wifiLastConnect > 10000) {
@@ -614,7 +603,7 @@ void loop() {
           long now=millis();
           if (now - mqttLastConnect > 1000) {
             #if defined(LED_PIN)
-            led.setInterval(500);
+              led.setInterval(500);
             #endif
             debugW("MQTT not connected, attempting connection to %s:%s",mqttServer.c_str(),mqttPort.c_str());
             mqttLastConnect = now;
@@ -646,7 +635,7 @@ void loop() {
 
           }
           #if defined(LED_PIN)
-          led.setInterval(2000);
+            led.setInterval(2000);
           #endif
         }
       }
