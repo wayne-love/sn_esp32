@@ -1,4 +1,1 @@
-- Many small fixes
-- Remove old autodiscovery entities
-- Fix power and energy reporting
-- Fix naming of climate entiry in HA
+- Fix bad merge in 1.0.2

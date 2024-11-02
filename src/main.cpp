@@ -112,42 +112,6 @@ if (triggerWiFiManager) {
 }
 }
 
-
-void checkRebootThreshold(){
-  // Check if REBOOT_THRESHOLD seconds have passed since the boot time, then clear the reboot flag
-  if (rebootFlag && millis() - bootStartMillis > (REBOOT_THRESHOLD * 1000)) {
-    debugI("Clear reboot flag after %i seconds.", REBOOT_THRESHOLD);
-    writeRebootFlag(false);
-  }
-}
-
-bool shouldStartWiFiManager() {
-  bool isSelectedRebootReason = false;
-
-  #if defined(ESP8266)
-    uint32_t resetReason = ESP.getResetInfoPtr()->reason;
-    debugI("ESP8266 Reset Reason: %d", resetReason);
-
-    // Check selected reset reasons for ESP8266
-    if (resetReason == REASON_SOFT_RESTART || resetReason == REASON_EXT_SYS_RST) {
-      isSelectedRebootReason = true;
-    }
-
-  #elif defined(ESP32)
-    esp_reset_reason_t resetReason = esp_reset_reason();
-    debugI("ESP32 Reset Reason: %d", resetReason);
-
-    // Check selected reset reasons for ESP32
-    if (resetReason == ESP_RST_POWERON || resetReason == ESP_RST_EXT || resetReason == ESP_RST_SW) {
-      isSelectedRebootReason = true;
-    }
-  #endif
-
-  return (isSelectedRebootReason && rebootFlag);
-}
-
-
-
 void mqttHaAutoDiscovery() {
   debugI("Publishing Home Assistant auto discovery");
 
