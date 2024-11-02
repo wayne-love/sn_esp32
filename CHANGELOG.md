@@ -1,1 +1,4 @@
-Change statusResponseMinFields to 288 to support SVM1.
+- Many small fixes
+- Remove old autodiscovery entities
+- Fix power and energy reporting
+- Fix naming of climate entiry in HA
