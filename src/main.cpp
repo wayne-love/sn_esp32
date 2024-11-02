@@ -9,23 +9,21 @@
 #endif
 
 #include <WiFiClient.h>
+#include <RemoteDebug.h>
 #include <WiFiManager.h>
-
 #include <PubSubClient.h>
 
 #if defined(LED_PIN)
 #include "Blinker.h"
 #endif
 #include "WebUI.h"
-#include "Common.h"
+#include "Config.h"
 #include "SpaInterface.h"
 #include "SpaUtils.h"
 #include "HAAutoDiscovery.h"
 
-// Define the threshold for detecting a fast reboot (within 20 seconds)
-#define REBOOT_THRESHOLD 20
-
 unsigned long bootStartMillis;  // To track when the device started
+RemoteDebug Debug;
 
 SpaInterface si;
 
@@ -59,7 +57,6 @@ void saveConfigCallback(){
 }
 
 void startWiFiManager(){
-  writeRebootFlag(false);
   if (ui.initialised) {
     ui.server->stop();
   }
@@ -111,8 +108,10 @@ void checkButton(){
 if (triggerWiFiManager) {
   triggerWiFiManager = false;
   startWiFiManager();
+  ESP.restart();  // restart, dirty but easier than trying to restart services one by one
 }
 }
+
 
 void checkRebootThreshold(){
   // Check if REBOOT_THRESHOLD seconds have passed since the boot time, then clear the reboot flag
@@ -583,26 +582,17 @@ void setup() {
     LittleFS.begin();
   }
 
-  readConfigFile();
+  if (!readConfigFile()) {
+    debugW("Failed to open config.json, starting Wi-Fi Manager");
+    startWiFiManager();
+    //I'm not sure if we need a reboot here - probably not
+  }
 
   mqttClient.setServer(mqttServer.c_str(),mqttPort.toInt());
   mqttClient.setCallback(mqttCallback);
   mqttClient.setBufferSize(2048);
 
-  bool valueFlag = readRebootFlag();
-  debugI("readRebootFlag: %s", valueFlag ? "true" : "false");
   bootStartMillis = millis();  // Record the current boot time in milliseconds
-
-  // If rebootFlag is true, the device rebooted within the threshold
-  if (shouldStartWiFiManager()) {
-    debugI("Detected reboot within the last %i seconds. Starting WiFiManager...", REBOOT_THRESHOLD);
-    startWiFiManager();
-    ESP.restart();
-  } else {
-    debugI("Normal boot, no WiFiManager needed.");
-    // Set the reboot flag to true
-    writeRebootFlag(true);
-  }
 
   ui.begin();
 
@@ -615,7 +605,6 @@ void loop() {
 
 
   checkButton();
-  checkRebootThreshold();
   #if defined(LED_PIN)
   led.tick();
   #endif

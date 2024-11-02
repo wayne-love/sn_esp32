@@ -1,66 +1,19 @@
-#include "Common.h"
+#include "Config.h"
 
 String mqttServer = "mqtt";
 String mqttPort = "1883";
 String mqttUserName = "";
 String mqttPassword = "";
-bool rebootFlag = false;
 String spaName = "MySpa";
 int updateFrequency = 60;
 bool triggerWiFiManager = false;
 
-#ifndef DEBUG_ENABLED
-    #define DEBUG_ENABLED
-    RemoteDebug Debug;
-#endif
-
-#if defined(ESP8266)
-  RTCData rtcData;
-  const int16_t MAGIC_NUMBER = 0xAAAA;
-#endif
-
-#if defined(ESP32)
-  Preferences preferences;  // For ESP32 reboot storage
-#endif
-
-bool readRebootFlag() {
-  bool retVal = false;
-
-  #if defined(ESP8266)
-    ESP.rtcUserMemoryRead(0, (uint32_t*)&rtcData, sizeof(rtcData));
-    // Check if the magic number matches
-    if (rtcData.magicNumber != MAGIC_NUMBER) {
-      debugD("Invalid or uninitialized RTC memory.");
-    } else {
-      retVal = (rtcData.rebootFlag  == 1);
-    }
-  #elif defined(ESP32)
-    preferences.begin("reboot_data", false);
-    retVal = preferences.getBool("rebootFlag", false);
-    preferences.end();
-  #endif
-  rebootFlag = retVal;
-  return retVal;
-}
-
-void writeRebootFlag(bool flagValue) {
-  rebootFlag = flagValue;
-  #if defined(ESP8266)
-    // Write MAGIC_NUMBER so we can validate the data when we read it later
-    rtcData.magicNumber = MAGIC_NUMBER;
-    rtcData.rebootFlag = flagValue?1:0;
-    ESP.rtcUserMemoryWrite(0, (uint32_t*)&rtcData, sizeof(rtcData));
-  #elif defined(ESP32)
-    preferences.begin("reboot_data", false);
-    preferences.putBool("rebootFlag", flagValue);
-    preferences.end();
-  #endif
-}
-
-void readConfigFile() {
+bool readConfigFile() {
   debugI("Reading config file");
   File configFile = LittleFS.open("/config.json","r");
-  if (configFile) {
+  if (!configFile) {
+    return false;
+  } else {
     size_t size = configFile.size();
     // Allocate a buffer to store contents of the file.
     std::unique_ptr<char[]> buf(new char[size]);
@@ -92,6 +45,7 @@ void readConfigFile() {
   }
 
   if (updateFrequency < 10) updateFrequency = 10;
+  return true;
 }
 
 void writeConfigFile() {

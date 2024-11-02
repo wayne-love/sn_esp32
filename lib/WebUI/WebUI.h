@@ -14,7 +14,9 @@
 
 #include "SpaInterface.h"
 #include "SpaUtils.h"
-#include "Common.h"
+#include "Config.h"
+
+extern RemoteDebug Debug;
 
 class WebUI {
     public:
