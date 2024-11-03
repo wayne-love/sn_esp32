@@ -17,7 +17,7 @@ extern RemoteDebug Debug;
 class WebUI {
     public:
         std::unique_ptr<WebServer> server;
-        WebUI(SpaInterface *spa);
+        WebUI(SpaInterface *spa, Config *config);
 
         /// @brief Set the function to be called when properties have been updated.
         /// @param f
@@ -27,6 +27,7 @@ class WebUI {
 
     private:
         SpaInterface *_spa;
+        Config *_config;
         void (*_wifiManagerCallback)() = nullptr;
 
         const char* getError();
@@ -227,6 +228,7 @@ $('#config_form').submit(function(e) {
     data: $('#config_form').serialize(),
     success: function() {
       $('#msg').html('<p style="color:green;">Configuration updated successfully!</p>');
+      loadConfig();
       setTimeout(function() { $('#msg').html(''); }, 3000);
     },
     error: function() {

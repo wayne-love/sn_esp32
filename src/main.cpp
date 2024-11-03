@@ -20,6 +20,7 @@ unsigned long bootStartMillis;  // To track when the device started
 RemoteDebug Debug;
 
 SpaInterface si;
+Config config;
 
 #if defined(LED_PIN)
   Blinker led(LED_PIN);
@@ -28,11 +29,11 @@ SpaInterface si;
 WiFiClient wifi;
 PubSubClient mqttClient(wifi);
 
-WebUI ui(&si);
+WebUI ui(&si, &config);
 
 
 
-bool saveConfig = false;
+bool WMsaveConfig = false;
 ulong mqttLastConnect = 0;
 ulong wifiLastConnect = millis();
 ulong bootTime = millis();
@@ -47,8 +48,10 @@ String mqttAvailability = "";
 
 String spaSerialNumber = "";
 
-void saveConfigCallback(){
-  saveConfig = true;
+bool updateMqtt = false;
+
+void WMsaveConfigCallback(){
+  WMsaveConfig = true;
 }
 
 void startWiFiManager(){
@@ -57,32 +60,32 @@ void startWiFiManager(){
   }
 
   WiFiManager wm;
-  WiFiManagerParameter custom_spa_name("spa_name", "Spa Name", spaName.c_str(), 40);
-  WiFiManagerParameter custom_mqtt_server("server", "MQTT server", mqttServer.c_str(), 40);
-  WiFiManagerParameter custom_mqtt_port("port", "MQTT port", mqttPort.c_str(), 6);
-  WiFiManagerParameter custom_mqtt_username("username", "MQTT Username", mqttUserName.c_str(), 20 );
-  WiFiManagerParameter custom_mqtt_password("password", "MQTT Password", mqttPassword.c_str(), 40 );
+  WiFiManagerParameter custom_spa_name("spa_name", "Spa Name", config.SpaName.getValue().c_str(), 40);
+  WiFiManagerParameter custom_mqtt_server("server", "MQTT server", config.MqttServer.getValue().c_str(), 40);
+  WiFiManagerParameter custom_mqtt_port("port", "MQTT port", config.MqttPort.getValue().c_str(), 6);
+  WiFiManagerParameter custom_mqtt_username("username", "MQTT Username", config.MqttUsername.getValue().c_str(), 20 );
+  WiFiManagerParameter custom_mqtt_password("password", "MQTT Password", config.MqttPassword.getValue().c_str(), 40 );
   wm.addParameter(&custom_spa_name);
   wm.addParameter(&custom_mqtt_server);
   wm.addParameter(&custom_mqtt_port);
   wm.addParameter(&custom_mqtt_username);
   wm.addParameter(&custom_mqtt_password);
   wm.setBreakAfterConfig(true);
-  wm.setSaveConfigCallback(saveConfigCallback);
+  wm.setSaveConfigCallback(WMsaveConfigCallback);
   wm.setConnectTimeout(300); //close the WiFiManager after 300 seconds of inactivity
 
 
   wm.startConfigPortal();
   debugI("Exiting Portal");
 
-  if (saveConfig) {
-    spaName = String(custom_spa_name.getValue());
-    mqttServer = String(custom_mqtt_server.getValue());
-    mqttPort = String(custom_mqtt_port.getValue());
-    mqttUserName = String(custom_mqtt_username.getValue());
-    mqttPassword = String(custom_mqtt_password.getValue());
+  if (WMsaveConfig) {
+    config.SpaName.setValue(String(custom_spa_name.getValue()));
+    config.MqttServer.setValue(String(custom_mqtt_server.getValue()));
+    config.MqttPort.setValue(String(custom_mqtt_port.getValue()));
+    config.MqttUsername.setValue(String(custom_mqtt_username.getValue()));
+    config.MqttPassword.setValue(String(custom_mqtt_password.getValue()));
 
-    writeConfigFile();
+    config.writeConfigFile();
   }
 }
 
@@ -101,11 +104,25 @@ void checkButton(){
   }
 #endif
 }
-
 void startWifiManagerCallback() {
   debugD("Starting Wi-Fi Manager...");
   startWiFiManager();
   ESP.restart(); //do we need to reboot here??
+}
+
+void configChangeCallbackString(const char* name, String value) {
+  debugD("%s: %s", name, value);
+  if (name == "MqttServer") updateMqtt = true;
+  else if (name == "MqttPort") updateMqtt = true;
+  else if (name == "MqttUsername") updateMqtt = true;
+  else if (name == "MqttPassword") updateMqtt = true;
+  else if (name == "SpaName") { } //TODO - Changing the SpaName currently requires the user to:
+                                  // delete the entities in MQTT then reboot the ESP
+}
+
+void configChangeCallbackInt(const char* name, int value) {
+  debugD("%s: %i", name, value);
+  if (name == "UpdateFrequency") si.setUpdateFrequency(value);
 }
 
 void mqttHaAutoDiscovery() {
@@ -115,7 +132,7 @@ void mqttHaAutoDiscovery() {
   String discoveryTopic;
 
   SpaADInformationTemplate spa;
-  spa.spaName = spaName;
+  spa.spaName = config.SpaName.getValue();
   spa.spaSerialNumber = spaSerialNumber;
   spa.stateTopic = mqttStatusTopic;
   spa.availabilityTopic = mqttAvailability;
@@ -536,13 +553,13 @@ void setup() {
     LittleFS.begin();
   }
 
-  if (!readConfigFile()) {
+  if (!config.readConfigFile()) {
     debugW("Failed to open config.json, starting Wi-Fi Manager");
     startWiFiManager();
     //I'm not sure if we need a reboot here - probably not
   }
 
-  mqttClient.setServer(mqttServer.c_str(),mqttPort.toInt());
+  mqttClient.setServer(config.MqttServer.getValue().c_str(), config.MqttPort.getValue().toInt());
   mqttClient.setCallback(mqttCallback);
   mqttClient.setBufferSize(2048);
 
@@ -550,7 +567,10 @@ void setup() {
 
   ui.begin();
   ui.setWifiManagerCallback(startWifiManagerCallback);
-  si.setUpdateFrequency(updateFrequency);
+  si.setUpdateFrequency(config.UpdateFrequency.getValue());
+
+  config.setCallback(configChangeCallbackString);
+  config.setCallback(configChangeCallbackInt);
 
 }
 
@@ -569,6 +589,12 @@ void loop() {
 
   if (ui.initialised) { 
     ui.server->handleClient(); 
+  }
+
+  if (updateMqtt) {
+    //TODO - Restart MQTT after settings are changed
+    debugD("TODO - Restart MQTT after settings are changed");
+    updateMqtt = false;
   }
 
   if (WiFi.status() != WL_CONNECTED) {
@@ -608,11 +634,11 @@ void loop() {
             #if defined(LED_PIN)
               led.setInterval(500);
             #endif
-            debugW("MQTT not connected, attempting connection to %s:%s",mqttServer.c_str(),mqttPort.c_str());
+            debugW("MQTT not connected, attempting connection to %s:%s", config.MqttServer.getValue().c_str(), config.MqttPort.getValue().c_str());
             mqttLastConnect = now;
 
 
-            if (mqttClient.connect("sn_esp32", mqttUserName.c_str(), mqttPassword.c_str(), mqttAvailability.c_str(),2,true,"offline")) {
+            if (mqttClient.connect("sn_esp32", config.MqttUsername.getValue().c_str(), config.MqttPassword.getValue().c_str(), mqttAvailability.c_str(),2,true,"offline")) {
               debugI("MQTT connected");
     
               String subTopic = mqttBase+"set/#";
