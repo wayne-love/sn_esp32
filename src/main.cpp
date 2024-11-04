@@ -183,22 +183,6 @@ void mqttHaAutoDiscovery() {
   generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "°C");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  ADConf.displayName = "Heatpump Ambient Temperature";
-  ADConf.valueTemplate = "{{ value_json.temperatures.heatpumpAmbient }}";
-  ADConf.propertyId = "HPAmbTemp";
-  ADConf.deviceClass = "temperature";
-  ADConf.entityCategory = "diagnostic";
-  generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "°C");
-  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
-
-  ADConf.displayName = "Heatpump Condensor Temperature";
-  ADConf.valueTemplate = "{{ value_json.temperatures.heatpumpCondensor }}";
-  ADConf.propertyId = "HPCondTemp";
-  ADConf.deviceClass = "temperature";
-  ADConf.entityCategory = "diagnostic";
-  generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "°C");
-  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
-
   ADConf.displayName = "Mains Voltage";
   ADConf.valueTemplate = "{{ value_json.power.voltage }}";
   ADConf.propertyId = "MainsVoltage";
@@ -266,15 +250,6 @@ void mqttHaAutoDiscovery() {
   generateClimateAdJSON(output, ADConf, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  //selectADPublish(mqttClient, spa, "Heatpump Mode", "{{ value_json.heatpump.mode }}", "heatpump_mode", "", "", {"Auto","Heat","Cool","Off"});
-  ADConf.displayName = "Heatpump Mode";
-  ADConf.valueTemplate = "{{ value_json.heatpump.mode }}";
-  ADConf.propertyId = "heatpump_mode";
-  ADConf.deviceClass = "";
-  ADConf.entityCategory = "";
-  generateSelectAdJSON(output, ADConf, spa, discoveryTopic, si.HPMPStrings);
-  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
-
 
   ADConf.deviceClass = "";
   ADConf.entityCategory = "";
@@ -324,14 +299,41 @@ void mqttHaAutoDiscovery() {
 
   }
 
-  //switchADPublish(mqttClient, spa, "Aux Heat Element", "{{ value_json.heatpump.auxheat }}", "heatpump_auxheat");
-  ADConf.displayName = "Aux Heat Element";
-  ADConf.valueTemplate = "{{ value_json.heatpump.auxheat }}";
-  ADConf.propertyId = "heatpump_auxheat";
-  ADConf.deviceClass = "";
-  ADConf.entityCategory = "";
-  generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
-  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
+  if (si.getHP_Present()) {
+    ADConf.displayName = "Heatpump Ambient Temperature";
+    ADConf.valueTemplate = "{{ value_json.temperatures.heatpumpAmbient }}";
+    ADConf.propertyId = "HPAmbTemp";
+    ADConf.deviceClass = "temperature";
+    ADConf.entityCategory = "diagnostic";
+    generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "°C");
+    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
+
+    ADConf.displayName = "Heatpump Condensor Temperature";
+    ADConf.valueTemplate = "{{ value_json.temperatures.heatpumpCondensor }}";
+    ADConf.propertyId = "HPCondTemp";
+    ADConf.deviceClass = "temperature";
+    ADConf.entityCategory = "diagnostic";
+    generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "°C");
+    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
+
+    //selectADPublish(mqttClient, spa, "Heatpump Mode", "{{ value_json.heatpump.mode }}", "heatpump_mode", "", "", {"Auto","Heat","Cool","Off"});
+    ADConf.displayName = "Heatpump Mode";
+    ADConf.valueTemplate = "{{ value_json.heatpump.mode }}";
+    ADConf.propertyId = "heatpump_mode";
+    ADConf.deviceClass = "";
+    ADConf.entityCategory = "";
+    generateSelectAdJSON(output, ADConf, spa, discoveryTopic, si.HPMPStrings);
+    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
+
+    //switchADPublish(mqttClient, spa, "Aux Heat Element", "{{ value_json.heatpump.auxheat }}", "heatpump_auxheat");
+    ADConf.displayName = "Aux Heat Element";
+    ADConf.valueTemplate = "{{ value_json.heatpump.auxheat }}";
+    ADConf.propertyId = "heatpump_auxheat";
+    ADConf.deviceClass = "";
+    ADConf.entityCategory = "";
+    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
+    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
+  }
 
   //lightADPublish(mqttClient, spa, "Lights", "{{ value_json.lights }}", "lights", "", "", colorModeStrings);
   ADConf.displayName = "Lights";
