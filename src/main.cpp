@@ -20,6 +20,7 @@ unsigned long bootStartMillis;  // To track when the device started
 RemoteDebug Debug;
 
 SpaInterface si;
+Config config;
 
 #if defined(LED_PIN)
   Blinker led(LED_PIN);
@@ -28,11 +29,11 @@ SpaInterface si;
 WiFiClient wifi;
 PubSubClient mqttClient(wifi);
 
-WebUI ui(&si);
+WebUI ui(&si, &config);
 
 
 
-bool saveConfig = false;
+bool WMsaveConfig = false;
 ulong mqttLastConnect = 0;
 ulong wifiLastConnect = millis();
 ulong bootTime = millis();
@@ -47,8 +48,10 @@ String mqttAvailability = "";
 
 String spaSerialNumber = "";
 
-void saveConfigCallback(){
-  saveConfig = true;
+bool updateMqtt = false;
+
+void WMsaveConfigCallback(){
+  WMsaveConfig = true;
 }
 
 void startWiFiManager(){
@@ -57,32 +60,32 @@ void startWiFiManager(){
   }
 
   WiFiManager wm;
-  WiFiManagerParameter custom_spa_name("spa_name", "Spa Name", spaName.c_str(), 40);
-  WiFiManagerParameter custom_mqtt_server("server", "MQTT server", mqttServer.c_str(), 40);
-  WiFiManagerParameter custom_mqtt_port("port", "MQTT port", mqttPort.c_str(), 6);
-  WiFiManagerParameter custom_mqtt_username("username", "MQTT Username", mqttUserName.c_str(), 20 );
-  WiFiManagerParameter custom_mqtt_password("password", "MQTT Password", mqttPassword.c_str(), 40 );
+  WiFiManagerParameter custom_spa_name("spa_name", "Spa Name", config.SpaName.getValue().c_str(), 40);
+  WiFiManagerParameter custom_mqtt_server("server", "MQTT server", config.MqttServer.getValue().c_str(), 40);
+  WiFiManagerParameter custom_mqtt_port("port", "MQTT port", config.MqttPort.getValue().c_str(), 6);
+  WiFiManagerParameter custom_mqtt_username("username", "MQTT Username", config.MqttUsername.getValue().c_str(), 20 );
+  WiFiManagerParameter custom_mqtt_password("password", "MQTT Password", config.MqttPassword.getValue().c_str(), 40 );
   wm.addParameter(&custom_spa_name);
   wm.addParameter(&custom_mqtt_server);
   wm.addParameter(&custom_mqtt_port);
   wm.addParameter(&custom_mqtt_username);
   wm.addParameter(&custom_mqtt_password);
   wm.setBreakAfterConfig(true);
-  wm.setSaveConfigCallback(saveConfigCallback);
+  wm.setSaveConfigCallback(WMsaveConfigCallback);
   wm.setConnectTimeout(300); //close the WiFiManager after 300 seconds of inactivity
 
 
   wm.startConfigPortal();
   debugI("Exiting Portal");
 
-  if (saveConfig) {
-    spaName = String(custom_spa_name.getValue());
-    mqttServer = String(custom_mqtt_server.getValue());
-    mqttPort = String(custom_mqtt_port.getValue());
-    mqttUserName = String(custom_mqtt_username.getValue());
-    mqttPassword = String(custom_mqtt_password.getValue());
+  if (WMsaveConfig) {
+    config.SpaName.setValue(String(custom_spa_name.getValue()));
+    config.MqttServer.setValue(String(custom_mqtt_server.getValue()));
+    config.MqttPort.setValue(String(custom_mqtt_port.getValue()));
+    config.MqttUsername.setValue(String(custom_mqtt_username.getValue()));
+    config.MqttPassword.setValue(String(custom_mqtt_password.getValue()));
 
-    writeConfigFile();
+    config.writeConfigFile();
   }
 }
 
@@ -100,11 +103,26 @@ void checkButton(){
     }
   }
 #endif
-if (triggerWiFiManager) {
-  triggerWiFiManager = false;
-  startWiFiManager();
-  ESP.restart();  // restart, dirty but easier than trying to restart services one by one
 }
+void startWifiManagerCallback() {
+  debugD("Starting Wi-Fi Manager...");
+  startWiFiManager();
+  ESP.restart(); //do we need to reboot here??
+}
+
+void configChangeCallbackString(const char* name, String value) {
+  debugD("%s: %s", name, value);
+  if (name == "MqttServer") updateMqtt = true;
+  else if (name == "MqttPort") updateMqtt = true;
+  else if (name == "MqttUsername") updateMqtt = true;
+  else if (name == "MqttPassword") updateMqtt = true;
+  else if (name == "SpaName") { } //TODO - Changing the SpaName currently requires the user to:
+                                  // delete the entities in MQTT then reboot the ESP
+}
+
+void configChangeCallbackInt(const char* name, int value) {
+  debugD("%s: %i", name, value);
+  if (name == "UpdateFrequency") si.setUpdateFrequency(value);
 }
 
 void mqttHaAutoDiscovery() {
@@ -113,8 +131,8 @@ void mqttHaAutoDiscovery() {
   String output;
   String discoveryTopic;
 
-  SpaAdConfig spa;
-  spa.spaName = spaName;
+  SpaADInformationTemplate spa;
+  spa.spaName = config.SpaName.getValue();
   spa.spaSerialNumber = spaSerialNumber;
   spa.stateTopic = mqttStatusTopic;
   spa.availabilityTopic = mqttAvailability;
@@ -131,274 +149,274 @@ void mqttHaAutoDiscovery() {
   //sensorADPublish("State","","",mqttStatusTopic,"","{{ value_json.status.state }}","","State", spaName, spaSerialNumber);
   spa.commandTopic = mqttSet;
   
-  AutoDiscoveryConfig config;
+  AutoDiscoveryInformationTemplate ADConf;
 
-  config.displayName = "Water Temperature";
-  config.valueTemplate = "{{ value_json.temperatures.water }}";
-  config.propertyId = "WaterTemperature";
-  config.deviceClass = "temperature";
-  config.entityCategory = "";
-  generateSensorAdJSON(output, config, spa, discoveryTopic, "measurement", "°C");
+  ADConf.displayName = "Water Temperature";
+  ADConf.valueTemplate = "{{ value_json.temperatures.water }}";
+  ADConf.propertyId = "WaterTemperature";
+  ADConf.deviceClass = "temperature";
+  ADConf.entityCategory = "";
+  generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "°C");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Case Temperature";
-  config.valueTemplate = "{{ value_json.temperatures.case }}";
-  config.propertyId = "CaseTemperature";
-  config.deviceClass = "temperature";
-  config.entityCategory = "diagnostic";
-  generateSensorAdJSON(output, config, spa, discoveryTopic, "measurement", "°C");
+  ADConf.displayName = "Case Temperature";
+  ADConf.valueTemplate = "{{ value_json.temperatures.case }}";
+  ADConf.propertyId = "CaseTemperature";
+  ADConf.deviceClass = "temperature";
+  ADConf.entityCategory = "diagnostic";
+  generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "°C");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Heater Temperature";
-  config.valueTemplate = "{{ value_json.temperatures.heater }}";
-  config.propertyId = "HeaterTemperature";
-  config.deviceClass = "temperature";
-  config.entityCategory = "diagnostic";
-  generateSensorAdJSON(output, config, spa, discoveryTopic, "measurement", "°C");
+  ADConf.displayName = "Heater Temperature";
+  ADConf.valueTemplate = "{{ value_json.temperatures.heater }}";
+  ADConf.propertyId = "HeaterTemperature";
+  ADConf.deviceClass = "temperature";
+  ADConf.entityCategory = "diagnostic";
+  generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "°C");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Heatpump Ambient Temperature";
-  config.valueTemplate = "{{ value_json.temperatures.heatpumpAmbient }}";
-  config.propertyId = "HPAmbTemp";
-  config.deviceClass = "temperature";
-  config.entityCategory = "diagnostic";
-  generateSensorAdJSON(output, config, spa, discoveryTopic, "measurement", "°C");
+  ADConf.displayName = "Heatpump Ambient Temperature";
+  ADConf.valueTemplate = "{{ value_json.temperatures.heatpumpAmbient }}";
+  ADConf.propertyId = "HPAmbTemp";
+  ADConf.deviceClass = "temperature";
+  ADConf.entityCategory = "diagnostic";
+  generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "°C");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Heatpump Condensor Temperature";
-  config.valueTemplate = "{{ value_json.temperatures.heatpumpCondensor }}";
-  config.propertyId = "HPCondTemp";
-  config.deviceClass = "temperature";
-  config.entityCategory = "diagnostic";
-  generateSensorAdJSON(output, config, spa, discoveryTopic, "measurement", "°C");
+  ADConf.displayName = "Heatpump Condensor Temperature";
+  ADConf.valueTemplate = "{{ value_json.temperatures.heatpumpCondensor }}";
+  ADConf.propertyId = "HPCondTemp";
+  ADConf.deviceClass = "temperature";
+  ADConf.entityCategory = "diagnostic";
+  generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "°C");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Mains Voltage";
-  config.valueTemplate = "{{ value_json.power.voltage }}";
-  config.propertyId = "MainsVoltage";
-  config.deviceClass = "voltage";
-  config.entityCategory = "diagnostic";
-  generateSensorAdJSON(output, config, spa, discoveryTopic, "measurement", "V");
+  ADConf.displayName = "Mains Voltage";
+  ADConf.valueTemplate = "{{ value_json.power.voltage }}";
+  ADConf.propertyId = "MainsVoltage";
+  ADConf.deviceClass = "voltage";
+  ADConf.entityCategory = "diagnostic";
+  generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "V");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Mains Current";
-  config.valueTemplate = "{{ value_json.power.current }}";
-  config.propertyId = "MainsCurrent";
-  config.deviceClass = "current";
-  config.entityCategory = "diagnostic";
-  generateSensorAdJSON(output, config, spa, discoveryTopic, "measurement", "A");
+  ADConf.displayName = "Mains Current";
+  ADConf.valueTemplate = "{{ value_json.power.current }}";
+  ADConf.propertyId = "MainsCurrent";
+  ADConf.deviceClass = "current";
+  ADConf.entityCategory = "diagnostic";
+  generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "A");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Power";
-  config.valueTemplate = "{{ value_json.power.power }}";
-  config.propertyId = "Power";
-  config.deviceClass = "power";
-  config.entityCategory = "diagnostic";
-  generateSensorAdJSON(output, config, spa, discoveryTopic, "measurement", "W");
+  ADConf.displayName = "Power";
+  ADConf.valueTemplate = "{{ value_json.power.power }}";
+  ADConf.propertyId = "Power";
+  ADConf.deviceClass = "power";
+  ADConf.entityCategory = "diagnostic";
+  generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "W");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Total Energy";
-  config.valueTemplate = "{{ value_json.power.totalenergy }}";
-  config.propertyId = "TotalEnergy";
-  config.deviceClass = "energy";
-  config.entityCategory = "diagnostic";
-  generateSensorAdJSON(output, config, spa, discoveryTopic, "measurement", "kWh");
+  ADConf.displayName = "Total Energy";
+  ADConf.valueTemplate = "{{ value_json.power.totalenergy }}";
+  ADConf.propertyId = "TotalEnergy";
+  ADConf.deviceClass = "energy";
+  ADConf.entityCategory = "diagnostic";
+  generateSensorAdJSON(output, ADConf, spa, discoveryTopic, "measurement", "kWh");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "State";
-  config.valueTemplate = "{{ value_json.status.state }}";
-  config.propertyId = "State";
-  config.deviceClass = "";
-  config.entityCategory = "";
-  generateSensorAdJSON(output, config, spa, discoveryTopic);
+  ADConf.displayName = "State";
+  ADConf.valueTemplate = "{{ value_json.status.state }}";
+  ADConf.propertyId = "State";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "";
+  generateSensorAdJSON(output, ADConf, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //binarySensorADPublish("Heating Active","",mqttStatusTopic,"{{ value_json.status.heatingActive }}","HeatingActive", spaName, spaSerialNumber);
   //binarySensorADPublish("Ozone Active","",mqttStatusTopic,"{{ value_json.status.ozoneActive }}","OzoneActive", spaName, spaSerialNumber);
-  config.displayName = "Heating Active";
-  config.valueTemplate = "{{ value_json.status.heatingActive }}";
-  config.propertyId = "HeatingActive";
-  config.deviceClass = "heat";
-  config.entityCategory = "";
-  generateBinarySensorAdJSON(output, config, spa, discoveryTopic);
+  ADConf.displayName = "Heating Active";
+  ADConf.valueTemplate = "{{ value_json.status.heatingActive }}";
+  ADConf.propertyId = "HeatingActive";
+  ADConf.deviceClass = "heat";
+  ADConf.entityCategory = "";
+  generateBinarySensorAdJSON(output, ADConf, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Ozone Active";
-  config.valueTemplate = "{{ value_json.status.ozoneActive }}";
-  config.propertyId = "OzoneActive";
-  config.deviceClass = "running";
-  config.entityCategory = "";
-  generateBinarySensorAdJSON(output, config, spa, discoveryTopic);
+  ADConf.displayName = "Ozone Active";
+  ADConf.valueTemplate = "{{ value_json.status.ozoneActive }}";
+  ADConf.propertyId = "OzoneActive";
+  ADConf.deviceClass = "running";
+  ADConf.entityCategory = "";
+  generateBinarySensorAdJSON(output, ADConf, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //climateADPublish(mqttClient, spa, spaName, "{{ value_json.temperatures }}", "Heating");
-  config.displayName = "Heat Set Point";
-  config.valueTemplate = "{{ value_json.temperatures }}";
-  config.propertyId = "Heating";
-  config.deviceClass = "";
-  config.entityCategory = "";
-  generateClimateAdJSON(output, config, spa, discoveryTopic);
+  ADConf.displayName = "Heat Set Point";
+  ADConf.valueTemplate = "{{ value_json.temperatures }}";
+  ADConf.propertyId = "Heating";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "";
+  generateClimateAdJSON(output, ADConf, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //selectADPublish(mqttClient, spa, "Heatpump Mode", "{{ value_json.heatpump.mode }}", "heatpump_mode", "", "", {"Auto","Heat","Cool","Off"});
-  config.displayName = "Heatpump Mode";
-  config.valueTemplate = "{{ value_json.heatpump.mode }}";
-  config.propertyId = "heatpump_mode";
-  config.deviceClass = "";
-  config.entityCategory = "";
-  generateSelectAdJSON(output, config, spa, discoveryTopic, si.HPMPStrings);
+  ADConf.displayName = "Heatpump Mode";
+  ADConf.valueTemplate = "{{ value_json.heatpump.mode }}";
+  ADConf.propertyId = "heatpump_mode";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "";
+  generateSelectAdJSON(output, ADConf, spa, discoveryTopic, si.HPMPStrings);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
 
-  config.deviceClass = "";
-  config.entityCategory = "";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "";
   if (si.getPump1InstallState().startsWith("1") && !(si.getPump1InstallState().endsWith("4"))) {
      //switchADPublish(mqttClient, spa, "Pump 1", "{{ value_json.pumps.pump1.state }}", "pump1");
-    config.displayName = "Pump 1";
-    config.valueTemplate = "{{ value_json.pumps.pump1.state }}";
-    config.propertyId = "pump1";
-    generateSwitchAdJSON(output, config, spa, discoveryTopic);
+    ADConf.displayName = "Pump 1";
+    ADConf.valueTemplate = "{{ value_json.pumps.pump1.state }}";
+    ADConf.propertyId = "pump1";
+    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
     mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
   }
 
   if (si.getPump2InstallState().startsWith("1") && !(si.getPump2InstallState().endsWith("4"))) {
     //switchADPublish(mqttClient, spa, "Pump 2","{{ value_json.pumps.pump2.state }}", "pump2");
-    config.displayName = "Pump 2";
-    config.valueTemplate = "{{ value_json.pumps.pump2.state }}";
-    config.propertyId = "pump2";
-    generateSwitchAdJSON(output, config, spa, discoveryTopic);
+    ADConf.displayName = "Pump 2";
+    ADConf.valueTemplate = "{{ value_json.pumps.pump2.state }}";
+    ADConf.propertyId = "pump2";
+    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
     mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
   }
 
   if (si.getPump3InstallState().startsWith("1") && !(si.getPump3InstallState().endsWith("4"))) {
     //switchADPublish(mqttClient, spa, "Pump 3", "{{ value_json.pumps.pump3.state }}", "pump3");
-    config.displayName = "Pump 3";
-    config.valueTemplate = "{{ value_json.pumps.pump3.state }}";
-    config.propertyId = "pump3";
-    generateSwitchAdJSON(output, config, spa, discoveryTopic);
+    ADConf.displayName = "Pump 3";
+    ADConf.valueTemplate = "{{ value_json.pumps.pump3.state }}";
+    ADConf.propertyId = "pump3";
+    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
     mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
   }
 
   if (si.getPump4InstallState().startsWith("1") && !(si.getPump4InstallState().endsWith("4"))) {
     //switchADPublish(mqttClient, spa, "Pump 4", "{{ value_json.pumps.pump4.state }}", "pump4");
-    config.displayName = "Pump 4";
-    config.valueTemplate = "{{ value_json.pumps.pump4.state }}";
-    config.propertyId = "pump4";
-    generateSwitchAdJSON(output, config, spa, discoveryTopic);
+    ADConf.displayName = "Pump 4";
+    ADConf.valueTemplate = "{{ value_json.pumps.pump4.state }}";
+    ADConf.propertyId = "pump4";
+    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
     mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
   }
 
   if (si.getPump5InstallState().startsWith("1") && !(si.getPump5InstallState().endsWith("4"))) {
     //switchADPublish(mqttClient, spa, "Pump 5", "{{ value_json.pumps.pump5.state }}", "pump5");
-    config.displayName = "Pump 5";
-    config.valueTemplate = "{{ value_json.pumps.pump5.state }}";
-    config.propertyId = "pump5";
-    generateSwitchAdJSON(output, config, spa, discoveryTopic);
+    ADConf.displayName = "Pump 5";
+    ADConf.valueTemplate = "{{ value_json.pumps.pump5.state }}";
+    ADConf.propertyId = "pump5";
+    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
     mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   }
 
   //switchADPublish(mqttClient, spa, "Aux Heat Element", "{{ value_json.heatpump.auxheat }}", "heatpump_auxheat");
-  config.displayName = "Aux Heat Element";
-  config.valueTemplate = "{{ value_json.heatpump.auxheat }}";
-  config.propertyId = "heatpump_auxheat";
-  config.deviceClass = "";
-  config.entityCategory = "";
-  generateSwitchAdJSON(output, config, spa, discoveryTopic);
+  ADConf.displayName = "Aux Heat Element";
+  ADConf.valueTemplate = "{{ value_json.heatpump.auxheat }}";
+  ADConf.propertyId = "heatpump_auxheat";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "";
+  generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //lightADPublish(mqttClient, spa, "Lights", "{{ value_json.lights }}", "lights", "", "", colorModeStrings);
-  config.displayName = "Lights";
-  config.valueTemplate = "{{ value_json.lights }}";
-  config.propertyId = "lights";
-  config.deviceClass = "";
-  config.entityCategory = "";
-  generateLightAdJSON(output, config, spa, discoveryTopic, si.colorModeStrings);
+  ADConf.displayName = "Lights";
+  ADConf.valueTemplate = "{{ value_json.lights }}";
+  ADConf.propertyId = "lights";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "";
+  generateLightAdJSON(output, ADConf, spa, discoveryTopic, si.colorModeStrings);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //selectADPublish(mqttClient, spa, "Lights Speed","{{ value_json.lights.speed }}","lights_speed", "", "", {"1","2","3","4","5"});
-  config.displayName = "Lights Speed";
-  config.valueTemplate = "{{ value_json.lights.speed }}";
-  config.propertyId = "lights_speed";
-  config.deviceClass = "";
-  config.entityCategory = "";
-  generateSelectAdJSON(output, config, spa, discoveryTopic, si.lightSpeedMap );
+  ADConf.displayName = "Lights Speed";
+  ADConf.valueTemplate = "{{ value_json.lights.speed }}";
+  ADConf.propertyId = "lights_speed";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "";
+  generateSelectAdJSON(output, ADConf, spa, discoveryTopic, si.lightSpeedMap );
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //selectADPublish(mqttClient, spa, "Sleep Timer 1","{{ value_json.sleepTimers.timer1.state }}", "sleepTimers_1_state", "config", "", sleepStrings);
   //selectADPublish(mqttClient, spa, "Sleep Timer 2","{{ value_json.sleepTimers.timer2.state }}", "sleepTimers_2_state", "config", "", sleepStrings);
-  config.displayName = "Sleep Timer 1";
-  config.valueTemplate = "{{ value_json.sleepTimers.timer1.state }}";
-  config.propertyId = "sleepTimers_1_state";
-  config.deviceClass = "";
-  config.entityCategory = "config";
-  generateSelectAdJSON(output, config, spa, discoveryTopic, si.sleepSelection);
+  ADConf.displayName = "Sleep Timer 1";
+  ADConf.valueTemplate = "{{ value_json.sleepTimers.timer1.state }}";
+  ADConf.propertyId = "sleepTimers_1_state";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "config";
+  generateSelectAdJSON(output, ADConf, spa, discoveryTopic, si.sleepSelection);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Sleep Timer 2";
-  config.valueTemplate = "{{ value_json.sleepTimers.timer2.state }}";
-  config.propertyId = "sleepTimers_2_state";
-  config.deviceClass = "";
-  config.entityCategory = "config";
-  generateSelectAdJSON(output, config, spa, discoveryTopic, si.sleepSelection);
+  ADConf.displayName = "Sleep Timer 2";
+  ADConf.valueTemplate = "{{ value_json.sleepTimers.timer2.state }}";
+  ADConf.propertyId = "sleepTimers_2_state";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "config";
+  generateSelectAdJSON(output, ADConf, spa, discoveryTopic, si.sleepSelection);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Date Time";
-  config.valueTemplate = "{{ value_json.status.datetime }}";
-  config.propertyId = "status_datetime";
-  config.deviceClass = "";
-  config.entityCategory = "config";
-  generateTextAdJSON(output, config, spa, discoveryTopic, "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
+  ADConf.displayName = "Date Time";
+  ADConf.valueTemplate = "{{ value_json.status.datetime }}";
+  ADConf.propertyId = "status_datetime";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "config";
+  generateTextAdJSON(output, ADConf, spa, discoveryTopic, "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Sleep Timer 1 Begin";
-  config.valueTemplate = "{{ value_json.sleepTimers.timer1.begin }}";
-  config.propertyId = "sleepTimers_1_begin";
-  config.deviceClass = "";
-  config.entityCategory = "config";
-  generateTextAdJSON(output, config, spa, discoveryTopic, "[0-2][0-9]:[0-9]{2}");
+  ADConf.displayName = "Sleep Timer 1 Begin";
+  ADConf.valueTemplate = "{{ value_json.sleepTimers.timer1.begin }}";
+  ADConf.propertyId = "sleepTimers_1_begin";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "config";
+  generateTextAdJSON(output, ADConf, spa, discoveryTopic, "[0-2][0-9]:[0-9]{2}");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Sleep Timer 1 End";
-  config.valueTemplate = "{{ value_json.sleepTimers.timer1.end }}";
-  config.propertyId = "sleepTimers_1_end";
-  config.deviceClass = "";
-  config.entityCategory = "config";
-  generateTextAdJSON(output, config, spa, discoveryTopic, "[0-2][0-9]:[0-9]{2}");
+  ADConf.displayName = "Sleep Timer 1 End";
+  ADConf.valueTemplate = "{{ value_json.sleepTimers.timer1.end }}";
+  ADConf.propertyId = "sleepTimers_1_end";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "config";
+  generateTextAdJSON(output, ADConf, spa, discoveryTopic, "[0-2][0-9]:[0-9]{2}");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Sleep Timer 2 Begin";
-  config.valueTemplate = "{{ value_json.sleepTimers.timer2.begin }}";
-  config.propertyId = "sleepTimers_2_begin";
-  config.deviceClass = "";
-  config.entityCategory = "config";
-  generateTextAdJSON(output, config, spa, discoveryTopic, "[0-2][0-9]:[0-9]{2}");
+  ADConf.displayName = "Sleep Timer 2 Begin";
+  ADConf.valueTemplate = "{{ value_json.sleepTimers.timer2.begin }}";
+  ADConf.propertyId = "sleepTimers_2_begin";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "config";
+  generateTextAdJSON(output, ADConf, spa, discoveryTopic, "[0-2][0-9]:[0-9]{2}");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-  config.displayName = "Sleep Timer 2 End";
-  config.valueTemplate = "{{ value_json.sleepTimers.timer2.end }}";
-  config.propertyId = "sleepTimers_2_end";
-  config.deviceClass = "";
-  config.entityCategory = "config";
-  generateTextAdJSON(output, config, spa, discoveryTopic, "[0-2][0-9]:[0-9]{2}");
+  ADConf.displayName = "Sleep Timer 2 End";
+  ADConf.valueTemplate = "{{ value_json.sleepTimers.timer2.end }}";
+  ADConf.propertyId = "sleepTimers_2_end";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "config";
+  generateTextAdJSON(output, ADConf, spa, discoveryTopic, "[0-2][0-9]:[0-9]{2}");
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //fanADPublish(mqttClient, spa, "Blower", "{{ value_json.blower }}", "blower");
-  config.displayName = "Blower";
-  config.valueTemplate = "{{ value_json.blower }}";
-  config.propertyId = "blower";
-  config.deviceClass = "";
-  config.entityCategory = "";
-  generateFanAdJSON(output, config, spa, discoveryTopic);
+  ADConf.displayName = "Blower";
+  ADConf.valueTemplate = "{{ value_json.blower }}";
+  ADConf.propertyId = "blower";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "";
+  generateFanAdJSON(output, ADConf, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //selectADPublish(mqttClient, spa, "Spa Mode", "{{ value_json.status.spaMode }}", "status_spaMode", "", "", spaModeStrings);
-  config.displayName = "Spa Mode";
-  config.valueTemplate = "{{ value_json.status.spaMode }}";
-  config.propertyId = "status_spaMode";
-  config.deviceClass = "";
-  config.entityCategory = "";
-  generateSelectAdJSON(output, config, spa, discoveryTopic, si.spaModeStrings);
+  ADConf.displayName = "Spa Mode";
+  ADConf.valueTemplate = "{{ value_json.status.spaMode }}";
+  ADConf.propertyId = "status_spaMode";
+  ADConf.deviceClass = "";
+  ADConf.entityCategory = "";
+  generateSelectAdJSON(output, ADConf, spa, discoveryTopic, si.spaModeStrings);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
 }
@@ -535,19 +553,24 @@ void setup() {
     LittleFS.begin();
   }
 
-  if (!readConfigFile()) {
+  if (!config.readConfigFile()) {
     debugW("Failed to open config.json, starting Wi-Fi Manager");
     startWiFiManager();
     //I'm not sure if we need a reboot here - probably not
   }
 
-  mqttClient.setServer(mqttServer.c_str(),mqttPort.toInt());
+  mqttClient.setServer(config.MqttServer.getValue().c_str(), config.MqttPort.getValue().toInt());
   mqttClient.setCallback(mqttCallback);
   mqttClient.setBufferSize(2048);
 
   bootStartMillis = millis();  // Record the current boot time in milliseconds
 
   ui.begin();
+  ui.setWifiManagerCallback(startWifiManagerCallback);
+  si.setUpdateFrequency(config.UpdateFrequency.getValue());
+
+  config.setCallback(configChangeCallbackString);
+  config.setCallback(configChangeCallbackInt);
 
 }
 
@@ -566,6 +589,12 @@ void loop() {
 
   if (ui.initialised) { 
     ui.server->handleClient(); 
+  }
+
+  if (updateMqtt) {
+    //TODO - Restart MQTT after settings are changed
+    debugD("TODO - Restart MQTT after settings are changed");
+    updateMqtt = false;
   }
 
   if (WiFi.status() != WL_CONNECTED) {
@@ -605,11 +634,11 @@ void loop() {
             #if defined(LED_PIN)
               led.setInterval(500);
             #endif
-            debugW("MQTT not connected, attempting connection to %s:%s",mqttServer.c_str(),mqttPort.c_str());
+            debugW("MQTT not connected, attempting connection to %s:%s", config.MqttServer.getValue().c_str(), config.MqttPort.getValue().c_str());
             mqttLastConnect = now;
 
 
-            if (mqttClient.connect("sn_esp32", mqttUserName.c_str(), mqttPassword.c_str(), mqttAvailability.c_str(),2,true,"offline")) {
+            if (mqttClient.connect("sn_esp32", config.MqttUsername.getValue().c_str(), config.MqttPassword.getValue().c_str(), mqttAvailability.c_str(),2,true,"offline")) {
               debugI("MQTT connected");
     
               String subTopic = mqttBase+"set/#";

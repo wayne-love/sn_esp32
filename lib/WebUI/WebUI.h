@@ -17,12 +17,18 @@ extern RemoteDebug Debug;
 class WebUI {
     public:
         std::unique_ptr<WebServer> server;
-        WebUI(SpaInterface *spa);
+        WebUI(SpaInterface *spa, Config *config);
+
+        /// @brief Set the function to be called when properties have been updated.
+        /// @param f
+        void setWifiManagerCallback(void (*f)());
         void begin();
         bool initialised = false;
 
     private:
         SpaInterface *_spa;
+        Config *_config;
+        void (*_wifiManagerCallback)() = nullptr;
 
         const char* getError();
 
@@ -72,8 +78,9 @@ window.onload = function() {
 <p>Spa status is - <span id="status_state">Loading...</span></p>
 <p>Set Temperature: <input type="number" id="temperatures_setPoint" step="0.2" min="10" max="41">
 <button onclick="updateTempSetPoint();">Set</button></p>
-<p><a href="/json">Spa JSON raw</a></p>
 <p><a href="/json.html">Spa JSON HTML</a></p>
+<p><a href="/json">Spa JSON</a></p>
+<p><a href="/status">Spa Response</a></p>
 <p><a href="/config">Configuration</a></p>
 <p><a href="/fota">Firmware Update</a></p>
 <p><a href="#" onclick="confirmAction('/wifi-manager'); return false;">Wi-Fi Manager</a></p>
@@ -221,6 +228,7 @@ $('#config_form').submit(function(e) {
     data: $('#config_form').serialize(),
     success: function() {
       $('#msg').html('<p style="color:green;">Configuration updated successfully!</p>');
+      loadConfig();
       setTimeout(function() { $('#msg').html(''); }, 3000);
     },
     error: function() {

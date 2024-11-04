@@ -2,8 +2,8 @@
 
 void generateCommonAdJSON(
    JsonDocument& json,
-   const AutoDiscoveryConfig& config,
-   const SpaAdConfig& spa,
+   const AutoDiscoveryInformationTemplate& config,
+   const SpaADInformationTemplate& spa,
    String& discoveryTopic,
    String type
    ) {
@@ -39,7 +39,7 @@ void generateCommonAdJSON(
 
 }
 
-void generateSensorAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, String stateClass, String unitOfMeasure) {
+void generateSensorAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic, String stateClass, String unitOfMeasure) {
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "sensor");
 
@@ -49,14 +49,14 @@ void generateSensorAdJSON(String& output, const AutoDiscoveryConfig& config, con
    serializeJson(json, output);
 }
 
-void generateBinarySensorAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic) {
+void generateBinarySensorAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic) {
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "binary_sensor");
 
    serializeJson(json, output);
 }
 
-void generateTextAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, String regex) {
+void generateTextAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic, String regex) {
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "text");
 
@@ -66,7 +66,7 @@ void generateTextAdJSON(String& output, const AutoDiscoveryConfig& config, const
    serializeJson(json, output);
 }
 
-void generateSwitchAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic) {
+void generateSwitchAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic) {
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "switch");
 
@@ -77,7 +77,7 @@ void generateSwitchAdJSON(String& output, const AutoDiscoveryConfig& config, con
 
 
 
-void generateFanAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic) {
+void generateFanAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic) {
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "fan");
 
@@ -108,7 +108,7 @@ void generateFanAdJSON(String& output, const AutoDiscoveryConfig& config, const 
 
 
 
-void generateClimateAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic) {
+void generateClimateAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic) {
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "climate");
 

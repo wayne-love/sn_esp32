@@ -1,12 +1,18 @@
 #include "WebUI.h"
 
-WebUI::WebUI(SpaInterface *spa) {
+WebUI::WebUI(SpaInterface *spa, Config *config) {
     _spa = spa;
+    _config = config;
+}
+
+void WebUI::setWifiManagerCallback(void (*f)()) {
+    _wifiManagerCallback = f;
 }
 
 const char * WebUI::getError() {
     return Update.errorString();
 }
+
 
 void WebUI::begin() {
         
@@ -94,27 +100,26 @@ void WebUI::begin() {
 
     server->on("/config", HTTP_POST, [&]() {
         debugD("uri: %s", server->uri().c_str());
-        if (server->hasArg("spaName")) spaName = server->arg("spaName");
-        if (server->hasArg("mqttServer")) mqttServer = server->arg("mqttServer");
-        if (server->hasArg("mqttPort")) mqttPort = server->arg("mqttPort");
-        if (server->hasArg("mqttUsername")) mqttUserName = server->arg("mqttUsername");
-        if (server->hasArg("mqttPassword")) mqttPassword = server->arg("mqttPassword");
-        if (server->hasArg("updateFrequency")) updateFrequency = (server->arg("updateFrequency")).toInt();
-        writeConfigFile();
+        if (server->hasArg("spaName")) _config->SpaName.setValue(server->arg("spaName"));
+        if (server->hasArg("mqttServer")) _config->MqttServer.setValue(server->arg("mqttServer"));
+        if (server->hasArg("mqttPort")) _config->MqttPort.setValue(server->arg("mqttPort"));
+        if (server->hasArg("mqttUsername")) _config->MqttUsername.setValue(server->arg("mqttUsername"));
+        if (server->hasArg("mqttPassword")) _config->MqttPassword.setValue(server->arg("mqttPassword"));
+        if (server->hasArg("updateFrequency")) _config->UpdateFrequency.setValue(server->arg("updateFrequency").toInt());
+        _config->writeConfigFile();
         server->sendHeader("Connection", "close");
         server->send(200, "text/plain", "Updated");
     });
 
     server->on("/json/config", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
-        readConfigFile();
         String configJson = "{";
-        configJson += "\"spaName\":\"" + spaName + "\",";
-        configJson += "\"mqttServer\":\"" + mqttServer + "\",";
-        configJson += "\"mqttPort\":\"" + mqttPort + "\",";
-        configJson += "\"mqttUsername\":\"" + mqttUserName + "\",";
-        configJson += "\"mqttPassword\":\"" + mqttPassword + "\",";
-        configJson += "\"updateFrequency\":" + String(updateFrequency);
+        configJson += "\"spaName\":\"" + _config->SpaName.getValue() + "\",";
+        configJson += "\"mqttServer\":\"" + _config->MqttServer.getValue() + "\",";
+        configJson += "\"mqttPort\":\"" + _config->MqttPort.getValue() + "\",";
+        configJson += "\"mqttUsername\":\"" + _config->MqttUsername.getValue() + "\",";
+        configJson += "\"mqttPassword\":\"" + _config->MqttPassword.getValue() + "\",";
+        configJson += "\"updateFrequency\":" + String(_config->UpdateFrequency.getValue());
         configJson += "}";
         server->send(200, "application/json", configJson);
     });
@@ -134,15 +139,22 @@ void WebUI::begin() {
 
     server->on("/wifi-manager", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
-        triggerWiFiManager = true;
         server->sendHeader("Connection", "close");
         server->send(200, "text/plain", "WiFi Manager launching, connect to ESP WiFi...");
+        if (_wifiManagerCallback != nullptr) { _wifiManagerCallback(); }
     });
 
     server->on("/json.html", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
         server->sendHeader("Connection", "close");
         server->send(200, "text/html", WebUI::jsonHTMLTemplate);
+    });
+
+    server->on("/status", HTTP_GET, [&]() {
+        debugD("uri: %s", server->uri().c_str());
+        SpaInterface &si = *_spa;
+        server->sendHeader("Connection", "close");
+        server->send(200, "text/plain", si.statusResponse.getValue());
     });
 
     server->begin();

@@ -6,13 +6,15 @@
 #include <stdexcept>
 #include <RemoteDebug.h>
 #include "SpaProperties.h"
-#include "Config.h"
 
 extern RemoteDebug Debug;
 #define FAILEDREADFREQUENCY 1000 //(ms) Frequency to retry on a failed read of the status registers.
 
 class SpaInterface : public SpaProperties {
     private:
+
+        /// @brief How often to pole the spa for updates in seconds.
+        int _updateFrequency = 60;
 
         /// @brief Number of fields that we can expect to read.
 
@@ -90,16 +92,14 @@ class SpaInterface : public SpaProperties {
 
 
     public:
-        /// @brief Init SNI to read from stream p. This stream needs to be started and configured baud 38400/8N1.
-        /// useful if you want to link this to a software COM port on a chip similar to a ESP8266.
-        /// Needs to be set to 38400/8/N/1
-        /// @param p 
-        SpaInterface(Stream &p);
-
-        /// @brief Init SNI and use Serial2 for comms.  Serial 2 DOES NOT need to be configured.
+        /// @brief Init SpaInterface.
         SpaInterface();
 
         ~SpaInterface();
+
+        /// @brief configure how often the spa is polled in seconds.
+        /// @param updateFrequency
+        void setUpdateFrequency(int updateFrequency);
 
         /// @brief Complete RF command response in a single string
         Property<String> statusResponse;

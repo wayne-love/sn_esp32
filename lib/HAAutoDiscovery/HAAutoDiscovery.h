@@ -6,7 +6,7 @@
 
 
 /// @brief Configuration structure for the data elements for the Spa.
-struct SpaAdConfig {
+struct SpaADInformationTemplate {
     String spaName;             // Spa name (eg MySpa)
     String spaSerialNumber;     // Spa serial number
     String stateTopic;          // MQTT topic where staus informaion is published.
@@ -15,7 +15,7 @@ struct SpaAdConfig {
 };
 
 /// @brief Base configuration structure for common data elements
-struct AutoDiscoveryConfig {
+struct AutoDiscoveryInformationTemplate {
     String displayName;         // Display name for the sensor
     String valueTemplate;       // Value template to extract the status information
     String propertyId;          // Unique ID of the sensor
@@ -25,18 +25,19 @@ struct AutoDiscoveryConfig {
 
 /// @brief Generate JSON string to publish for Sensor auto discovery
 /// @param output String to revceive JSON output
-/// @param config Structure to define JSON output
+/// @param config Structure to define entity information
+/// @param spa Structure to define Spa information
 /// @param discoveryTopic String to retun discovrery topic
 /// @param type String to provide the type
-void generateCommonAdJSON(JsonDocument& json, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, String type);
+void generateCommonAdJSON(JsonDocument& json, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic, String type);
 
-void generateSensorAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, String stateClass="", String unitOfMeasure="");
-void generateBinarySensorAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic);
-void generateTextAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, String regex="");
-void generateSwitchAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic);
+void generateSensorAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic, String stateClass="", String unitOfMeasure="");
+void generateBinarySensorAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic);
+void generateTextAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic, String regex="");
+void generateSwitchAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic);
 
 template <typename T, size_t N>
-void generateSelectAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, const std::array<T, N>& options) {
+void generateSelectAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic, const std::array<T, N>& options) {
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "select");
 
@@ -48,11 +49,11 @@ void generateSelectAdJSON(String& output, const AutoDiscoveryConfig& config, con
 }
 
 
-void generateFanAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic);
+void generateFanAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic);
 
 
 template <typename T, size_t N>
-void generateLightAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic, const std::array<T, N>& colorModes) {
+void generateLightAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic, const std::array<T, N>& colorModes) {
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "light");
 
@@ -92,7 +93,7 @@ void generateLightAdJSON(String& output, const AutoDiscoveryConfig& config, cons
 }
 
 
-void generateClimateAdJSON(String& output, const AutoDiscoveryConfig& config, const SpaAdConfig& spa, String &discoveryTopic);
+void generateClimateAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic);
 
 /*
 struct SensorAdConfig {
