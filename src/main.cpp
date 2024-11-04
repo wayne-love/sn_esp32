@@ -242,7 +242,7 @@ void mqttHaAutoDiscovery() {
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //climateADPublish(mqttClient, spa, spaName, "{{ value_json.temperatures }}", "Heating");
-  ADConf.displayName = "Heat Set Point";
+  ADConf.displayName = "";
   ADConf.valueTemplate = "{{ value_json.temperatures }}";
   ADConf.propertyId = "Heating";
   ADConf.deviceClass = "";

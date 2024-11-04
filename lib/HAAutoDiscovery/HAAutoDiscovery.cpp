@@ -116,8 +116,6 @@ void generateClimateAdJSON(String& output, const AutoDiscoveryInformationTemplat
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "climate");
 
-   json["name"]="";  ///TODO #49 - Need to work out how get HA to create climate.myspa without this.
-
    // Find the last character that is not a space or curly brace
    int lastIndex = config.valueTemplate.length() - 1;
    while (lastIndex >= 0 && (config.valueTemplate[lastIndex] == ' ' || config.valueTemplate[lastIndex] == '}')) {
