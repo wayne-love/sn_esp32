@@ -16,6 +16,10 @@
 #include "SpaUtils.h"
 #include "HAAutoDiscovery.h"
 
+//define stringify function
+#define xstr(a) str(a)
+#define str(a) #a
+
 unsigned long bootStartMillis;  // To track when the device started
 RemoteDebug Debug;
 
@@ -136,6 +140,10 @@ void mqttHaAutoDiscovery() {
   spa.spaSerialNumber = spaSerialNumber;
   spa.stateTopic = mqttStatusTopic;
   spa.availabilityTopic = mqttAvailability;
+  spa.manufacturer = "sn_esp32";
+  spa.model = xstr(PIOENV);
+  spa.sw_version = xstr(BUILD_INFO);
+  spa.configuration_url = "http://" + wifi.localIP().toString();
 
   //sensorADPublish("Water Temperature","","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.water }}","measurement","WaterTemperature", spaName, spaSerialNumber);
   //sensorADPublish("Heater Temperature","diagnostic","temperature",mqttStatusTopic,"°C","{{ value_json.temperatures.heater }}","measurement","HeaterTemperature", spaName, spaSerialNumber);

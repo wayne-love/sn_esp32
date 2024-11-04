@@ -35,3 +35,4 @@ def get_git_version():
 
 # Append the version to build flags
 env.Append(CPPDEFINES=[("BUILD_INFO", f'"{get_git_version()}"')])
+env.Append(CPPDEFINES=[("PIOENV", f'"{env["PIOENV"]}"')])

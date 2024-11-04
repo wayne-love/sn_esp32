@@ -31,6 +31,10 @@ void generateCommonAdJSON(
    json["device"]["identifiers"][0] = spa.spaSerialNumber;
    json["device"]["serial_number"] = spa.spaSerialNumber;
    json["device"]["name"] = spa.spaName;
+   json["device"]["manufacturer"] = spa.manufacturer;
+   json["device"]["model"] = spa.model;
+   json["device"]["sw_version"] = spa.sw_version;
+   json["device"]["configuration_url"] = spa.configuration_url;
    json["availability"]["topic"] = spa.availabilityTopic;
    if (!config.deviceClass.isEmpty()) json["device_class"] = config.deviceClass;
    if (!config.entityCategory.isEmpty()) json["entity_category"] = config.entityCategory;
