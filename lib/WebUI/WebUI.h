@@ -1,8 +1,6 @@
 #ifndef WEBUI_H
 #define WEBUI_H
 
-#define BUILD_INFO __DATE__ " " __TIME__
-
 #include <Arduino.h>
 
 #include <WebServer.h>
@@ -11,6 +9,10 @@
 #include "SpaInterface.h"
 #include "SpaUtils.h"
 #include "Config.h"
+
+//define stringify function
+#define xstr(a) str(a)
+#define str(a) #a
 
 extern RemoteDebug Debug;
 
@@ -85,7 +87,7 @@ window.onload = function() {
 <p><a href="/fota">Firmware Update</a></p>
 <p><a href="#" onclick="confirmAction('/wifi-manager'); return false;">Wi-Fi Manager</a></p>
 <p><a href="#" onclick="confirmAction('/reboot'); return false;">Reboot ESP</a></p>
-<p>Build: )" BUILD_INFO R"(</p>
+<p>Build: )" xstr(BUILD_INFO) R"(</p>
 </body>
 </html>)";
 
