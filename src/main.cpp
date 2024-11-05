@@ -602,6 +602,12 @@ void loop() {
     //TODO - Restart MQTT after settings are changed
     debugD("TODO - Restart MQTT after settings are changed");
     updateMqtt = false;
+    mqttClient.disconnect();
+    //wifi = WiFiClient(wifi);
+    //mqttClient = PubSubClient(wifi);
+    mqttClient.setServer(config.MqttServer.getValue().c_str(), config.MqttPort.getValue().toInt());
+    mqttClient.setCallback(mqttCallback);
+    mqttClient.setBufferSize(2048);
   }
 
   if (WiFi.status() != WL_CONNECTED) {
