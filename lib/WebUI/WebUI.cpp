@@ -130,7 +130,7 @@ void WebUI::begin() {
         if (server->hasArg("temperatures_setPoint")) {
             float newTemperature = server->arg("temperatures_setPoint").toFloat();
             SpaInterface &si = *_spa;
-            si.setSTMP(int(newTemperature*10));
+            si.STMP.sendValue(int(newTemperature*10));
             server->send(200, "text/plain", "Temperature updated");
         } else {
             server->send(400, "text/plain", "Invalid temperature value");
