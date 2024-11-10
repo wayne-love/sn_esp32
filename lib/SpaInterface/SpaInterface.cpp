@@ -78,244 +78,165 @@ bool SpaInterface::sendCommandCheckResult(String cmd, String expected){
 }
 
 bool SpaInterface::sendValue(const char* name, int mode) {
-debugD("sendValue name: %s, mode: %i", name, mode);
-if (name == "RB_TP_Pump1") {
-    debugD("setRB_TP_Pump1 - %i",mode);
+    debugD("sendValue name: %s, mode: %i", name, mode);
 
-    if (sendCommandCheckResult("S22:"+String(mode),"S22-OK")) {
-        RB_TP_Pump1.updateValue(mode);
-        return true;
+    if (name == "RB_TP_Pump1") {
+        if (sendCommandCheckResult("S22:"+String(mode),"S22-OK")) {
+            RB_TP_Pump1.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "RB_TP_Pump2") {
-    debugD("setRB_TP_Pump2 - %i",mode);
-
-    if (sendCommandCheckResult("S23:"+String(mode),"S23-OK")) {
-        RB_TP_Pump2.updateValue(mode);
-        return true;
+    else if (name == "RB_TP_Pump2") {
+        if (sendCommandCheckResult("S23:"+String(mode),"S23-OK")) {
+            RB_TP_Pump2.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "setRB_TP_Pump3") {
-    debugD("setRB_TP_Pump3 - %i",mode);
-
-    if (sendCommandCheckResult("S24:"+String(mode),"S24-OK")) {
-        RB_TP_Pump3.updateValue(mode);
-        return true;
+    else if (name == "setRB_TP_Pump3") {
+        if (sendCommandCheckResult("S24:"+String(mode),"S24-OK")) {
+            RB_TP_Pump3.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "RB_TP_Pump4") {
-    debugD("setRB_TP_Pump4 - %i",mode);
-
-    if (sendCommandCheckResult("S25:"+String(mode),"S25-OK")) {
-        RB_TP_Pump4.updateValue(mode);
-        return true;
+    else if (name == "RB_TP_Pump4") {
+        if (sendCommandCheckResult("S25:"+String(mode),"S25-OK")) {
+            RB_TP_Pump4.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "RB_TP_Pump5") {
-    debugD("setRB_TP_Pump5 - %i",mode);
-
-    if (sendCommandCheckResult("S26:"+String(mode),"S26-OK")) {
-        RB_TP_Pump5.updateValue(mode);
-        return true;
+    else if (name == "RB_TP_Pump5") {
+        if (sendCommandCheckResult("S26:"+String(mode),"S26-OK")) {
+            RB_TP_Pump5.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "RB_TP_Light") {
-    debugD("setRB_TP_Light - %i",mode);
-    //if (mode != RB_TP_Light.getValue()) {
+    else if (name == "RB_TP_Light") {
         if (sendCommandCheckResult("W14","W14")) {
             RB_TP_Light.updateValue(mode);
             return true;
         }
         return false;
-    //}
-    return true;
-}
-
-else if (name == "HELE") {
-    debugD("setHELE - %i", mode);
-
-    if (sendCommandCheckResult("W98:"+String(mode),String(mode))) {
-        HELE.updateValue(mode);
-        return true;
     }
-    return false;
-}
-
-
-else if (name == "STMP") {
-    int temp = mode;
-    debugD("setSTMP - %i", temp);
-    String stemp = String(temp);
-
-    if (sendCommandCheckResult("W40:" + stemp,stemp)) {
-        STMP.updateValue(temp);
-        return true;
+    else if (name == "HELE") {
+        if (sendCommandCheckResult("W98:"+String(mode),String(mode))) {
+            HELE.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "L_1SNZ_DAY") {
-    debugD("setL_1SNZ_DAY - %i",mode);
-    if (sendCommandCheckResult(String("W67:")+mode,String(mode))) {
-        L_1SNZ_DAY.updateValue(mode);
-        return true;
+    else if (name == "STMP") {
+        if (sendCommandCheckResult("W40:" + String(mode),String(mode))) {
+            STMP.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "L_1SNZ_BGN") {
-    debugD("setL_1SNZ_BGN - %i",mode);
-    if (sendCommandCheckResult(String("W68:")+mode,String(mode))) {
-        L_1SNZ_BGN.updateValue(mode);
-        return true;
+    else if (name == "L_1SNZ_DAY") {
+        if (sendCommandCheckResult(String("W67:")+mode,String(mode))) {
+            L_1SNZ_DAY.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "L_1SNZ_END") {
-    debugD("setL_1SNZ_END - %i",mode);
-    if (sendCommandCheckResult(String("W69:")+mode,String(mode))) {
-        L_1SNZ_END.updateValue(mode);
-        return true;
+    else if (name == "L_1SNZ_BGN") {
+        if (sendCommandCheckResult(String("W68:")+mode,String(mode))) {
+            L_1SNZ_BGN.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "L_2SNZ_DAY") {
-    debugD("setL_2SNZ_DAY - %i",mode);
-    if (sendCommandCheckResult(String("W70:")+mode,String(mode))) {
-        L_2SNZ_DAY.updateValue(mode);
-        return true;
+    else if (name == "L_1SNZ_END") {
+        if (sendCommandCheckResult(String("W69:")+mode,String(mode))) {
+            L_1SNZ_END.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "L_2SNZ_BGN") {
-    debugD("setL_1SNZ_BGN - %i",mode);
-    if (sendCommandCheckResult(String("W71:")+mode,String(mode))) {
-        L_1SNZ_BGN.updateValue(mode);
-        return true;
+    else if (name == "L_2SNZ_DAY") {
+        if (sendCommandCheckResult(String("W70:")+mode,String(mode))) {
+            L_2SNZ_DAY.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "L_2SNZ_END") {
-    debugD("setL_1SNZ_END - %i",mode);
-    if (sendCommandCheckResult(String("W72:")+mode,String(mode))) {
-        L_1SNZ_END.updateValue(mode);
-        return true;
+    else if (name == "L_2SNZ_BGN") {
+        if (sendCommandCheckResult(String("W71:")+mode,String(mode))) {
+            L_1SNZ_BGN.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "HPMP") {
-    debugD("setHPMP - %i", mode);
-
-    String smode = String(mode);
-
-    if (sendCommandCheckResult("W99:"+smode,smode)) {
-        HPMP.updateValue(mode);
-        return true;
+    else if (name == "L_2SNZ_END") {
+        if (sendCommandCheckResult(String("W72:")+mode,String(mode))) {
+            L_1SNZ_END.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "ColorMode") {
-    debugD("setColorMode - %i", mode);
-
-    String smode = String(mode);
-
-    if (sendCommandCheckResult("S07:"+smode,smode)) {
-        ColorMode.updateValue(mode);
-        return true;
+    else if (name == "HPMP") {
+        if (sendCommandCheckResult("W99:"+String(mode),String(mode))) {
+            HPMP.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "LBRTValue") {
-    debugD("setLBRTValue - %i", mode);
-
-    String smode = String(mode);
-
-    if (sendCommandCheckResult("S08:"+smode,smode)) {
-        LBRTValue.updateValue(mode);
-        return true;
+    else if (name == "ColorMode") {
+        if (sendCommandCheckResult("S07:"+String(mode),String(mode))) {
+            ColorMode.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "LSPDValue") {
-    debugD("setLSPDValue - %i", mode);
-
-    String smode = String(mode);
-
-    if (sendCommandCheckResult("S09:"+smode,smode)) {
-        LSPDValue.updateValue(mode);
-        return true;
+    else if (name == "LBRTValue") {
+        if (sendCommandCheckResult("S08:"+String(mode),String(mode))) {
+            LBRTValue.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "CurrClr") {
-    debugD("setCurrClr - %i", mode);
-
-    String smode = String(mode);
-
-    if (sendCommandCheckResult("S10:"+smode,smode)) {
-        CurrClr.updateValue(mode);
-        return true;
+    else if (name == "LSPDValue") {
+        if (sendCommandCheckResult("S09:"+String(mode),String(mode))) {
+            LSPDValue.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "Outlet_Blower") {
-    debugD("setOuput-Blower - %i", mode);
-
-    String smode = String(mode);
-
-    if (sendCommandCheckResult("S28:"+smode,"S28-OK")) {
-        Outlet_Blower.updateValue(mode);
-        return true;
+    else if (name == "CurrClr") {
+        if (sendCommandCheckResult("S10:"+String(mode),String(mode))) {
+            CurrClr.updateValue(mode);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
-
-else if (name == "VARIValue") {
-    debugD("setVARIValue - %i", mode);
-    if (mode > 0 && mode < 6) {
-        String smode = String(mode);
-
-        if (sendCommandCheckResult("S13:"+smode,smode+"  S13")) {
+    else if (name == "Outlet_Blower") {
+        if (sendCommandCheckResult("S28:"+String(mode),"S28-OK")) {
+            Outlet_Blower.updateValue(mode);
+            return true;
+        }
+        return false;
+    }
+    else if (name == "VARIValue") {
+        debugD("setVARIValue - %i", mode);
+        if (sendCommandCheckResult("S13:"+String(mode),String(mode)+"  S13")) {
             VARIValue.updateValue(mode);
             return true;
         }
+        return false;
     }
-    return false;
-}
-
-else if (name == "Mode") {
-    debugD("setMode - %i", mode);
-
-    String smode = String(mode);
-
-    if (sendCommandCheckResult("W66:"+smode,smode)) {
-        Mode.updateValue(spaModeStrings[mode]);
-        return true;
+    else if (name == "Mode") {
+        if (sendCommandCheckResult("W66:"+String(mode),String(mode))) {
+            Mode.updateValue(spaModeStrings[mode]);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
 
-return false;
+    return false;
 }
 
 bool SpaInterface::sendValue(const char* name, String smode) {

@@ -21,7 +21,7 @@ class SpaInterface : public SpaProperties {
         int statusResponseMinFields = 288;
 
         static const int statusResponseMaxFields = 295;
-        
+
         /// @brief Each field of the RF cmd response as seperate elements.
         String statusResponseRaw[statusResponseMaxFields];
 
@@ -57,7 +57,7 @@ class SpaInterface : public SpaProperties {
         /// @param cmd - cmd to be executed.
         void sendCommand(String cmd);
 
-        
+
         /// @brief Sends a command to the SpanNet controller and returns the result string
         /// @param cmd - cmd to be executed
         /// @return String - result string
@@ -84,7 +84,7 @@ class SpaInterface : public SpaProperties {
         /// @brief If the result registers have been modified locally, need to do a fress pull from the controller
         bool _resultRegistersDirty = true;
 
-   
+
         void (*updateCallback)() = nullptr;
 
         u_long _lastWaitMessage = millis();
@@ -111,11 +111,11 @@ class SpaInterface : public SpaProperties {
         void loop();
 
         /// @brief Have we sucessfuly read the registers from the SpaNet controller.
-        /// @return 
+        /// @return
         bool isInitialised();
 
         /// @brief Set the function to be called when properties have been updated.
-        /// @param f 
+        /// @param f
         void setUpdateCallback(void (*f)());
 
         /// @brief Clear the call back function.
@@ -123,4 +123,4 @@ class SpaInterface : public SpaProperties {
 };
 
 
-#endif
+#endif  //SPAINTERFACE_H
