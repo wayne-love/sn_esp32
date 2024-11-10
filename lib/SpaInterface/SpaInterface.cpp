@@ -10,15 +10,19 @@ SpaInterface::SpaInterface() : port(SPA_SERIAL) {
 
     SpaInterface* mySpa = this;
     Property<int>::setSendCallback([mySpa](const char* name, int value) {
+        debugV("calling sendValue int...");
         return mySpa->sendValue(name, value);
     });
     Property<String>::setSendCallback([mySpa](const char* name, String value) {
+        debugV("calling sendValue String...");
         return mySpa->sendValue(name, value);
     });
     Property<bool>::setSendCallback([mySpa](const char* name, int value) {
+        debugV("calling sendValue bool...");
         return mySpa->sendValue(name, value);
     });
     Property<time_t>::setSendCallback([mySpa](const char* name, time_t value) {
+        debugV("calling sendValue time_t...");
         return mySpa->sendValue(name, value);
     });
 }

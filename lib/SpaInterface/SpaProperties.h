@@ -7,10 +7,25 @@
 #include <TimeLib.h>
 #include <array>
 
+extern RemoteDebug Debug;
+
+template<typename T>
+void debugVT(const char* msg, const char* name, T oldValue, T newValue) {
+    if (std::is_same<T, int>::value) {
+        debugV("%s, name: %s (int) - old value: %i, new value: %i", msg, name, oldValue, newValue);
+    }
+    else if (std::is_same<T, float>::value) {
+        debugV("%s, name: %s (float) - old value: %.2f, new value: %.2f", msg, name, oldValue, newValue);
+    }
+    else if (std::is_same<T, String>::value) {
+        debugV("%s, name: %s (String) - old value: %s, new value: %s", msg, name, String(oldValue).c_str(), String(newValue).c_str());
+    } else {
+        debugV("Property '%s' (unknown type) - old value: ?, new value: ?", name);
+    }
+};
 
 template <typename T>
-class Property
-{
+class Property {
 private:
     T _value;
     const char* _name;
@@ -24,27 +39,26 @@ public:
     Property(const char* name, T initialValue = T()) : _name(name) {}
 
     T getValue() { return _value; }
-    void sendValue(T newval)
+    void sendValue(T newValue)
     {
-        T oldvalue = _value;
-        if ((_sendCallback) && (oldvalue != newval))
-            {
-                _sendCallback(_name, _value);
-            }
+        T oldValue = _value;
+        debugVT("sendValue T", _name, oldValue, newValue);
+        if ((_sendCallback) && (oldValue != newValue)) {
+            _sendCallback(_name, newValue);
+        }
     };
     static void setSendCallback(std::function<bool(const char*, T)> c) { _sendCallback = c; };
     void setUpdateCallback(void (*c)(T)) { _updateCallback = c; };
 
 protected:
     //TODO do we need updateValue to return true on success??
-    void updateValue(T newval)
+    void updateValue(T newValue)
     {
-        T oldvalue = _value;
-        _value = newval;
-        if ((_updateCallback) && (oldvalue != newval))
-            {
-                _updateCallback(_value);
-            }
+        T oldValue = _value;
+        _value = newValue;
+        if ((_updateCallback) && (oldValue != newValue)) {
+            _updateCallback(_value);
+        }
     };
 };
 
@@ -68,17 +82,22 @@ public:
 
     int getValue() { return _value; }
 
-    void sendValue(int newval) {
-        int oldvalue = _value;
-        if ((_sendCallback) && (oldvalue != _value)) {
-            _sendCallback(_name, _value);
+    void sendValue(int newValue) {
+        int oldValue = _value;
+        debugV("sendValue int, name: %s (int) - old value: %i, new value: %i", _name, oldValue, newValue);
+        if (newValue > _maxValue || newValue < _minValue) {
+            debugW("Value for %s out of range: %i", _name, newValue);
+        }
+        else if ((_sendCallback) && (oldValue != newValue)) {
+            _sendCallback(_name, newValue);
         }
     }
 
     // Overload setValue to accept String input and convert it to int
     void sendValue(const String& s) {
-        int newval = s.toInt();
-        sendValue(newval);
+        int newValue = s.toInt();
+        debugV("sendValue int String, name: %s (int) - old value: %s, new value: %s", _name, String(_value).c_str(), s.c_str());
+        sendValue(newValue);
     }
 
     static void setSendCallback(std::function<bool(const char*, int)> c) { _sendCallback = c; };
@@ -86,14 +105,12 @@ public:
 
 protected:
     //TODO do we need updateValue to return true on success??
-    void updateValue(int newval)
-    {
-        int oldvalue = _value;
-        _value = newval;
-        if ((_updateCallback) && (oldvalue != newval))
-            {
-                _updateCallback(_value);
-            }
+    void updateValue(int newValue) {
+        int oldValue = _value;
+        _value = newValue;
+        if ((_updateCallback) && (oldValue != newValue)) {
+            _updateCallback(_value);
+        }
     };
 
     //TODO do we need updateValue to return true on success??
@@ -106,8 +123,8 @@ protected:
             }
         }
 
-        int newval = s.toInt();
-        updateValue(newval);
+        int newValue = s.toInt();
+        updateValue(newValue);
 
     }
 };
