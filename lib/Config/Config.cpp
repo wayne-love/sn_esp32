@@ -26,7 +26,7 @@ bool Config::readConfigFile() {
       debugI("Parsed JSON");
 
       if (json["mqtt_server"].is<String>()) MqttServer.setValue(json["mqtt_server"].as<String>());
-      if (json["mqtt_port"].is<String>()) MqttPort.setValue(json["mqtt_port"].as<String>());
+      if (json["mqtt_port"].is<int>()) MqttPort.setValue(json["mqtt_port"].as<int>());
       if (json["mqtt_username"].is<String>()) MqttUsername.setValue(json["mqtt_username"].as<String>());
       if (json["mqtt_password"].is<String>()) MqttPassword.setValue(json["mqtt_password"].as<String>());
       if (json["spa_name"].is<String>()) SpaName.setValue(json["spa_name"].as<String>());
