@@ -12,6 +12,10 @@ struct SpaADInformationTemplate {
     String stateTopic;          // MQTT topic where staus informaion is published.
     String availabilityTopic;   // MQTT topic for availability of the Spa (not sensor)
     String commandTopic;        // MQTT topic where command information is sent.
+    String manufacturer;        // MQTT topic for device manufacturer.
+    String model;               // MQTT topic for device model.
+    String sw_version;             // MQTT topic for device software version.
+    String configuration_url;   // MQTT topic for config url.
 };
 
 /// @brief Base configuration structure for common data elements

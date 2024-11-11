@@ -3,15 +3,8 @@
 // Function to convert integer to time in HH:mm format
 String convertToTime(int data) {
   // Extract hours and minutes from data
-  int hours = (data >> 8) & 0xFF; // High byte for hours
-  int minutes = data & 0xFF;      // Low byte for minutes
-
-  // If minutes are greater than or equal to 100, adjust hours and minutes
-  if (minutes >= 100) {
-    int extraHours = minutes / 100;
-    minutes = minutes % 100;
-    hours += extraHours;
-  }
+  int hours = (data >> 8) & 0x3F; // High byte for hours
+  int minutes = data & 0x1F;      // Low byte for minutes
 
   String timeStr = String(hours / 10) + String(hours % 10) + ":" +
                    String(minutes / 10) + String(minutes % 10);
