@@ -48,10 +48,6 @@ class SpaInterface : public SpaProperties {
         /// @return true if successful read, false if there was a corrupted read
         bool readStatus();
 
-        void updateMeasures();
-
-
-
         /// @brief Sends command to SpaNet controller.  Result must be read by some other method.
         /// Used for the 'RF' command so that we can do a optomised read of the return array.
         /// @param cmd - cmd to be executed.

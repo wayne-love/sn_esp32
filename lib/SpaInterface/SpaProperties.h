@@ -188,6 +188,9 @@ protected:
 
 /// @brief represents the properties of the spa.
 class SpaProperties {
+    protected:
+        void updateMeasures(String statusResponseRaw[], int R2, int R3, int R4, int R5, int R6, int R7, int R9, int RA, int RB, int RC, int RE, int RG);
+
     public:
 
     #pragma region R2
@@ -766,13 +769,6 @@ class SpaProperties {
         Property<int> LockMode = Property<int>("LockMode");
 
     #pragma endregion
-
-    public:
-        // Set callback for all Properties
-        template <typename T>
-        void setCallback(void (*callback)(const char*, T)) {
-            Property<T>::setCallback(callback);
-        }
 
         const std::array <String, 4> spaModeStrings = {"NORM","ECON", "AWAY","WEEK"};
         const std::array <int, 25> colorMap = {0, 4, 4, 19, 13, 25, 25, 16, 10, 7, 2, 8, 5, 3, 6, 6, 21, 21, 21, 18, 18, 9, 9, 1, 1};
