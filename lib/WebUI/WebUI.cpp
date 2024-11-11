@@ -102,7 +102,7 @@ void WebUI::begin() {
         debugD("uri: %s", server->uri().c_str());
         if (server->hasArg("spaName")) _config->SpaName.setValue(server->arg("spaName"));
         if (server->hasArg("mqttServer")) _config->MqttServer.setValue(server->arg("mqttServer"));
-        if (server->hasArg("mqttPort")) _config->MqttPort.setValue(server->arg("mqttPort"));
+        if (server->hasArg("mqttPort")) _config->MqttPort.setValue(server->arg("mqttPort").toInt());
         if (server->hasArg("mqttUsername")) _config->MqttUsername.setValue(server->arg("mqttUsername"));
         if (server->hasArg("mqttPassword")) _config->MqttPassword.setValue(server->arg("mqttPassword"));
         if (server->hasArg("updateFrequency")) _config->UpdateFrequency.setValue(server->arg("updateFrequency").toInt());
@@ -116,7 +116,7 @@ void WebUI::begin() {
         String configJson = "{";
         configJson += "\"spaName\":\"" + _config->SpaName.getValue() + "\",";
         configJson += "\"mqttServer\":\"" + _config->MqttServer.getValue() + "\",";
-        configJson += "\"mqttPort\":\"" + _config->MqttPort.getValue() + "\",";
+        configJson += "\"mqttPort\":\"" + String(_config->MqttPort.getValue()) + "\",";
         configJson += "\"mqttUsername\":\"" + _config->MqttUsername.getValue() + "\",";
         configJson += "\"mqttPassword\":\"" + _config->MqttPassword.getValue() + "\",";
         configJson += "\"updateFrequency\":" + String(_config->UpdateFrequency.getValue());
