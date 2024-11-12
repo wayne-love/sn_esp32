@@ -569,9 +569,8 @@ void setup() {
     //I'm not sure if we need a reboot here - probably not
   }
 
-  mqttClient.setServer(config.MqttServer.getValue().c_str(), config.MqttPort.getValue().toInt());
-  mqttClient.setCallback(mqttCallback);
-  mqttClient.setBufferSize(2048);
+  mqttClient.setCallback(mqttCallback);  // This is ok in setup as it never changes
+  mqttClient.setBufferSize(2048);        // This is ok in setup as it never changes
 
   bootStartMillis = millis();  // Record the current boot time in milliseconds
 
@@ -647,6 +646,8 @@ void loop() {
             debugW("MQTT not connected, attempting connection to %s:%s", config.MqttServer.getValue().c_str(), config.MqttPort.getValue().c_str());
             mqttLastConnect = now;
 
+            String server = config.MqttServer.getValue(); // Must create a local varible to store value otherwise the ptr goes out of scope
+            mqttClient.setServer(server.c_str(), config.MqttPort.getValue().toInt());
 
             if (mqttClient.connect("sn_esp32", config.MqttUsername.getValue().c_str(), config.MqttPassword.getValue().c_str(), mqttAvailability.c_str(),2,true,"offline")) {
               debugI("MQTT connected");
