@@ -82,7 +82,7 @@ void startWiFiManager(){
   wm.setConnectTimeout(300); //close the WiFiManager after 300 seconds of inactivity
 
 
-  wm.startConfigPortal();
+  wm.startConfigPortal("eSpa-wifi-AP", NULL);
   debugI("Exiting Portal");
 
   if (WMsaveConfig) {
