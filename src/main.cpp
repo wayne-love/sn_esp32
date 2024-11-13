@@ -545,6 +545,10 @@ void setup() {
     pinMode(EN_PIN, INPUT_PULLUP);
   #endif
 
+  Serial.begin(115200);
+  Serial.setDebugOutput(true);
+  Debug.setSerialEnabled(true);
+
   delay(200);
   debugA("Starting... %s", WiFi.getHostname());
 
