@@ -73,7 +73,7 @@ void MultiBlinker::updateLEDs() {
         digitalWrite(ledPins[0], newState);
     } else if (numLeds == 4) {
         for (int i = 0; i < 4; i++) {
-            digitalWrite(ledPins[i], (currentState & (1 << i)) ? HIGH : LOW);
+            digitalWrite(ledPins[i], (currentState & (1 << (3 - i))) ? HIGH : LOW);
         }
     }
 }
