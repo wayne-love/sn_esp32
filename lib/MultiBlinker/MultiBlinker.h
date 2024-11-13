@@ -25,8 +25,6 @@ const int MULTI_BLINKER_INTERVAL = 100;
 class MultiBlinker {
 public:
     MultiBlinker(int led1 = -1, int led2 = -1, int led3 = -1, int led4 = -1);
-    // void resetInterval();
-    // void setInterval(int i);
     void setState(int state);
     void start();
     void stop();
