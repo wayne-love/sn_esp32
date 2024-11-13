@@ -6,9 +6,7 @@
 #include <WiFiManager.h>
 #include <PubSubClient.h>
 
-#if defined(LED_PIN)
-  #include "Blinker.h"
-#endif
+#include "MultiBlinker.h"
 
 #include "WebUI.h"
 #include "Config.h"
@@ -26,8 +24,12 @@ RemoteDebug Debug;
 SpaInterface si;
 Config config;
 
-#if defined(LED_PIN)
-  Blinker led(LED_PIN);
+#if defined(SPACTRLPCB)
+  MultiBlinker blinker(PCB_LED1, PCB_LED2, PCB_LED3, PCB_LED4);
+#elif defined(LED_PIN)
+  MultiBlinker blinker(LED_PIN);
+#else
+  MultiBlinker blinker(-1);
 #endif
 
 WiFiClient wifi;
@@ -81,8 +83,8 @@ void startWiFiManager(){
   wm.setSaveConfigCallback(WMsaveConfigCallback);
   wm.setConnectTimeout(300); //close the WiFiManager after 300 seconds of inactivity
 
-
-  wm.startConfigPortal();
+  blinker.setState(STATE_STARTED_WIFI_AP);
+  wm.startConfigPortal("eSpa-wifi-AP", NULL);
   debugI("Exiting Portal");
 
   if (WMsaveConfig) {
@@ -100,7 +102,7 @@ void startWiFiManager(){
 void checkButton(){
 #if defined(EN_PIN)
   if(digitalRead(EN_PIN) == LOW) {
-    debugI("Initial buttong press detected");
+    debugI("Initial button press detected");
     delay(100); // wait and then test again to ensure that it is a held button not a press
     if(digitalRead(EN_PIN) == LOW) {
       debugI("Button press detected. Starting Portal");
@@ -559,6 +561,15 @@ void setup() {
     pinMode(EN_PIN, INPUT_PULLUP);
   #endif
 
+  #if defined(ENABLE_SERIAL)
+    Serial.begin(115200);
+    Serial.setDebugOutput(true);
+    Debug.setSerialEnabled(true);
+  #endif
+
+  blinker.setState(STATE_NONE); // start with all LEDs off
+  blinker.start();
+
   delay(200);
   debugA("Starting... %s", WiFi.getHostname());
 
@@ -604,13 +615,8 @@ void setup() {
 
 
 void loop() {  
-
-
-
   checkButton();
-  #if defined(LED_PIN)
-    led.tick();
-  #endif
+  
   mqttClient.loop();
   Debug.handle();
 
@@ -629,9 +635,7 @@ void loop() {
 
   if (WiFi.status() != WL_CONNECTED) {
     //wifi not connected
-    #if defined(LED_PIN)
-      led.setInterval(100);
-    #endif
+    blinker.setState(STATE_WIFI_NOT_CONNECTED);
 
     if (millis()-wifiLastConnect > 10000) {
       debugI("Wifi reconnecting...");
@@ -661,9 +665,8 @@ void loop() {
         if (!mqttClient.connected()) {  // MQTT broker reconnect if not connected
           long now=millis();
           if (now - mqttLastConnect > 1000) {
-            #if defined(LED_PIN)
-              led.setInterval(500);
-            #endif
+            blinker.setState(STATE_MQTT_NOT_CONNECTED);
+            
             debugW("MQTT not connected, attempting connection to %s:%i", mqttServer.c_str(), config.MqttPort.getValue());
             mqttLastConnect = now;
 
@@ -693,9 +696,9 @@ void loop() {
             si.statusResponse.setCallback(mqttPublishStatusString);
 
           }
-          #if defined(LED_PIN)
-            led.setInterval(2000);
-          #endif
+          
+          // all systems are go! Start the knight rider animation loop
+          blinker.setState(KNIGHT_RIDER);
         }
       }
     }
