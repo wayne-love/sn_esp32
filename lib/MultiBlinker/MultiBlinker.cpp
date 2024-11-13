@@ -68,7 +68,7 @@ void MultiBlinker::run() {
 
 void MultiBlinker::updateLEDs() {
     if (numLeds == 1) {
-        // Blink the single LED using the interval value
+        // Blink the single LED using the interval value - where the interval is multiplied by the state (so it gets slower as the state increases)
         bool newState = !digitalRead(ledPins[0]);
         digitalWrite(ledPins[0], newState);
     } else if (numLeds == 4) {
@@ -91,6 +91,6 @@ void MultiBlinker::knightRider() {
     if (position == 3 || position == 0) {
         direction = -direction;
         // Keep the end LEDs on for a longer duration
-        vTaskDelay(150 / portTICK_PERIOD_MS); // Adjust the delay as needed
+        vTaskDelay(150 / portTICK_PERIOD_MS);
     }
 }
