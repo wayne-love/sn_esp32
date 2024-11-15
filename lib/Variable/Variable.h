@@ -1,5 +1,6 @@
 // lib/Variable/Variable.h
 #pragma once
+#include <Arduino.h>
 
 /**
  * @brief A template class for managing a value with update callbacks
@@ -11,6 +12,32 @@ private:
     T value;
     bool (*beforeUpdate)(T) = nullptr;    // Called before update with newValue, returns true to allow change
     void (*onUpdate)(T) = nullptr;        // Called after successful update with newValue
+    T (*stringConverter)(const String&) = nullptr;  // Allows custom string to T conversion
+
+    // Default converter implementations
+    static T defaultStringConverter(const String& str) {
+        if constexpr (std::is_same_v<T, int>) {
+            return str.toInt();
+        }
+        else if constexpr (std::is_same_v<T, float>) {
+            return str.toFloat();
+        }
+        else if constexpr (std::is_same_v<T, double>) {
+            return str.toDouble();
+        }
+        else if constexpr (std::is_same_v<T, long>) {
+            return str.toInt();
+        }
+        else if constexpr (std::is_same_v<T, String>) {
+            return str;
+        }
+        else if constexpr (std::is_same_v<T, bool>) {
+            return str.equalsIgnoreCase("true") || str == "1";
+        }
+        else {
+            return T(); // Default construct for unsupported types
+        }
+    }
 
 public:
     /**
@@ -50,6 +77,18 @@ public:
     }
 
     /**
+     * @brief Attempts to set value from string using configured converter
+     * @param strValue String value to convert and set
+     * @return true if value was updated, false if unchanged, invalid, or prevented
+     */
+    bool setValue(const String& strValue) {
+        if (stringConverter) {
+            return setValue(stringConverter(strValue));
+        }
+        return setValue(defaultStringConverter(strValue));
+    }
+
+    /**
      * @brief Sets the callback function to be called after value updates
      * @param newCallback Function pointer to call after successful updates
      */
@@ -78,4 +117,14 @@ public:
     void clearBeforeUpdate() {
         beforeUpdate = nullptr;
     }
+
+    /**
+     * @brief Sets the string conversion function for this type
+     * @param converter Function that converts String to type T
+     */
+    static void setStringConverter(T (*converter)(const String&)) {
+        stringConverter = converter;
+    }
+
+
 };
