@@ -561,11 +561,9 @@ void setup() {
     pinMode(EN_PIN, INPUT_PULLUP);
   #endif
 
-  #if defined(ENABLE_SERIAL)
-    Serial.begin(115200);
-    Serial.setDebugOutput(true);
-    Debug.setSerialEnabled(true);
-  #endif
+  Serial.begin(115200);
+  Serial.setDebugOutput(true);
+  Debug.setSerialEnabled(true);
 
   blinker.setState(STATE_NONE); // start with all LEDs off
   blinker.start();
