@@ -43,8 +43,8 @@ private:
     int _maxValue;
 
 public:
-    Setting(const char* name, int minValue = 10, int maxValue = 3600)
-        : _name(name), _minValue(minValue), _maxValue(maxValue) {}
+    Setting(const char* name, int initialValue, int minValue = 10, int maxValue = 3600)
+        : _name(name), _value(initialValue), _minValue(minValue), _maxValue(maxValue) {}
 
     int getValue() { return _value; }
 
@@ -65,11 +65,11 @@ public:
 class ControllerConfig {
 public:
     Setting<String> MqttServer = Setting<String>("MqttServer", "mqtt");
-    Setting<String> MqttPort = Setting<String>("MqttPort", "1883");
+    Setting<int> MqttPort = Setting<int>("MqttPort", 1883, 1, 65535);
     Setting<String> MqttUsername = Setting<String>("MqttUsername");
     Setting<String> MqttPassword = Setting<String>("MqttPassword");
     Setting<String> SpaName = Setting<String>("SpaName", "MySpa");
-    Setting<int> UpdateFrequency = Setting<int>("UpdateFrequency", 10, 300);
+    Setting<int> UpdateFrequency = Setting<int>("UpdateFrequency", 60, 10, 300);
 };
 
 class Config : public ControllerConfig {

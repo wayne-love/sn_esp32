@@ -31,6 +31,10 @@ void generateCommonAdJSON(
    json["device"]["identifiers"][0] = spa.spaSerialNumber;
    json["device"]["serial_number"] = spa.spaSerialNumber;
    json["device"]["name"] = spa.spaName;
+   json["device"]["manufacturer"] = spa.manufacturer;
+   json["device"]["model"] = spa.model;
+   json["device"]["sw_version"] = spa.sw_version;
+   json["device"]["configuration_url"] = spa.configuration_url;
    json["availability"]["topic"] = spa.availabilityTopic;
    if (!config.deviceClass.isEmpty()) json["device_class"] = config.deviceClass;
    if (!config.entityCategory.isEmpty()) json["entity_category"] = config.entityCategory;
@@ -111,8 +115,6 @@ void generateFanAdJSON(String& output, const AutoDiscoveryInformationTemplate& c
 void generateClimateAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic) {
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "climate");
-
-   json["name"]="";  ///TODO #49 - Need to work out how get HA to create climate.myspa without this.
 
    // Find the last character that is not a space or curly brace
    int lastIndex = config.valueTemplate.length() - 1;
