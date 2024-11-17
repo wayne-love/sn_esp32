@@ -1,15 +1,15 @@
-// lib/Variable/Variable.h
 #pragma once
 #include <Arduino.h>
 #include <Preferences.h>
+#include <type_traits>
 
 /**
- * @brief A template class for managing a value with update callbacks
+ * @brief Base class for read-only variables
  * @tparam T The type of value to store
  */
 template<typename T>
-class Variable {
-private:
+class ReadOnlyVariable {
+protected:
     T value;
     bool (*beforeUpdate)(T) = nullptr;    // Called before update with newValue, returns true to allow change
     void (*onUpdate)(T) = nullptr;        // Called after successful update with newValue
@@ -36,67 +36,34 @@ private:
             return str.equalsIgnoreCase("true") || str == "1";
         }
         else {
-            return T(); // Default construct for unsupported types
+            return T();
         }
     }
-
-protected:
-    /**
-     * @brief Sets the callback function to be called before value updates
-     * @param newCallback Function pointer to call before updates, returns true to allow change
-     */
-    void setBeforeUpdate(bool (*newCallback)(T)) {
-        beforeUpdate = newCallback;
-    }
-
-    /**
-     * @brief Clears the beforeUpdate callback
-     */
-    void clearBeforeUpdate() {
-        beforeUpdate = nullptr;
-    }
-
-    /**
-     * @brief Sets the string conversion function for this type
-     * @param converter Function that converts String to type T
-     */
-    static void setStringConverter(T (*converter)(const String&)) {
-        stringConverter = converter;
-    }
-
-public:
-    /**
-     * @brief Constructs a new Variable with an initial value and optional beforeUpdate callback
-     * @param initialValue The initial value to store (default constructed if not provided)
-     * @param beforeUpdateCallback Optional callback to validate updates (nullptr if not provided)
-     */
-    Variable(T initialValue = T(), bool (*beforeUpdateCallback)(T) = nullptr) 
-        : value(initialValue), beforeUpdate(beforeUpdateCallback) {}
-
-    /**
-     * @brief Gets the current stored value
-     * @return The current value
-     */
-    T getValue() const { return value; }
     
     /**
-     * @brief Attempts to set a new value, triggering callbacks if value changes
-     * @param newValue The value to set
-     * @return true if value was updated, false if unchanged or update prevented
+     * @brief Attempts to set a new value with validation and notification
+     * @param newValue The new value to set
+     * @return true if value was changed successfully or value is unchanged:
+     *         - Value was different from current
+     *         - BeforeUpdate callback allowed change (or no callback set)
+     *         - Value was updated and OnUpdate notified
+     *         Returns false if:
+     *         - BeforeUpdate callback prevented change
      */
     bool setValue(T newValue) {
-        if (value != newValue) {
-            bool allowUpdate = true;
-            if (beforeUpdate) {
-                allowUpdate = beforeUpdate(newValue);
+        if (this->value == newValue) {
+            return true;
+        }
+        bool allowUpdate = true;
+        if (beforeUpdate) {
+            allowUpdate = beforeUpdate(newValue);
+        }
+        if (allowUpdate) {
+            this->value = newValue;
+            if (onUpdate) {
+                onUpdate(this->value);
             }
-            if (allowUpdate) {
-                value = newValue;
-                if (onUpdate) {
-                    onUpdate(value);
-                }
-                return true;
-            }
+            return true;
         }
         return false;
     }
@@ -113,20 +80,71 @@ public:
         return setValue(defaultStringConverter(strValue));
     }
 
+public:
+    /**
+     * @brief Constructs a new ReadOnlyVariable
+     * @param initialValue Initial value (default constructed if not provided)
+     * @param beforeUpdateCallback Function pointer to call before updates, returns true to allow change
+     * @param onUpdateCallback Function pointer to call after successful updates
+     * @param stringConverterCallback Function pointer to convert string to T
+     */
+    ReadOnlyVariable(T initialValue = T(), bool (*beforeUpdateCallback)(T) = nullptr, void (*onUpdateCallback)(T) = nullptr, T (*stringConverterCallback)(const String&) = nullptr)
+        : value(initialValue), beforeUpdate(beforeUpdateCallback), onUpdate(onUpdateCallback), stringConverter(stringConverterCallback) {}
+
     /**
      * @brief Sets the callback function to be called after value updates
      * @param newCallback Function pointer to call after successful updates
      */
     void setOnUpdate(void (*newCallback)(T)) {
-        onUpdate = newCallback;
+        this->onUpdate = newCallback;
     }
 
     /**
      * @brief Clears the onUpdate callback
      */
     void clearOnUpdate() {
-        onUpdate = nullptr;
+        this->onUpdate = nullptr;
     }
+
+    /**
+     * @brief Sets the callback function to be called before value updates
+     * @param newCallback Function pointer to call before updates, returns true to allow change
+     */
+    void setBeforeUpdate(bool (*newCallback)(T)) {
+        this->beforeUpdate = newCallback;
+    }
+
+    /**
+     * @brief Clears the beforeUpdate callback
+     */
+    void clearBeforeUpdate() {
+        this->beforeUpdate = nullptr;
+    }
+
+    /**
+     * @brief Gets the current stored value
+     * @return The current value
+     */
+    T getValue() const { return value; }
+
+    // Allow implicit conversion to T
+    operator T() const { return value; }
+};
+
+/**
+ * @brief A template class for managing a value with update callbacks
+ * @tparam T The type of value to store
+ */
+template<typename T>
+class Variable : public ReadOnlyVariable<T> {
+public:
+    using ReadOnlyVariable<T>::setValue;  // Make setValue functions public
+
+    Variable(T initialValue = T(), bool (*beforeUpdateCallback)(T) = nullptr, void (*onUpdateCallback)(T) = nullptr, T (*stringConverterCallback)(const String&) = nullptr)
+        : ReadOnlyVariable<T>(initialValue, beforeUpdateCallback, onUpdateCallback, stringConverterCallback) {}
+
+
+
 };
 
 /**
@@ -238,33 +256,4 @@ public:
         }
         return false;
     }
-};
-
-
-/**
- * @brief A variable that can only be modified by its containing class
- * @tparam T The type of value to store
- */
-template<typename T>
-class ReadOnlyVariable : public Variable<T> {
-
-protected:
-    using Variable<T>::setValue;  // Bring setValue into protected scope
-    using Variable<T>::setOnUpdate; // Bring setOnUpdate into protected scope
-    using Variable<T>::setBeforeUpdate; // Bring setBeforeUpdate into protected scope
-    using Variable<T>::clearOnUpdate; // Bring clearOnUpdate into protected scope
-    using Variable<T>::clearBeforeUpdate; // Bring clearBeforeUpdate into protected scope   
-    using Variable<T>::stringConverter; // Bring stringConverter into protected scope
-
-public:
-    /**
-     * @brief Constructs a new ReadOnlyVariable
-     * @param initialValue Initial value (default constructed if not provided)
-     * @param beforeUpdateCallback Optional validation callback (nullptr if not provided)
-     */
-    ReadOnlyVariable(T initialValue = T(), bool (*beforeUpdateCallback)(T) = nullptr)
-        : Variable<T>(initialValue, beforeUpdateCallback) {}
-
-    // Inherit public getValue
-    using Variable<T>::getValue;
 };
