@@ -42,9 +42,12 @@ private:
      */
     void clearSerialReadBuffer();
 
+    /// @brief If the result registers have been modified locally, need to do a fress pull from the controller
+    bool _resultRegistersDirty = true;
 
 
     bool setSTMP(int temp);
+
     
 public:
     /**
@@ -376,9 +379,10 @@ public:
     ReadOnlyVariable<int> FiltSetHrs;
     /// @brief Filter block duration (hours)
     ReadOnlyVariable<int> FiltBlockHrs;
+
+
     /// @brief Water temperature set point ('C)
     Variable<int> STMP;
-
 
 
     // 1 = 12 hrs
