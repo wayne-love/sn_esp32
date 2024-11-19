@@ -5,6 +5,9 @@ Spa::Spa() : port(SPA_SERIAL) {
     SPA_SERIAL.setTxBufferSize(1024);  //required for unit testing
     SPA_SERIAL.begin(38400, SERIAL_8N1, RX_PIN, TX_PIN);
     SPA_SERIAL.setTimeout(250);
+
+    STMP.setBeforeUpdate(this, &Spa::setSTMP);
+
 }
 
 void Spa::sendCommand(String cmd) {
@@ -24,7 +27,7 @@ void Spa::sendCommand(String cmd) {
     while (port.available()==0 and millis()<timeout) {}
     debugD("Finish waiting");
 
-    //_resultRegistersDirty = true; // we're trying to write to the registers so we can assume that they will now be dirty
+    _resultRegistersDirty = true; // we're trying to write to the registers so we can assume that they will now be dirty
 }
 
 String Spa::sendCommandReturnResult(String cmd) {
