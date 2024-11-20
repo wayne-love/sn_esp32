@@ -472,15 +472,15 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   } else if (property == "heatpump_mode") {
     si.setHPMP(p);
   } else if (property == "pump1") {
-    si.setRB_TP_Pump1(p=="OFF"?0:1);
+    si.setRB_TP_Pump1(p=="OFF"?0:3);
   } else if (property == "pump2") {
-    si.setRB_TP_Pump2(p=="OFF"?0:1);
+    si.setRB_TP_Pump2(p=="OFF"?0:3);
   } else if (property == "pump3") {
-    si.setRB_TP_Pump3(p=="OFF"?0:1);
+    si.setRB_TP_Pump3(p=="OFF"?0:3);
   } else if (property == "pump4") {
-    si.setRB_TP_Pump4(p=="OFF"?0:1);
+    si.setRB_TP_Pump4(p=="OFF"?0:3);
   } else if (property == "pump5") {
-    si.setRB_TP_Pump5(p=="OFF"?0:1);
+    si.setRB_TP_Pump5(p=="OFF"?0:3);
   } else if (property == "heatpump_auxheat") {
     si.setHELE(p=="OFF"?0:1);
   } else if (property == "status_datetime") {
