@@ -8,7 +8,7 @@
 #include "SpaProperties.h"
 
 extern RemoteDebug Debug;
-#define FAILEDREADFREQUENCY 1000 //(ms) Frequency to retry on a failed read of the status registers.
+#define FAILEDREADFREQUENCY 15000 //(ms) Frequency to retry on a failed read of the status registers.
 
 class SpaInterface : public SpaProperties {
     private:
@@ -81,8 +81,8 @@ class SpaInterface : public SpaProperties {
         /// @brief False until first successful read of the registers.
         bool _initialised = false;
 
-        /// @brief If the result registers have been modified locally, need to do a fress pull from the controller
-        bool _resultRegistersDirty = true;
+        /// @brief If the result registers have been modified locally, need to do a fresh pull from the controller
+        bool _resultRegistersDirty = false;
 
    
         void (*updateCallback)() = nullptr;
