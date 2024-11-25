@@ -9,6 +9,7 @@
 #include "SpaInterface.h"
 #include "SpaUtils.h"
 #include "Config.h"
+#include "MQTTClientWrapper.h"
 
 //define stringify function
 #define xstr(a) str(a)
@@ -19,7 +20,7 @@ extern RemoteDebug Debug;
 class WebUI {
     public:
         std::unique_ptr<WebServer> server;
-        WebUI(SpaInterface *spa, Config *config);
+        WebUI(SpaInterface *spa, Config *config, MQTTClientWrapper *mqttClient);
 
         /// @brief Set the function to be called when properties have been updated.
         /// @param f
@@ -30,6 +31,7 @@ class WebUI {
     private:
         SpaInterface *_spa;
         Config *_config;
+        MQTTClientWrapper *_mqttClient;
         void (*_wifiManagerCallback)() = nullptr;
 
         const char* getError();
@@ -52,8 +54,11 @@ function fetchStatus() {
     .then(response => response.json())
     .then(value_json => {
       document.getElementById('temperatures_water').innerText = value_json.temperatures.water + "\u00B0C";
-      document.getElementById('status_state').innerText = value_json.status.state;
       document.getElementById('temperatures_setPoint').value = value_json.temperatures.setPoint;
+      document.getElementById('status_state').innerText = value_json.status.state;
+      document.getElementById('status_controller').innerText = value_json.status.controller;
+      document.getElementById('status_serial').innerText = value_json.status.serial;
+      document.getElementById('status_mqtt').innerText = value_json.status.mqtt;
     })
     .catch(error => console.error('Error fetching status:', error));
 }
@@ -87,10 +92,16 @@ window.onload = function() {
 </head>
 <body>
 <h1>ESP32 Spa Controller</h1>
-<p>Spa temperature is - <span id="temperatures_water">Loading...</span></p>
-<p>Spa status is - <span id="status_state">Loading...</span></p>
-<p>Set Temperature: <input type="number" id="temperatures_setPoint" step="0.2" min="10" max="41">
-<button onclick="updateTempSetPoint();">Set</button></p>
+<table>
+<tr><td>Spa status:</td><td><span id="status_state">Loading...</span></td></tr>
+<tr><td>Spa temperature:</td><td><span id="temperatures_water">Loading...</span></td></tr>
+<tr><td>Set Temperature:</td><td><input type="number" id="temperatures_setPoint" step="0.2" min="10" max="41">
+<button onclick="updateTempSetPoint();">Set</button></td></tr>
+<tr><td>Spa controller:</td><td><span id="status_controller">Loading...</span></td></tr>
+<tr><td>Spa serial:</td><td><span id="status_serial">Loading...</span></td></tr>
+<tr><td>MQTT status:</td><td><span id="status_mqtt">Loading...</span></td></tr>
+<tr><td>Build:</td><td>)" xstr(BUILD_INFO) R"(</td></tr>
+</table>
 <p><a href="/json.html">Spa JSON HTML</a></p>
 <p><a href="/json">Spa JSON</a></p>
 <p><a href="/status">Spa Response</a></p>
@@ -99,7 +110,6 @@ window.onload = function() {
 <p><a href="/fota">Firmware Update</a></p>
 <p><a href="#" onclick="confirmAction('/wifi-manager'); return false;">Wi-Fi Manager</a></p>
 <p><a href="#" onclick="confirmAction('/reboot'); return false;">Reboot ESP</a></p>
-<p>Build: )" xstr(BUILD_INFO) R"(</p>
 </body>
 </html>)";
 
@@ -178,6 +188,13 @@ input[type=file]::file-selector-button, input[type="submit"], a, button {
 }
 input[type=file]::file-selector-button:hover, input[type="submit"]:hover, a:hover, button:hover {
     background-color: #0056b3;
+}
+table, td, th {
+  border: 1px solid;
+  padding: 5px;
+}
+table {
+  border-collapse: collapse;
 })";
 
 static constexpr const char *rebootPage PROGMEM =

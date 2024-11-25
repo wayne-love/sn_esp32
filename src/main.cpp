@@ -4,7 +4,6 @@
 #include <WiFiClient.h>
 #include <RemoteDebug.h>
 #include <WiFiManager.h>
-#include <PubSubClient.h>
 
 #include "MultiBlinker.h"
 
@@ -36,7 +35,7 @@ Config config;
 WiFiClient wifi;
 MQTTClientWrapper mqttClient(wifi);
 
-WebUI ui(&si, &config);
+WebUI ui(&si, &config, &mqttClient);
 
 
 
@@ -444,7 +443,7 @@ void mqttPublishStatusString(String s){
 
 void mqttPublishStatus() {
   String json;
-  if (generateStatusJson(si, json)) {
+  if (generateStatusJson(si, mqttClient, json, false)) {
     mqttClient.publish(mqttStatusTopic.c_str(),json.c_str());
   } else {
     debugD("Error generating json");
