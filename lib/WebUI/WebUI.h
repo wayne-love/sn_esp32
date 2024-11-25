@@ -58,6 +58,7 @@ function fetchStatus() {
       document.getElementById('status_state').innerText = value_json.status.state;
       document.getElementById('status_controller').innerText = value_json.status.controller;
       document.getElementById('status_serial').innerText = value_json.status.serial;
+      document.getElementById('status_siInitialised').innerText = value_json.status.siInitialised;
       document.getElementById('status_mqtt').innerText = value_json.status.mqtt;
     })
     .catch(error => console.error('Error fetching status:', error));
@@ -98,7 +99,8 @@ window.onload = function() {
 <tr><td>Set Temperature:</td><td><input type="number" id="temperatures_setPoint" step="0.2" min="10" max="41">
 <button onclick="updateTempSetPoint();">Set</button></td></tr>
 <tr><td>Spa controller:</td><td><span id="status_controller">Loading...</span></td></tr>
-<tr><td>Spa serial:</td><td><span id="status_serial">Loading...</span></td></tr>
+<tr><td>Spa serial number:</td><td><span id="status_serial">Loading...</span></td></tr>
+<tr><td>Spa interface initialised:</td><td><span id="status_siInitialised">Loading...</span></td></tr>
 <tr><td>MQTT status:</td><td><span id="status_mqtt">Loading...</span></td></tr>
 <tr><td>Build:</td><td>)" xstr(BUILD_INFO) R"(</td></tr>
 </table>

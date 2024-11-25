@@ -102,6 +102,7 @@ bool generateStatusJson(SpaInterface &si, MQTTClientWrapper &mqttClient, String 
   json["status"]["spaMode"] = si.getMode();
   json["status"]["controller"] = si.getModel();
   json["status"]["serial"] = si.getSerialNo1() + "-" + si.getSerialNo2();
+  json["status"]["siInitialised"] = si.isInitialised()?"true":"false";
   json["status"]["mqtt"] = mqttClient.connected()?"connected":"disconnected";
 
   json["heatpump"]["mode"] = si.HPMPStrings[si.getHPMP()];
