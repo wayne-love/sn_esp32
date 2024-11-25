@@ -1,7 +1,5 @@
 #include "MultiBlinker.h"
 
-#include <RemoteDebug.h>
-
 MultiBlinker::MultiBlinker(int led1, int led2, int led3, int led4) {
     ledPins[0] = led1;
     ledPins[1] = led2;
@@ -24,7 +22,16 @@ void MultiBlinker::setState(int state) {
         return;
     }
     currentState = state;
-    interval = INTERVAL_MULTIPLIER * state;
+    updateLEDs();
+    if (numLeds == 1) {
+        if (currentState == -1) {
+            interval = 2000;
+        } else {
+            interval = INTERVAL_MULTIPLIER * state;
+        }
+    } else {
+        interval = MULTI_BLINKER_INTERVAL;
+    }
 }
 
 void MultiBlinker::start() {
@@ -54,13 +61,9 @@ void MultiBlinker::runTask(void *pvParameters) {
 void MultiBlinker::run() {
     while (running) {
         ulong currentTime = millis();
-        if (currentTime - lastUpdate >= MULTI_BLINKER_INTERVAL) {
+        if (currentTime - lastUpdate >= interval) {
             lastUpdate = currentTime;
-            if (currentState == -1) {
-                knightRider();
-            } else {
-                updateLEDs();
-            }
+            updateLEDs();
         }
         vTaskDelay(10 / portTICK_PERIOD_MS); // Small delay to prevent task from hogging the CPU
     }
@@ -72,8 +75,12 @@ void MultiBlinker::updateLEDs() {
         bool newState = !digitalRead(ledPins[0]);
         digitalWrite(ledPins[0], newState);
     } else if (numLeds == 4) {
-        for (int i = 0; i < 4; i++) {
-            digitalWrite(ledPins[i], (currentState & (1 << (3 - i))) ? HIGH : LOW);
+        if (currentState == -1) {
+            knightRider();
+        } else {
+            for (int i = 0; i < 4; i++) {
+                digitalWrite(ledPins[i], (currentState & (1 << (3 - i))) ? HIGH : LOW);
+            }
         }
     }
 }

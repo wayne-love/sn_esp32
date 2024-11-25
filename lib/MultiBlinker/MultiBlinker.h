@@ -13,13 +13,13 @@
 
 // Define error state constants
                                                 // LED State:
-const int KNIGHT_RIDER = -1;                    // Knight Rider animation
+const int KNIGHT_RIDER = -1;                    // Knight Rider animation or 2000ms blink
 const int STATE_NONE = 0;                       // ON: (nothing)
-const int STATE_STARTED_WIFI_AP     = 1;        // ON: 4
-const int STATE_WIFI_NOT_CONNECTED  = 2;        // ON: 3
-const int STATE_MQTT_NOT_CONNECTED  = 3;        // ON: 4, 3
+const int STATE_STARTED_WIFI_AP     = 15;       // ON: ALL or 3750ms blink
+const int STATE_WIFI_NOT_CONNECTED  = 1;        // ON: 4 or 250ms blink
+const int STATE_MQTT_NOT_CONNECTED  = 4;        // ON: 2 or 1000ms blink
 
-const int INTERVAL_MULTIPLIER = 500;
+const int INTERVAL_MULTIPLIER = 250;
 const int MULTI_BLINKER_INTERVAL = 100;
 
 class MultiBlinker {
