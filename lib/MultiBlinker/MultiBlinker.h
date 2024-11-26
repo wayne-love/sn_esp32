@@ -2,6 +2,9 @@
 #define MULTIBLINKER_H
 
 #include <Arduino.h>
+#include <RemoteDebug.h>
+
+extern RemoteDebug Debug;
 
 // These are the four LEDs on the PCB
 #ifdef SPACTRLPCB
@@ -13,14 +16,18 @@
 
 // Define error state constants
                                                 // LED State:
-const int KNIGHT_RIDER = -1;                    // Knight Rider animation
+const int KNIGHT_RIDER = -1;                    // Knight Rider animation or 2000ms blink
 const int STATE_NONE = 0;                       // ON: (nothing)
-const int STATE_STARTED_WIFI_AP     = 1;        // ON: 4
-const int STATE_WIFI_NOT_CONNECTED  = 2;        // ON: 3
-const int STATE_MQTT_NOT_CONNECTED  = 3;        // ON: 4, 3
+const int STATE_STARTED_WIFI_AP     = 15;       // ON: ALL or solid on
+const int STATE_WIFI_NOT_CONNECTED  = 1;        // ON: 4 or 100ms blink
+const int STATE_MQTT_NOT_CONNECTED  = 4;        // ON: 2 or 500ms blink
 
-const int INTERVAL_MULTIPLIER = 500;
 const int MULTI_BLINKER_INTERVAL = 100;
+
+struct LEDPattern {
+    u_int offTime; // Time in milliseconds the LED is off
+    u_int onTime;  // Time in milliseconds the LED is on
+};
 
 class MultiBlinker {
 public:
@@ -37,9 +44,7 @@ private:
 
     int ledPins[4];
     int numLeds;
-    int interval = 0;
     int currentState = STATE_NONE;
-    int previousState = -2; // Initialize to a value that is not a valid state
     bool running = false;
     ulong lastUpdate = 0;
     TaskHandle_t taskHandle = NULL;
