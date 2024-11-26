@@ -125,12 +125,13 @@ void WebUI::begin() {
     });
 
     server->on("/set", HTTP_POST, [&]() {
+        debugD("uri: %s", server->uri().c_str());
         //In theory with minor modification, we can reuse mqttCallback here
         //for (uint8_t i = 0; i < server->args(); i++) updateSpaSetting("set/" + server->argName(0), server->arg(0));
         if (server->hasArg("temperatures_setPoint")) {
             float newTemperature = server->arg("temperatures_setPoint").toFloat();
             SpaInterface &si = *_spa;
-            si.setSTMP(int(newTemperature*10));
+            si.STMP.sendValue(int(newTemperature*10));
             server->send(200, "text/plain", "Temperature updated");
         } else {
             server->send(400, "text/plain", "Invalid temperature value");
