@@ -92,9 +92,9 @@ bool generateStatusJson(SpaInterface &si, String &output, bool prettyJson) {
   json["temperatures"]["heatpumpCondensor"] = si.getHP_Condensor();
 
   json["power"]["voltage"] = si.getMainsVoltage();
-  json["power"]["current"]= si.getMainsCurrent() / 10.0;
-  json["power"]["power"] = si.getPower() / 10.0;
-  json["power"]["totalenergy"]= si.getPower_kWh() / 100.0; // convert to kWh to Wh.
+  json["power"]["current"]= si.getMainsCurrent() / 10.0; // convert value to A
+  json["power"]["power"] = si.getPower() / 10.0; // convert value to W
+  json["power"]["totalenergy"]= si.getPower_kWh() / 100.0; // convert value to kWh.
 
   json["status"]["heatingActive"] = si.getRB_TP_Heater()? "ON": "OFF";
   json["status"]["ozoneActive"] = si.getRB_TP_Ozone()? "ON": "OFF";
