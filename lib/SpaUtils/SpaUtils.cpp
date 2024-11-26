@@ -81,7 +81,7 @@ bool getPumpModes(SpaInterface &si, int pumpNumber, JsonObject pumps) {
   return true;
 }
 
-bool generateStatusJson(SpaInterface &si, String &output, bool prettyJson) {
+bool generateStatusJson(SpaInterface &si, MQTTClientWrapper &mqttClient, String &output, bool prettyJson) {
   JsonDocument json;
 
   json["temperatures"]["setPoint"] = si.getSTMP() / 10.0;
@@ -100,6 +100,10 @@ bool generateStatusJson(SpaInterface &si, String &output, bool prettyJson) {
   json["status"]["ozoneActive"] = si.getRB_TP_Ozone()? "ON": "OFF";
   json["status"]["state"] = si.getStatus();
   json["status"]["spaMode"] = si.getMode();
+  json["status"]["controller"] = si.getModel();
+  json["status"]["serial"] = si.getSerialNo1() + "-" + si.getSerialNo2();
+  json["status"]["siInitialised"] = si.isInitialised()?"true":"false";
+  json["status"]["mqtt"] = mqttClient.connected()?"connected":"disconnected";
 
   json["heatpump"]["mode"] = si.HPMPStrings[si.getHPMP()];
   json["heatpump"]["auxheat"] = si.getHELE()==0? "OFF" : "ON";

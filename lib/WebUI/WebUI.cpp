@@ -1,8 +1,9 @@
 #include "WebUI.h"
 
-WebUI::WebUI(SpaInterface *spa, Config *config) {
+WebUI::WebUI(SpaInterface *spa, Config *config, MQTTClientWrapper *mqttClient) {
     _spa = spa;
     _config = config;
+    _mqttClient = mqttClient;
 }
 
 void WebUI::setWifiManagerCallback(void (*f)()) {
@@ -28,8 +29,7 @@ void WebUI::begin() {
         debugD("uri: %s", server->uri().c_str());
         server->sendHeader("Connection", "close");
         String json;
-        SpaInterface &si = *_spa;
-        if (generateStatusJson(si, json, true)) {
+        if (generateStatusJson(*_spa, *_mqttClient, json, true)) {
             server->send(200, "text/json", json.c_str());
         } else {
             server->send(200, "text/text", "Error generating json");
@@ -129,13 +129,11 @@ void WebUI::begin() {
         //for (uint8_t i = 0; i < server->args(); i++) updateSpaSetting("set/" + server->argName(0), server->arg(0));
         if (server->hasArg("temperatures_setPoint")) {
             float newTemperature = server->arg("temperatures_setPoint").toFloat();
-            SpaInterface &si = *_spa;
-            si.setSTMP(int(newTemperature*10));
+            _spa->setSTMP(int(newTemperature*10));
             server->send(200, "text/plain", "Temperature updated");
         }
         else if (server->hasArg("status_datetime")) {
             String p = server->arg("status_datetime");
-            SpaInterface &si = *_spa;
             tmElements_t tm;
             tm.Year=CalendarYrToTm(p.substring(0,4).toInt());
             tm.Month=p.substring(5,7).toInt();
@@ -143,7 +141,7 @@ void WebUI::begin() {
             tm.Hour=p.substring(11,13).toInt();
             tm.Minute=p.substring(14,16).toInt();
             tm.Second=p.substring(17).toInt();
-            si.setSpaTime(makeTime(tm));
+            _spa->setSpaTime(makeTime(tm));
             server->send(200, "text/plain", "Date/Time updated");
         }
         else {
@@ -166,9 +164,8 @@ void WebUI::begin() {
 
     server->on("/status", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
-        SpaInterface &si = *_spa;
         server->sendHeader("Connection", "close");
-        server->send(200, "text/plain", si.statusResponse.getValue());
+        server->send(200, "text/plain", _spa->statusResponse.getValue());
     });
 
     server->begin();
