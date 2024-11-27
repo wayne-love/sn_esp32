@@ -252,53 +252,25 @@ void mqttHaAutoDiscovery() {
   generateClimateAdJSON(output, ADConf, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-
   ADConf.deviceClass = "";
   ADConf.entityCategory = "";
-  if (si.getPump1InstallState().startsWith("1") && !(si.getPump1InstallState().endsWith("4"))) {
-     //switchADPublish(mqttClient, spa, "Pump 1", "{{ value_json.pumps.pump1.state }}", "pump1");
-    ADConf.displayName = "Pump 1";
-    ADConf.valueTemplate = "{{ value_json.pumps.pump1.state }}";
-    ADConf.propertyId = "pump1";
-    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
-    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
-  }
-
-  if (si.getPump2InstallState().startsWith("1") && !(si.getPump2InstallState().endsWith("4"))) {
-    //switchADPublish(mqttClient, spa, "Pump 2","{{ value_json.pumps.pump2.state }}", "pump2");
-    ADConf.displayName = "Pump 2";
-    ADConf.valueTemplate = "{{ value_json.pumps.pump2.state }}";
-    ADConf.propertyId = "pump2";
-    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
-    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
-  }
-
-  if (si.getPump3InstallState().startsWith("1") && !(si.getPump3InstallState().endsWith("4"))) {
-    //switchADPublish(mqttClient, spa, "Pump 3", "{{ value_json.pumps.pump3.state }}", "pump3");
-    ADConf.displayName = "Pump 3";
-    ADConf.valueTemplate = "{{ value_json.pumps.pump3.state }}";
-    ADConf.propertyId = "pump3";
-    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
-    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
-  }
-
-  if (si.getPump4InstallState().startsWith("1") && !(si.getPump4InstallState().endsWith("4"))) {
-    //switchADPublish(mqttClient, spa, "Pump 4", "{{ value_json.pumps.pump4.state }}", "pump4");
-    ADConf.displayName = "Pump 4";
-    ADConf.valueTemplate = "{{ value_json.pumps.pump4.state }}";
-    ADConf.propertyId = "pump4";
-    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
-    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
-  }
-
-  if (si.getPump5InstallState().startsWith("1") && !(si.getPump5InstallState().endsWith("4"))) {
-    //switchADPublish(mqttClient, spa, "Pump 5", "{{ value_json.pumps.pump5.state }}", "pump5");
-    ADConf.displayName = "Pump 5";
-    ADConf.valueTemplate = "{{ value_json.pumps.pump5.state }}";
-    ADConf.propertyId = "pump5";
-    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
-    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
-
+  for (int pumpNumber = 1; pumpNumber <= 5; pumpNumber++) {
+    String pumpInstallState = (si.*(pumpInstallStateFunctions[pumpNumber - 1]))();
+    if (pumpInstallState.startsWith("1") && !(pumpInstallState.endsWith("4"))) {
+      ADConf.displayName = "Pump " + String(pumpNumber);
+      if (getPumpSpeedType(pumpInstallState) == "1") {
+        ADConf.propertyId = "pump" + String(pumpNumber) + "_state";
+        ADConf.valueTemplate = "{{ value_json.pumps.pump" + String(pumpNumber) + ".state }}";
+        generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
+        mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
+      } else {
+        ADConf.propertyId = "pump" + String(pumpNumber);
+        ADConf.valueTemplate = "{{ value_json.pumps.pump" + String(pumpNumber) + " }}";
+        const std::array<int, 0> emptyOptions;
+        generateFanAdJSON(output, ADConf, spa, discoveryTopic, getPumpSpeedMin(pumpInstallState), getPumpSpeedMax(pumpInstallState), emptyOptions);
+        mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
+      }
+    }
   }
 
   if (si.getHP_Present()) {
@@ -419,7 +391,7 @@ void mqttHaAutoDiscovery() {
   ADConf.propertyId = "blower";
   ADConf.deviceClass = "";
   ADConf.entityCategory = "";
-  generateFanAdJSON(output, ADConf, spa, discoveryTopic);
+  generateFanAdJSON(output, ADConf, spa, discoveryTopic, 1, 5, si.blowerStrings);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //selectADPublish(mqttClient, spa, "Spa Mode", "{{ value_json.status.spaMode }}", "status_spaMode", "", "", spaModeStrings);
@@ -470,16 +442,26 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     si.setSTMP(int(p.toFloat()*10));
   } else if (property == "heatpump_mode") {
     si.setHPMP(p);
-  } else if (property == "pump1") {
+  } else if (property == "pump1_state") {
     si.setRB_TP_Pump1(p=="OFF"?0:1);
-  } else if (property == "pump2") {
+  } else if (property == "pump1_speed") {
+    si.setRB_TP_Pump1(p.toInt());
+  } else if (property == "pump2_state") {
     si.setRB_TP_Pump2(p=="OFF"?0:1);
-  } else if (property == "pump3") {
+  } else if (property == "pump2_speed") {
+    si.setRB_TP_Pump2(p.toInt());
+  } else if (property == "pump3_state") {
     si.setRB_TP_Pump3(p=="OFF"?0:1);
-  } else if (property == "pump4") {
+  } else if (property == "pump3_speed") {
+    si.setRB_TP_Pump3(p.toInt());
+  } else if (property == "pump4_state") {
     si.setRB_TP_Pump4(p=="OFF"?0:1);
-  } else if (property == "pump5") {
+  } else if (property == "pump4_speed") {
+    si.setRB_TP_Pump4(p.toInt());
+  } else if (property == "pump5_state") {
     si.setRB_TP_Pump5(p=="OFF"?0:1);
+  } else if (property == "pump5_speed") {
+    si.setRB_TP_Pump5(p.toInt());
   } else if (property == "heatpump_auxheat") {
     si.setHELE(p=="OFF"?0:1);
   } else if (property == "status_datetime") {

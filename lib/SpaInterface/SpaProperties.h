@@ -1134,6 +1134,7 @@ public:
 
     int getRB_TP_Blower() { return RB_TP_Blower.getValue(); }
     void setRB_TP_BlowerCallback(void (*callback)(int)) { RB_TP_Blower.setCallback(callback); }
+    const std::array <String, 2> blowerStrings = {"Variable", "Ramp"};
 
     int getRB_TP_Light() { return RB_TP_Light.getValue(); }
     void setRB_TP_LightCallback(void (*callback)(int)) { RB_TP_Light.setCallback(callback); }

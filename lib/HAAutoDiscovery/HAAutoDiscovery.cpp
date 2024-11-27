@@ -79,39 +79,6 @@ void generateSwitchAdJSON(String& output, const AutoDiscoveryInformationTemplate
    serializeJson(json, output);
 }
 
-
-
-void generateFanAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic) {
-   JsonDocument json;
-   generateCommonAdJSON(json, config, spa, discoveryTopic, "fan");
-
-   // Find the last character that is not a space or curly brace
-   int lastIndex = config.valueTemplate.length() - 1;
-   while (lastIndex >= 0 && (config.valueTemplate[lastIndex] == ' ' || config.valueTemplate[lastIndex] == '}')) {
-      lastIndex--;
-   }
-   json["state_value_template"] = config.valueTemplate.substring(0, lastIndex + 1) + ".state" + config.valueTemplate.substring(lastIndex + 1);
-   json["command_topic"] = spa.commandTopic + "/" + config.propertyId + "_state";
-
-   json["percentage_state_topic"] = spa.stateTopic;
-   json["percentage_command_topic"] = spa.commandTopic + "/" + config.propertyId + "_speed";
-   json["percentage_value_template"] = "{{ value_json."+ config.propertyId + ".speed }}";
-
-   json["preset_mode_state_topic"] = spa.stateTopic;
-   json["preset_mode_command_topic"] = spa.commandTopic + "/" + config.propertyId + "_mode";
-   json["preset_mode_value_template"] = "{{ value_json."+ config.propertyId + ".mode }}";
-
-   JsonArray modes = json["preset_modes"].to<JsonArray>();
-   modes.add("Variable");
-   modes.add("Ramp");
-   json["speed_range_min"]=1;
-   json["speed_range_max"]=5;
-
-   serializeJson(json, output);
-}
-
-
-
 void generateClimateAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic) {
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "climate");

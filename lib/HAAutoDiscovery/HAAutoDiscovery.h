@@ -52,9 +52,39 @@ void generateSelectAdJSON(String& output, const AutoDiscoveryInformationTemplate
    serializeJson(json, output);
 }
 
+//template <typename T, size_t N>
+//constexpr size_t size(T (&)[N]) { return N; }
+template <typename T, size_t N>
+void generateFanAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic, int min, int max, const std::array<T, N>& modes) {
+   JsonDocument json;
+   generateCommonAdJSON(json, config, spa, discoveryTopic, "fan");
 
-void generateFanAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic);
+   // Find the last character that is not a space or curly brace
+   int lastIndex = config.valueTemplate.length() - 1;
+   while (lastIndex >= 0 && (config.valueTemplate[lastIndex] == ' ' || config.valueTemplate[lastIndex] == '}')) {
+      lastIndex--;
+   }
+   json["state_value_template"] = config.valueTemplate.substring(0, lastIndex + 1) + ".state" + config.valueTemplate.substring(lastIndex + 1);
+   json["command_topic"] = spa.commandTopic + "/" + config.propertyId + "_state";
 
+   json["percentage_state_topic"] = spa.stateTopic;
+   json["percentage_command_topic"] = spa.commandTopic + "/" + config.propertyId + "_speed";
+   json["percentage_value_template"] = "{{ value_json."+ config.propertyId + ".speed }}";
+
+   if (modes.size() > 0) {
+      json["preset_mode_state_topic"] = spa.stateTopic;
+      json["preset_mode_command_topic"] = spa.commandTopic + "/" + config.propertyId + "_mode";
+      json["preset_mode_value_template"] = "{{ value_json."+ config.propertyId + ".mode }}";
+
+      JsonArray jsonModes = json["preset_modes"].to<JsonArray>();
+      for (const auto& mode : modes) jsonModes.add(mode);
+   }
+
+   json["speed_range_min"]=min;
+   json["speed_range_max"]=max;
+
+   serializeJson(json, output);
+}
 
 template <typename T, size_t N>
 void generateLightAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic, const std::array<T, N>& colorModes) {
@@ -95,7 +125,6 @@ void generateLightAdJSON(String& output, const AutoDiscoveryInformationTemplate&
 
    serializeJson(json, output);
 }
-
 
 void generateClimateAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic);
 
