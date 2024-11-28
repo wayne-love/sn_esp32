@@ -67,9 +67,14 @@ void generateFanAdJSON(String& output, const AutoDiscoveryInformationTemplate& c
    json["state_value_template"] = config.valueTemplate.substring(0, lastIndex + 1) + ".state" + config.valueTemplate.substring(lastIndex + 1);
    json["command_topic"] = spa.commandTopic + "/" + config.propertyId + "_state";
 
-   json["percentage_state_topic"] = spa.stateTopic;
-   json["percentage_command_topic"] = spa.commandTopic + "/" + config.propertyId + "_speed";
-   json["percentage_value_template"] = "{{ value_json."+ config.propertyId + ".speed }}";
+    if (max > min) {
+        json["percentage_state_topic"] = spa.stateTopic;
+        json["percentage_command_topic"] = spa.commandTopic + "/" + config.propertyId + "_speed";
+        json["percentage_value_template"] = "{{ value_json."+ config.propertyId + ".speed }}";
+
+        json["speed_range_min"]=min;
+        json["speed_range_max"]=max;
+    }
 
    if (modes.size() > 0) {
       json["preset_mode_state_topic"] = spa.stateTopic;
@@ -80,8 +85,9 @@ void generateFanAdJSON(String& output, const AutoDiscoveryInformationTemplate& c
       for (const auto& mode : modes) jsonModes.add(mode);
    }
 
-   json["speed_range_min"]=min;
-   json["speed_range_max"]=max;
+    if (config.propertyId.startsWith("pump")) {
+      json["icon"] = "mdi:pump";
+   }
 
    serializeJson(json, output);
 }
