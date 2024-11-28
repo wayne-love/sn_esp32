@@ -256,16 +256,12 @@ void mqttHaAutoDiscovery() {
   ADConf.entityCategory = "";
   for (int pumpNumber = 1; pumpNumber <= 5; pumpNumber++) {
     String pumpInstallState = (si.*(pumpInstallStateFunctions[pumpNumber - 1]))();
-    if (pumpInstallState.startsWith("1") && !(pumpInstallState.endsWith("4"))) {
+    if (pumpInstallState.startsWith("1-")) {
       ADConf.displayName = "Pump " + String(pumpNumber);
       ADConf.propertyId = "pump" + String(pumpNumber);
       ADConf.valueTemplate = "{{ value_json.pumps.pump" + String(pumpNumber) + " }}";
       const std::array<int, 0> emptyOptions;
-      if (getPumpSpeedType(pumpInstallState) == "1") {
-        generateFanAdJSON(output, ADConf, spa, discoveryTopic, 0, 0, emptyOptions);
-      } else {
-        generateFanAdJSON(output, ADConf, spa, discoveryTopic, getPumpSpeedMin(pumpInstallState), getPumpSpeedMax(pumpInstallState), emptyOptions);
-      }
+      generateFanAdJSON(output, ADConf, spa, discoveryTopic, getPumpSpeedMin(pumpInstallState), getPumpSpeedMax(pumpInstallState), emptyOptions);
       mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
     }
   }

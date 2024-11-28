@@ -10,6 +10,7 @@
 #include "Config.h"
 #include <PubSubClient.h>
 #include "MQTTClientWrapper.h"
+#include <vector>
 
 extern RemoteDebug Debug;
 
@@ -18,8 +19,11 @@ int convertToInteger(String &timeStr);
 bool getPumpModesJson(SpaInterface &si, int pumpNumber, JsonObject pumps);
 
 bool getPumpInstalledState(String pumpState);
-String getPumpSpeedType(String pumpState);
-String getPumpPossibleStates(String pumpState);
+int getPumpSpeeds(String pumpState);
+const std::vector<String> pumpStates = {"OFF", "ON", "LOW", "HIGH", "AUTO"};
+std::vector<int> getPumpPossibleStates(String pumpState);
+std::vector<String> getPumpPossibleStateStrings(String pumpInstallState);
+int getPumpSpeedFromStateString(String state);
 int getPumpSpeedMax(String pumpState);
 int getPumpSpeedMin(String pumpState);
 

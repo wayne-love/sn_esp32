@@ -58,28 +58,18 @@ bool getPumpModesJson(SpaInterface &si, int pumpNumber, JsonObject pumps) {
   pumpKey[5] = '\0';  // Null-terminate the string
 
   pumps[pumpKey]["installed"] = getPumpInstalledState(pumpInstallState);
-  pumps[pumpKey]["speedType"] = getPumpSpeedType(pumpInstallState);
+  int speeds =  getPumpSpeeds(pumpInstallState);
+  pumps[pumpKey]["speeds"] = speeds;
 
-  String possibleStates = getPumpPossibleStates(pumpInstallState);
   // Convert possibleStates into words and store them in a JSON array
-  for (uint i = 0; i < possibleStates.length(); i++) {
-    char stateChar = possibleStates.charAt(i);
-    if (stateChar == '0') {
-      pumps[pumpKey]["possibleStates"].add("OFF");
-    } else if (stateChar == '1') {
-      pumps[pumpKey]["possibleStates"].add("ON");
-    } else if (stateChar == '2') {
-      pumps[pumpKey]["possibleStates"].add("LOW");
-    } else if (stateChar == '2') {
-      pumps[pumpKey]["possibleStates"].add("HIGH");
-    } else if (stateChar == '4') {
-      pumps[pumpKey]["possibleStates"].add("AUTO");
-    }
+  for (auto &str : getPumpPossibleStateStrings(pumpInstallState)) {
+    pumps[pumpKey]["possibleStates"].add(str);
   }
 
   int pumpState = (si.*(pumpStateFunctions[pumpNumber - 1]))();
-  pumps[pumpKey]["state"] = pumpState==0? "OFF" : "ON"; // we're ignoring auto here
+  pumps[pumpKey]["state"] = pumpState == 0 ? "OFF" : "ON"; // we're ignoring auto here
   pumps[pumpKey]["speed"] = pumpState;
+  pumps[pumpKey]["mode"] = pumpStates.at(pumpState);
 
   return true;
 }
@@ -89,33 +79,54 @@ bool getPumpInstalledState(String pumpInstallState) {
   return (pumpInstallState.substring(0, firstDash) == "1");
 }
 
-String getPumpSpeedType(String pumpInstallState) {
+int getPumpSpeeds(String pumpInstallState) {
   int firstDash = pumpInstallState.indexOf("-");
   int secondDash = pumpInstallState.lastIndexOf("-");
-  return pumpInstallState.substring(firstDash + 1, secondDash);
+  return atoi(pumpInstallState.substring(firstDash + 1, secondDash).c_str());
 }
 
-String getPumpPossibleStates(String pumpInstallState) {
+std::vector<int> getPumpPossibleStates(String pumpInstallState) {
+  std::vector<int> values = {};
   int secondDash = pumpInstallState.lastIndexOf("-");
-  return pumpInstallState.substring(secondDash + 1);
+
+  for (auto &ch : pumpInstallState.substring(secondDash + 1)) {
+    int val = ch - '0';
+    if (val >= 0 && val <= 9)
+      values.push_back(val);
+  }
+  return values;
+}
+
+std::vector<String> getPumpPossibleStateStrings(String pumpInstallState) {
+  std::vector<String> valid = {};
+  for (auto &state : getPumpPossibleStates(pumpInstallState)) {
+    valid.push_back(pumpStates.at(state));
+  }
+  return valid;
+}
+
+int getPumpSpeedFromStateString(String state) {
+  for (int i = 0; i <= pumpStates.size(); i++) {
+    if (pumpStates[i] == state)
+      return i;
+  }
+  return 0;
 }
 
 int getPumpSpeedMax(String pumpInstallState) {
-  String possibleStates = getPumpPossibleStates(pumpInstallState);
-  uint max = 0;
-  for (uint i = 0; i < possibleStates.length(); i++) {
-    char stateChar = possibleStates.charAt(i);
-    if (stateChar != '4' && stateChar > max) max = stateChar;
+  int max = 0;
+  for (auto &val : getPumpPossibleStates(pumpInstallState)) {
+    if (val < 4)
+      max = std::max(max, val);
   }
   return max;
 }
 
 int getPumpSpeedMin(String pumpInstallState) {
-  String possibleStates = getPumpPossibleStates(pumpInstallState);
-  uint min = UINT_MAX;
-  for (uint i = 0; i < possibleStates.length(); i++) {
-    char stateChar = possibleStates.charAt(i);
-    if (stateChar != '0' && stateChar < min) min = stateChar;
+  int min = INT_MAX;
+  for (auto &val : getPumpPossibleStates(pumpInstallState)) {
+    if (val > 0)
+      min = std::min(min, val);
   }
   return min;
 }
