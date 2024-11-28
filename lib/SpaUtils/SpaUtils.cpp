@@ -58,8 +58,7 @@ bool getPumpModesJson(SpaInterface &si, int pumpNumber, JsonObject pumps) {
   pumpKey[5] = '\0';  // Null-terminate the string
 
   pumps[pumpKey]["installed"] = getPumpInstalledState(pumpInstallState);
-  int speeds =  getPumpSpeeds(pumpInstallState);
-  pumps[pumpKey]["speeds"] = speeds;
+  pumps[pumpKey]["speeds"] = getPumpSpeeds(pumpInstallState);
 
   // Convert possibleStates into words and store them in a JSON array
   for (auto &str : getPumpPossibleStateStrings(pumpInstallState)) {
