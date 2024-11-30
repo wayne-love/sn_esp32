@@ -44,28 +44,24 @@ int convertToInteger(String &timeStr) {
   return data;
 }
 
-bool getPumpModes(SpaInterface &si, int pumpNumber, JsonObject pumps) {
+bool getPumpModesJson(SpaInterface &si, int pumpNumber, JsonObject pumps) {
   // Validate the pump number
   if (pumpNumber < 1 || pumpNumber > 5) {
     return false;
   }
 
   // Retrieve the pump install state dynamically
-  String pumpState = (si.*(pumpStateFunctions[pumpNumber - 1]))();
-
-  // Split pumpState by "-"
-  int firstDash = pumpState.indexOf("-");
-  int secondDash = pumpState.indexOf("-", firstDash + 1);
+  String pumpInstallState = (si.*(pumpInstallStateFunctions[pumpNumber - 1]))();
 
   char pumpKey[6] = "pump";  // Start with "pump"
   pumpKey[4] = '0' + pumpNumber;  // Append the pump number as a character
   pumpKey[5] = '\0';  // Null-terminate the string
 
-  // Convert installed to a boolean (true for "1", false for "0")
-  pumps[pumpKey]["installed"] = (pumpState.substring(0, firstDash) == "1");
-  pumps[pumpKey]["speedType"] = pumpState.substring(firstDash + 1, secondDash);
+  pumps[pumpKey]["installed"] = getPumpInstalledState(pumpInstallState);
+  String speedType = getPumpSpeedType(pumpInstallState);
+  pumps[pumpKey]["speedType"] = speedType;
 
-  String possibleStates = pumpState.substring(secondDash + 1);
+  String possibleStates = getPumpPossibleStates(pumpInstallState);
   // Convert possibleStates into words and store them in a JSON array
   for (uint i = 0; i < possibleStates.length(); i++) {
     char stateChar = possibleStates.charAt(i);
@@ -73,12 +69,61 @@ bool getPumpModes(SpaInterface &si, int pumpNumber, JsonObject pumps) {
       pumps[pumpKey]["possibleStates"].add("OFF");
     } else if (stateChar == '1') {
       pumps[pumpKey]["possibleStates"].add("ON");
+    } else if (stateChar == '2') {
+      pumps[pumpKey]["possibleStates"].add("LOW");
+    } else if (stateChar == '3') {
+      pumps[pumpKey]["possibleStates"].add("HIGH");
     } else if (stateChar == '4') {
       pumps[pumpKey]["possibleStates"].add("AUTO");
     }
   }
 
+  int pumpState = (si.*(pumpStateFunctions[pumpNumber - 1]))();
+  if (pumpInstallState.endsWith("4") && possibleStates.length() > 1) {
+    if (pumpState == 4) pumps[pumpKey]["mode"] = "Auto";
+    else pumps[pumpKey]["mode"] = "Manual";
+  }
+  pumps[pumpKey]["state"] = pumpState==0?"OFF":"ON";
+  if (pumpState == 4) pumpState = 2;
+  pumps[pumpKey]["speed"] = pumpState;
+
   return true;
+}
+
+bool getPumpInstalledState(String pumpInstallState) {
+  return pumpInstallState.startsWith("1");
+}
+
+String getPumpSpeedType(String pumpInstallState) {
+  int firstDash = pumpInstallState.indexOf("-");
+  int secondDash = pumpInstallState.lastIndexOf("-");
+  return pumpInstallState.substring(firstDash + 1, secondDash);
+}
+
+String getPumpPossibleStates(String pumpInstallState) {
+  int secondDash = pumpInstallState.lastIndexOf("-");
+  return pumpInstallState.substring(secondDash + 1);
+}
+
+int getPumpSpeedMax(String pumpInstallState) {
+  String possibleStates = getPumpPossibleStates(pumpInstallState);
+  uint max = 0;
+  for (uint i = 0; i < possibleStates.length(); i++) {
+    int pumpMode = possibleStates.charAt(i)  - '0';
+    if (pumpMode > 0 && pumpMode < 4 && pumpMode > max) max = pumpMode;
+  }
+  return max;
+}
+
+int getPumpSpeedMin(String pumpInstallState) {
+  String possibleStates = getPumpPossibleStates(pumpInstallState);
+  uint min = UINT_MAX;
+  for (uint i = 0; i < possibleStates.length(); i++) {
+    int pumpMode = possibleStates.charAt(i)  - '0';
+    if (pumpMode > 0 && pumpMode < 4 && pumpMode < min) min = pumpMode;
+  }
+  if (min == UINT_MAX) min = 0;
+  return min;
 }
 
 bool generateStatusJson(SpaInterface &si, MQTTClientWrapper &mqttClient, String &output, bool prettyJson) {
@@ -111,16 +156,10 @@ bool generateStatusJson(SpaInterface &si, MQTTClientWrapper &mqttClient, String 
   JsonObject pumps = json["pumps"].to<JsonObject>();
   // Add pump data by calling the function for each pump
   for (int i = 1; i <= 5; i++) {
-    if (!getPumpModes(si, i, pumps)) {
+    if (!getPumpModesJson(si, i, pumps)) {
       debugD("Invalid pump number: %i", i);
     }
   }
-
-  json["pumps"]["pump1"]["state"] = si.getRB_TP_Pump1()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pumps"]["pump2"]["state"] = si.getRB_TP_Pump2()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pumps"]["pump3"]["state"] = si.getRB_TP_Pump3()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pumps"]["pump4"]["state"] = si.getRB_TP_Pump4()==0? "OFF" : "ON"; // we're ignoring auto here
-  json["pumps"]["pump5"]["state"] = si.getRB_TP_Pump5()==0? "OFF" : "ON"; // we're ignoring auto here
 
   String y=String(year(si.getSpaTime()));
   String m=String(month(si.getSpaTime()));

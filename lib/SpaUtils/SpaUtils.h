@@ -15,7 +15,14 @@ extern RemoteDebug Debug;
 
 String convertToTime(int data);
 int convertToInteger(String &timeStr);
-bool getPumpModes(SpaInterface &si, int pumpNumber, JsonObject pumps);
+bool getPumpModesJson(SpaInterface &si, int pumpNumber, JsonObject pumps);
+
+bool getPumpInstalledState(String pumpState);
+String getPumpSpeedType(String pumpState);
+String getPumpPossibleStates(String pumpState);
+int getPumpSpeedMax(String pumpState);
+int getPumpSpeedMin(String pumpState);
+
 bool generateStatusJson(SpaInterface &si, MQTTClientWrapper &mqttClient, String &output, bool prettyJson=false);
 
 #endif // SPAUTILS_H

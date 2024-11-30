@@ -79,9 +79,7 @@ void generateSwitchAdJSON(String& output, const AutoDiscoveryInformationTemplate
    serializeJson(json, output);
 }
 
-
-
-void generateFanAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic) {
+void generateFanAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic, int min, int max, const String* modes, const size_t modesSize) {
    JsonDocument json;
    generateCommonAdJSON(json, config, spa, discoveryTopic, "fan");
 
@@ -93,24 +91,31 @@ void generateFanAdJSON(String& output, const AutoDiscoveryInformationTemplate& c
    json["state_value_template"] = config.valueTemplate.substring(0, lastIndex + 1) + ".state" + config.valueTemplate.substring(lastIndex + 1);
    json["command_topic"] = spa.commandTopic + "/" + config.propertyId + "_state";
 
-   json["percentage_state_topic"] = spa.stateTopic;
-   json["percentage_command_topic"] = spa.commandTopic + "/" + config.propertyId + "_speed";
-   json["percentage_value_template"] = "{{ value_json."+ config.propertyId + ".speed }}";
+    if (max > min) {
+        json["percentage_state_topic"] = spa.stateTopic;
+        json["percentage_command_topic"] = spa.commandTopic + "/" + config.propertyId + "_speed";
+        json["percentage_value_template"] = config.valueTemplate.substring(0, lastIndex + 1) + ".speed" + config.valueTemplate.substring(lastIndex + 1);
 
-   json["preset_mode_state_topic"] = spa.stateTopic;
-   json["preset_mode_command_topic"] = spa.commandTopic + "/" + config.propertyId + "_mode";
-   json["preset_mode_value_template"] = "{{ value_json."+ config.propertyId + ".mode }}";
+        json["speed_range_min"]=min;
+        json["speed_range_max"]=max;
+    }
 
-   JsonArray modes = json["preset_modes"].to<JsonArray>();
-   modes.add("Variable");
-   modes.add("Ramp");
-   json["speed_range_min"]=1;
-   json["speed_range_max"]=5;
+   if (modes != nullptr && modesSize > 0) {
+      json["preset_mode_state_topic"] = spa.stateTopic;
+      json["preset_mode_command_topic"] = spa.commandTopic + "/" + config.propertyId + "_mode";
+      json["preset_mode_value_template"] = config.valueTemplate.substring(0, lastIndex + 1) + ".mode" + config.valueTemplate.substring(lastIndex + 1);
+
+      JsonArray jsonModes = json["preset_modes"].to<JsonArray>();
+      //for (const auto& mode : *modes) jsonModes.add(mode);
+      for (size_t i = 0; i < modesSize; ++i) jsonModes.add(modes[i]);
+   }
+
+    if (config.propertyId.startsWith("pump")) {
+      json["icon"] = "mdi:pump";
+   }
 
    serializeJson(json, output);
 }
-
-
 
 void generateClimateAdJSON(String& output, const AutoDiscoveryInformationTemplate& config, const SpaADInformationTemplate& spa, String &discoveryTopic) {
    JsonDocument json;

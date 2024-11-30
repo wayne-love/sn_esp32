@@ -252,53 +252,30 @@ void mqttHaAutoDiscovery() {
   generateClimateAdJSON(output, ADConf, spa, discoveryTopic);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
-
   ADConf.deviceClass = "";
   ADConf.entityCategory = "";
-  if (si.getPump1InstallState().startsWith("1") && !(si.getPump1InstallState().endsWith("4"))) {
-     //switchADPublish(mqttClient, spa, "Pump 1", "{{ value_json.pumps.pump1.state }}", "pump1");
-    ADConf.displayName = "Pump 1";
-    ADConf.valueTemplate = "{{ value_json.pumps.pump1.state }}";
-    ADConf.propertyId = "pump1";
-    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
-    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
-  }
-
-  if (si.getPump2InstallState().startsWith("1") && !(si.getPump2InstallState().endsWith("4"))) {
-    //switchADPublish(mqttClient, spa, "Pump 2","{{ value_json.pumps.pump2.state }}", "pump2");
-    ADConf.displayName = "Pump 2";
-    ADConf.valueTemplate = "{{ value_json.pumps.pump2.state }}";
-    ADConf.propertyId = "pump2";
-    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
-    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
-  }
-
-  if (si.getPump3InstallState().startsWith("1") && !(si.getPump3InstallState().endsWith("4"))) {
-    //switchADPublish(mqttClient, spa, "Pump 3", "{{ value_json.pumps.pump3.state }}", "pump3");
-    ADConf.displayName = "Pump 3";
-    ADConf.valueTemplate = "{{ value_json.pumps.pump3.state }}";
-    ADConf.propertyId = "pump3";
-    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
-    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
-  }
-
-  if (si.getPump4InstallState().startsWith("1") && !(si.getPump4InstallState().endsWith("4"))) {
-    //switchADPublish(mqttClient, spa, "Pump 4", "{{ value_json.pumps.pump4.state }}", "pump4");
-    ADConf.displayName = "Pump 4";
-    ADConf.valueTemplate = "{{ value_json.pumps.pump4.state }}";
-    ADConf.propertyId = "pump4";
-    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
-    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
-  }
-
-  if (si.getPump5InstallState().startsWith("1") && !(si.getPump5InstallState().endsWith("4"))) {
-    //switchADPublish(mqttClient, spa, "Pump 5", "{{ value_json.pumps.pump5.state }}", "pump5");
-    ADConf.displayName = "Pump 5";
-    ADConf.valueTemplate = "{{ value_json.pumps.pump5.state }}";
-    ADConf.propertyId = "pump5";
-    generateSwitchAdJSON(output, ADConf, spa, discoveryTopic);
-    mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
-
+  const String* selectedPumpOptions = nullptr;
+  size_t arrSize = 0;
+  for (int pumpNumber = 1; pumpNumber <= 5; pumpNumber++) {
+    String pumpInstallState = (si.*(pumpInstallStateFunctions[pumpNumber - 1]))();
+    if (getPumpInstalledState(pumpInstallState) && getPumpPossibleStates(pumpInstallState).length() > 1) {
+      ADConf.displayName = "Pump " + String(pumpNumber);
+      ADConf.propertyId = "pump" + String(pumpNumber);
+      ADConf.valueTemplate = "{{ value_json.pumps.pump" + String(pumpNumber) + " }}";
+      if (pumpInstallState.endsWith("4")) {
+        selectedPumpOptions = si.autoPumpOptions.data();
+        arrSize = si.autoPumpOptions.size();
+      } else {
+        selectedPumpOptions = nullptr;
+        arrSize = 0;
+      }
+      if (getPumpSpeedType(pumpInstallState) == "1") {
+        generateFanAdJSON(output, ADConf, spa, discoveryTopic, 0, 0, selectedPumpOptions, arrSize);
+      } else {
+        generateFanAdJSON(output, ADConf, spa, discoveryTopic, getPumpSpeedMin(pumpInstallState), getPumpSpeedMax(pumpInstallState), selectedPumpOptions, arrSize);
+      }
+      mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
+    }
   }
 
   if (si.getHP_Present()) {
@@ -419,7 +396,7 @@ void mqttHaAutoDiscovery() {
   ADConf.propertyId = "blower";
   ADConf.deviceClass = "";
   ADConf.entityCategory = "";
-  generateFanAdJSON(output, ADConf, spa, discoveryTopic);
+  generateFanAdJSON(output, ADConf, spa, discoveryTopic, 1, 5, si.blowerStrings.data(), si.blowerStrings.size());
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
   //selectADPublish(mqttClient, spa, "Spa Mode", "{{ value_json.status.spaMode }}", "status_spaMode", "", "", spaModeStrings);
@@ -470,16 +447,24 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     si.setSTMP(int(p.toFloat()*10));
   } else if (property == "heatpump_mode") {
     si.setHPMP(p);
-  } else if (property == "pump1") {
-    si.setRB_TP_Pump1(p=="OFF"?0:1);
-  } else if (property == "pump2") {
-    si.setRB_TP_Pump2(p=="OFF"?0:1);
-  } else if (property == "pump3") {
-    si.setRB_TP_Pump3(p=="OFF"?0:1);
-  } else if (property == "pump4") {
-    si.setRB_TP_Pump4(p=="OFF"?0:1);
-  } else if (property == "pump5") {
-    si.setRB_TP_Pump5(p=="OFF"?0:1);
+  // note single speed pumps should never trigger a mode or speed events
+  } else if (property.startsWith("pump") && property.endsWith("_speed")) {
+    int pumpNum = property.charAt(4) - '0';
+    // p = 1 = Off, p = 2 = Low, p = 3 = High
+    // send values need to be changed to the appropriate values
+    if (p == "1") p = "0";
+    else if (p == "2") p = "3";
+    else if (p == "3") p = "2";
+    (si.*(setPumpFunctions[pumpNum-1]))(p.toInt());
+  } else if (property.startsWith("pump") && property.endsWith("_mode")) {
+    int pumpNum = property.charAt(4) - '0';
+    if (p == "Auto") (si.*(setPumpFunctions[pumpNum-1]))(4);
+    else (si.*(setPumpFunctions[pumpNum-1]))(3); // When we change mode to manual set speed to low, as this matches the auto display speed
+  } else if (property.startsWith("pump") && property.endsWith("_state")) {
+    int pumpNum = property.charAt(4) - '0';
+    String pumpState = (si.*(pumpInstallStateFunctions[pumpNum-1]))();
+    if (getPumpSpeedType(pumpState) == "2") (si.*(setPumpFunctions[pumpNum-1]))(p=="OFF"?0:2); // When we turn on the pump use speed high
+    else (si.*(setPumpFunctions[pumpNum-1]))(p=="OFF"?0:1);
   } else if (property == "heatpump_auxheat") {
     si.setHELE(p=="OFF"?0:1);
   } else if (property == "status_datetime") {
