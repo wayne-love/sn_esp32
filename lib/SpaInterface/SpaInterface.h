@@ -117,11 +117,12 @@ class SpaInterface : public SpaProperties {
 
         /// @brief Clear the call back function.
         void clearUpdateCallback();
-
+/*
         /// @brief Set the desired water temperature
         /// @param temp Between 5 and 40 in 0.5 increments
         /// @return Returns True if succesful
         bool setSTMP(int temp);
+*/
 
         /// @brief Set snooze day ({128,127,96,31} -> {"Off","Everyday","Weekends","Weekdays"};)
         /// @param mode
@@ -151,11 +152,13 @@ class SpaInterface : public SpaProperties {
         bool setHPMP(int mode);
         bool setHPMP(String mode);
 
+/*
         /// @brief Set light mode (0 = white, 1 = colour, 2 = step, 3 = fade, 4 = party)
         /// @param mode
         /// @return Returns True if succesful
         bool setColorMode(int mode);
         bool setColorMode(String mode);
+*/
 
         /// @brief Set light brightness (min 1, max 5)
         /// @param mode
@@ -173,6 +176,7 @@ class SpaInterface : public SpaProperties {
         /// @return Returns True if succesful
         bool setCurrClr(int mode);
 
+        /*
         /// @brief Set the operating mode for pump 1
         /// @param mode 0 = off, 1 = on, 4 = auto (if supported)
         /// @return True if successful
@@ -197,6 +201,7 @@ class SpaInterface : public SpaProperties {
         /// @param mode 0 = off, 1 = on, 4 = auto (if supported)
         /// @return True if successful
         bool setRB_TP_Pump5(int mode);
+        */
 
         bool setRB_TP_Light(int mode);
 
