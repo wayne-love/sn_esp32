@@ -46,7 +46,13 @@ private:
     bool _resultRegistersDirty = true;
 
 
-    bool setSTMP(int temp);
+    bool setSTMP(uint16_t temp);
+    bool setColorMode(byte mode);
+    bool setRB_TP_Pump1(byte mode);
+    bool setRB_TP_Pump2(byte mode);
+    bool setRB_TP_Pump3(byte mode);
+    bool setRB_TP_Pump4(byte mode);
+    bool setRB_TP_Pump5(byte mode);
 
     
 public:
@@ -55,11 +61,140 @@ public:
      */
     Spa();
 
+    /**
+     * @brief Light effect mode
+     * 
+     * @details Integer value representing the light effect mode
+     * 
+     * @note Valid values: 0 = White, 1 = Color, 3 = Fade, 2 = Step, 4 = Party
+     */
+
+    Variable<byte> ColorMode = Variable<byte>(
+        0, {
+            {"White", 0},
+            {"Color", 1},
+            {"Fade", 3},
+            {"Step", 2},
+            {"Party", 4}
+        }
+    );
+
+    /**
+     * @brief Spa target temperature setting
+     * 
+     * @details The value of this property is the target temperature in degrees Celsius * 10
+     * eg 382 = 38.2°C. The temperature steps are in 0.2°C increments.  If a 0.1°C increment is
+     * sent then it will be rounded down to the nearest 0.2°C increment.
+     * 
+     * @note Valid range: 10.0°C to 41.0°C
+     */
+    Variable<uint16_t> STMP;
+
+
+    /**
+     * @brief Represents the state of Pump 1 with various modes.
+     * 
+     * @note Can take the following values:
+     * - "Off"  : 0
+     * - "On"   : 1
+     * - "Low"  : 2
+     * - "High" : 3
+     * - "Auto" : 4
+     */
+    Variable<byte> RB_TP_Pump1 = Variable<byte>(
+        0, {
+            {"Off", 0},
+            {"On", 1},
+            {"Low", 2},
+            {"High", 3},
+            {"Auto", 4}
+        }
+    );
+
+    /**
+     * @brief Represents the state of Pump 2 with various modes.
+     * 
+     * @note Can take the following values:
+     * - "Off"  : 0
+     * - "On"   : 1
+     * - "Low"  : 2
+     * - "High" : 3
+     * - "Auto" : 4
+     */
+    Variable<byte> RB_TP_Pump2 = Variable<byte>(
+        0, {
+            {"Off", 0},
+            {"On", 1},
+            {"Low", 2},
+            {"High", 3},
+            {"Auto", 4}
+        }
+    );
+
+    /**
+     * @brief Represents the state of Pump 3 with various modes.
+     * 
+     * @note Can take the following values:
+     * - "Off"  : 0
+     * - "On"   : 1
+     * - "Low"  : 2
+     * - "High" : 3
+     * - "Auto" : 4
+     */
+    Variable<byte> RB_TP_Pump3 = Variable<byte>(
+        0, {
+            {"Off", 0},
+            {"On", 1},
+            {"Low", 2},
+            {"High", 3},
+            {"Auto", 4}
+        }
+    );
+
+    /**
+     * @brief Represents the state of Pump 4 with various modes.
+     * 
+     * @note Can take the following values:
+     * - "Off"  : 0
+     * - "On"   : 1
+     * - "Low"  : 2
+     * - "High" : 3
+     * - "Auto" : 4
+     */
+    Variable<byte> RB_TP_Pump4 = Variable<byte>(
+        0, {
+            {"Off", 0},
+            {"On", 1},
+            {"Low", 2},
+            {"High", 3},
+            {"Auto", 4}
+        }
+    );
+
+    /**
+     * @brief Represents the state of Pump 5 with various modes.
+     * 
+     * @note Can take the following values:
+     * - "Off"  : 0
+     * - "On"   : 1
+     * - "Low"  : 2
+     * - "High" : 3
+     * - "Auto" : 4
+     */
+    Variable<byte> RB_TP_Pump5 = Variable<byte>(
+        0, {
+            {"Off", 0},
+            {"On", 1},
+            {"Low", 2},
+            {"High", 3},
+            {"Auto", 4}
+        }
+    );
+
 
 #pragma Properties
 #pragma region R2
     /// @brief Mains current draw
-    /// @details Range: 0-32A (Single Phase) or 0-16A per phase (3-Phase)
     /// Monitors total system current draw for load shedding
     ReadOnlyVariable<int> MainsCurrent;
 
@@ -308,26 +443,7 @@ public:
     // R5
     //  Unknown encoding - Attribute<int> TouchPad2;
     //  Unknown encoding - Attribute<int> TouchPad1;
-    /// @brief Pump 1 state
-    ///
-    /// 0 = off, 1 = running, 4 = auto
-    ReadOnlyVariable<int> RB_TP_Pump1;
-    /// @brief Pump 2 state
-    ///
-    /// 0 = off, 1 = running, 4 = auto
-    ReadOnlyVariable<int> RB_TP_Pump2;
-    /// @brief Pump 3 state
-    ///
-    /// 0 = off, 1 = running, 4 = auto
-    ReadOnlyVariable<int> RB_TP_Pump3;
-    /// @brief Pump 4 state
-    ///
-    /// 0 = off, 1 = running, 4 = auto
-    ReadOnlyVariable<int> RB_TP_Pump4;
-    /// @brief Pump 5 state
-    ///
-    /// 0 = off, 1 = running, 4 = auto
-    ReadOnlyVariable<int> RB_TP_Pump5;
+
     ReadOnlyVariable<int> RB_TP_Blower;
     ReadOnlyVariable<int> RB_TP_Light;
     /// @brief Auto enabled
@@ -367,10 +483,11 @@ public:
     ///
     /// min 0, max 31
     ReadOnlyVariable<int> CurrClr;
-    /// @brief Lights mode
-    ///
-    /// 0 = white, 1 = colour, 2 = step, 3 = fade, 4 = party
-    ReadOnlyVariable<int> ColorMode;
+
+
+
+
+
     /// @brief Light effect speed
     ///
     /// min 1, max 5
@@ -380,9 +497,6 @@ public:
     /// @brief Filter block duration (hours)
     ReadOnlyVariable<int> FiltBlockHrs;
 
-
-    /// @brief Water temperature set point ('C)
-    Variable<int> STMP;
 
 
     // 1 = 12 hrs

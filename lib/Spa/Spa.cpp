@@ -7,7 +7,13 @@ Spa::Spa() : port(SPA_SERIAL) {
     SPA_SERIAL.setTimeout(250);
 
     STMP.setBeforeUpdate(this, &Spa::setSTMP);
-
+    ColorMode.setBeforeUpdate(this, &Spa::setColorMode);
+    RB_TP_Pump1.setBeforeUpdate(this, &Spa::setRB_TP_Pump1);
+    RB_TP_Pump2.setBeforeUpdate(this, &Spa::setRB_TP_Pump2);
+    RB_TP_Pump3.setBeforeUpdate(this, &Spa::setRB_TP_Pump3);
+    RB_TP_Pump4.setBeforeUpdate(this, &Spa::setRB_TP_Pump4);
+    RB_TP_Pump5.setBeforeUpdate(this, &Spa::setRB_TP_Pump5);
+    
 }
 
 void Spa::sendCommand(String cmd) {
@@ -56,8 +62,67 @@ void Spa::clearSerialReadBuffer() {
     debugD("Flushed serial stream - %i bytes in the buffer", port.available());
 }
 
-bool Spa::setSTMP(int temp) {
+bool Spa::setSTMP(uint16_t temp) {
     debugD("setSTMP - %i", temp);
-    String stemp = String(temp);
-    return sendCommandCheckResult("W40:" + stemp, stemp);
+    temp = temp - temp % 2; // round to nearest 0.2 degrees
+    if ((temp >= 160) && (temp <= 410)) {
+        String stemp = String(temp);
+        return sendCommandCheckResult("W40:" + stemp, stemp);
+    }
+    return false;
 }
+
+bool Spa::setColorMode(byte mode){
+    debugD("setColorMode - %i", mode);
+    if ((mode >= 0) && (mode <= 4)) {
+        String smode = String(mode);
+        return sendCommandCheckResult("S07:"+smode,smode);
+    }
+    return false;
+}
+
+bool Spa::setRB_TP_Pump1(byte mode){
+    debugD("setRB_TP_Pump1 - %i",mode);
+    if ((mode >= 0) && (mode <= 4)) {
+        String smode = String(mode);
+        return sendCommandCheckResult("S21:"+smode,smode);
+    }
+    return false;
+}
+
+bool Spa::setRB_TP_Pump2(byte mode){
+    debugD("setRB_TP_Pump2 - %i",mode);
+    if ((mode >= 0) && (mode <= 4)) {
+        String smode = String(mode);
+        return sendCommandCheckResult("S22:"+smode,smode);
+    }
+    return false;
+}
+
+bool Spa::setRB_TP_Pump3(byte mode){
+    debugD("setRB_TP_Pump3 - %i",mode);
+    if ((mode >= 0) && (mode <= 4)) {
+        String smode = String(mode);
+        return sendCommandCheckResult("S23:"+smode,smode);
+    }
+    return false;
+}
+
+bool Spa::setRB_TP_Pump4(byte mode){
+    debugD("setRB_TP_Pump4 - %i",mode);
+    if ((mode >= 0) && (mode <= 4)) {
+        String smode = String(mode);
+        return sendCommandCheckResult("S24:"+smode,smode);
+    }
+    return false;
+}
+
+bool Spa::setRB_TP_Pump5(byte mode){
+    debugD("setRB_TP_Pump5 - %i",mode);
+    if ((mode >= 0) && (mode <= 4)) {
+        String smode = String(mode);
+        return sendCommandCheckResult("S26:"+smode,smode);
+    }
+    return false;
+}
+
