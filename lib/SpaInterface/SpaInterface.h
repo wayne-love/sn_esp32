@@ -21,7 +21,7 @@ class SpaInterface : public SpaProperties {
         int statusResponseMinFields = 288;
 
         static const int statusResponseMaxFields = 295;
-        
+
         /// @brief Each field of the RF cmd response as seperate elements.
         String statusResponseRaw[statusResponseMaxFields];
 
@@ -48,16 +48,12 @@ class SpaInterface : public SpaProperties {
         /// @return true if successful read, false if there was a corrupted read
         bool readStatus();
 
-        void updateMeasures();
-
-
-
         /// @brief Sends command to SpaNet controller.  Result must be read by some other method.
         /// Used for the 'RF' command so that we can do a optomised read of the return array.
         /// @param cmd - cmd to be executed.
         void sendCommand(String cmd);
 
-        
+
         /// @brief Sends a command to the SpanNet controller and returns the result string
         /// @param cmd - cmd to be executed
         /// @return String - result string
@@ -84,11 +80,14 @@ class SpaInterface : public SpaProperties {
         /// @brief If the result registers have been modified locally, need to do a fress pull from the controller
         bool _resultRegistersDirty = true;
 
-   
+
         void (*updateCallback)() = nullptr;
 
         u_long _lastWaitMessage = millis();
 
+        bool sendValue(const char* name, String smode);
+        bool sendValue(const char* name, int mode);
+        bool sendValue(const char* name, time_t t);
 
 
     public:
@@ -102,17 +101,17 @@ class SpaInterface : public SpaProperties {
         void setUpdateFrequency(int updateFrequency);
 
         /// @brief Complete RF command response in a single string
-        Property<String> statusResponse;
+        Property<String> statusResponse = Property<String>("statusResponse");
 
         /// @brief To be called by loop function of main sketch.  Does regular updates, etc.
         void loop();
 
         /// @brief Have we sucessfuly read the registers from the SpaNet controller.
-        /// @return 
+        /// @return
         bool isInitialised();
 
         /// @brief Set the function to be called when properties have been updated.
-        /// @param f 
+        /// @param f
         void setUpdateCallback(void (*f)());
 
         /// @brief Clear the call back function.
