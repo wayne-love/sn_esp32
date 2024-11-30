@@ -191,6 +191,29 @@ public:
     const std::map<String, T>& getStringMap() const {
         return stringMap;
     }
+
+    /**
+     * @brief Sets the string converter function to be used for converting strings to values
+     * @param newConverter Function pointer to use for string conversion
+     */
+    void setStringConverter(T (*newConverter)(const String&)) {
+        this->stringConverter = newConverter;
+    }
+
+    template<typename U>
+    void setStringConverter(U* instance, T (U::*newConverter)(const String&)) {
+        stringConverter = [instance, newConverter](const String& strValue) {
+            return (instance->*newConverter)(strValue);
+        };
+    }
+
+    /**
+     * @brief Clears the string converter function
+     */
+    void clearStringConverter() {
+        this->stringConverter = nullptr;
+    }
+
 };
 
 /**

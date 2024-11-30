@@ -20,6 +20,12 @@ Spa::Spa() : port(SPA_SERIAL) {
     L_1SNZ_END.setBeforeUpdate(this, &Spa::setL_1SNZ_END);
     L_2SNZ_BGN.setBeforeUpdate(this, &Spa::setL_2SNZ_BGN);
     L_2SNZ_END.setBeforeUpdate(this, &Spa::setL_2SNZ_END);
+
+    L_1SNZ_BGN.setStringConverter(this, &Spa::timeStringToUint16);
+    L_1SNZ_END.setStringConverter(this, &Spa::timeStringToUint16);
+    L_2SNZ_BGN.setStringConverter(this, &Spa::timeStringToUint16);
+    L_2SNZ_END.setStringConverter(this, &Spa::timeStringToUint16);
+    
 }
 
 void Spa::sendCommand(String cmd) {
@@ -66,6 +72,17 @@ void Spa::clearSerialReadBuffer() {
         debugV("%i,",byteRead);
     }
     debugD("Flushed serial stream - %i bytes in the buffer", port.available());
+}
+
+uint16_t Spa::timeStringToUint16(const String& time) {
+    int colonIndex = time.indexOf(':');
+    if (colonIndex == -1) {
+        debugW("Invalid time string - %s", time.c_str());
+        return 0;
+    }
+    int hours = time.substring(0, colonIndex).toInt();
+    int minutes = time.substring(colonIndex + 1).toInt();
+    return hours * 256 + minutes;
 }
 
 bool Spa::setSTMP(uint16_t temp) {

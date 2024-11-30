@@ -45,6 +45,13 @@ private:
     /// @brief If the result registers have been modified locally, need to do a fress pull from the controller
     bool _resultRegistersDirty = true;
 
+    /**
+     * @brief Converts a time string to a uint16_t
+     * 
+     * @param time The time string in the format HH:MM
+     * @return The time as a uint16_t
+     */
+    uint16_t timeStringToUint16(const String& time);
 
     bool setColorMode(byte mode);
 
@@ -233,23 +240,42 @@ public:
     /// @brief Sleep timer 2 active days
     ///
     /// 128 = off, 127 = every day, 96 = weekends, 31 = weekdays
-    Variable<byte> L_2SNZ_DAY;
-    /// @brief Sleep time 1 start time
-    ///
-    /// Formula h*256+m (ie: for 20:00, integer will be 20*256+0 = 5120; for 13:47, integer will be 13*256+47 = 3375)
-    Variable<u16_t> L_1SNZ_BGN;
-    /// @brief Sleep time 2 start time
-    ///
-    /// Formula h*256+m (ie: for 20:00, integer will be 20*256+0 = 5120; for 13:47, integer will be 13*256+47 = 3375)
-    Variable<u16_t> L_2SNZ_BGN;
-    /// @brief Sleep time 1 end time
-    ///
-    /// Formula h*256+m (ie: for 20:00, integer will be 20*256+0 = 5120; for 13:47, integer will be 13*256+47 = 3375)
-    Variable<u16_t> L_1SNZ_END;
-    /// @brief Sleep time 2 end time
-    ///
-    /// Formula h*256+m (ie: for 20:00, integer will be 20*256+0 = 5120; for 13:47, integer will be 13*256+47 = 3375)
-    Variable<u16_t> L_2SNZ_END;
+    Variable<byte> L_2SNZ_DAY = Variable<byte>(
+        127, {
+            {"Off", 128},
+            {"Everyday", 127},
+            {"Weekends", 96},
+            {"Weekdays", 31}
+        }
+    );
+
+    /**
+     * @brief Sleep time 1 start time
+     * @details Takes either uint16_t or string format HH:MM if uint16_t is used, the formula is h*256+m
+     * eg 20:00 = 20*256+0 = 5120; 13:47 = 13*256+47 = 3375
+     */
+    Variable<uint16_t> L_1SNZ_BGN;
+
+    /**
+     * @brief Sleep time 2 start time
+     * @details Takes either uint16_t or string format HH:MM if uint16_t is used, the formula is h*256+m
+     * eg 20:00 = 20*256+0 = 5120; 13:47 = 13*256+47 = 3375
+     */
+    Variable<uint16_t> L_2SNZ_BGN;
+
+    /**
+     * @brief Sleep time 1 end time
+     * @details Takes either uint16_t or string format HH:MM if uint16_t is used, the formula is h*256+m
+     * eg 20:00 = 20*256+0 = 5120; 13:47 = 13*256+47 = 3375
+     */
+    Variable<uint16_t> L_1SNZ_END;
+
+    /**
+     * @brief Sleep time 2 end time
+     * @details Takes either uint16_t or string format HH:MM if uint16_t is used, the formula is h*256+m
+     * eg 20:00 = 20*256+0 = 5120; 13:47 = 13*256+47 = 3375
+     */
+    Variable<uint16_t> L_2SNZ_END;
 
 
 
