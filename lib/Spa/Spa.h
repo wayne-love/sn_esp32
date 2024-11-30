@@ -67,35 +67,19 @@ private:
     bool setL_1SNZ_DAY(byte mode);
     bool setL_1SNZ_BGN(uint16_t time);
     bool setL_1SNZ_END(uint16_t time);
-
     bool setL_2SNZ_DAY(byte mode);
     bool setL_2SNZ_BGN(uint16_t time);
     bool setL_2SNZ_END(uint16_t time);
 
+    bool setLBRTValue(byte brightness);
+    bool setLSPDValue(byte speed);
+    bool setCurrClr(byte colour);
 
 public:
     /**
      * @brief Initialize spa controller
      */
     Spa();
-
-    /**
-     * @brief Light effect mode
-     * 
-     * @details Integer value representing the light effect mode
-     * 
-     * @note Valid values: 0 = White, 1 = Color, 3 = Fade, 2 = Step, 4 = Party
-     */
-
-    Variable<byte> ColorMode = Variable<byte>(
-        0, {
-            {"White", 0},
-            {"Color", 1},
-            {"Fade", 3},
-            {"Step", 2},
-            {"Party", 4}
-        }
-    );
 
     /**
      * @brief Spa target temperature setting
@@ -123,7 +107,6 @@ public:
             {"Disabled", 3}
         }
     );
-
 
     /**
      * @brief Represents the state of Pump 1 with various modes.
@@ -276,6 +259,42 @@ public:
      * eg 20:00 = 20*256+0 = 5120; 13:47 = 13*256+47 = 3375
      */
     Variable<uint16_t> L_2SNZ_END;
+
+    /**
+     * @brief Light effect mode
+     * 
+     * @details Integer value representing the light effect mode
+     * 
+     * @note Valid values: 0 = White, 1 = Color, 3 = Fade, 2 = Step, 4 = Party
+     */
+
+    Variable<byte> ColorMode = Variable<byte>(
+        0, {
+            {"White", 0},
+            {"Color", 1},
+            {"Fade", 3},
+            {"Step", 2},
+            {"Party", 4}
+        }
+    );
+
+    /**
+     * @brief Light brightness
+     * @details Range: 1 (dim) - 5 (bright)
+     */
+    Variable<byte> LBRTValue;
+
+    /**
+     * @brief Light effect speed
+     * @details Range: 1 (slow) - 5 (fast)
+     */
+    Variable<byte> LSPDValue;
+
+    /**
+     * @brief Light colour
+     * @details Range: 0 - 31
+     */
+    Variable<byte> CurrClr; 
 
 
 
@@ -561,23 +580,13 @@ public:
     ///
     /// min 1, max 5
     ReadOnlyVariable<int> VARIValue;
-    /// @brief Lights brightness
-    ///
-    /// min 1, max 5
-    ReadOnlyVariable<int> LBRTValue;
-    /// @brief Light colour
-    ///
-    /// min 0, max 31
-    ReadOnlyVariable<int> CurrClr;
 
 
 
 
 
-    /// @brief Light effect speed
-    ///
-    /// min 1, max 5
-    ReadOnlyVariable<int> LSPDValue;
+
+
     /// @brief Filter run time (in hours) per block
     ReadOnlyVariable<int> FiltSetHrs;
     /// @brief Filter block duration (hours)

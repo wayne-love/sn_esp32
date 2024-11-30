@@ -7,7 +7,7 @@ Spa::Spa() : port(SPA_SERIAL) {
     SPA_SERIAL.setTimeout(250);
 
     STMP.setBeforeUpdate(this, &Spa::setSTMP);
-    ColorMode.setBeforeUpdate(this, &Spa::setColorMode);
+
     RB_TP_Pump1.setBeforeUpdate(this, &Spa::setRB_TP_Pump1);
     RB_TP_Pump2.setBeforeUpdate(this, &Spa::setRB_TP_Pump2);
     RB_TP_Pump3.setBeforeUpdate(this, &Spa::setRB_TP_Pump3);
@@ -25,7 +25,13 @@ Spa::Spa() : port(SPA_SERIAL) {
     L_1SNZ_END.setStringConverter(this, &Spa::timeStringToUint16);
     L_2SNZ_BGN.setStringConverter(this, &Spa::timeStringToUint16);
     L_2SNZ_END.setStringConverter(this, &Spa::timeStringToUint16);
-    
+
+    ColorMode.setBeforeUpdate(this, &Spa::setColorMode);
+    LBRTValue.setBeforeUpdate(this, &Spa::setLBRTValue);
+    LSPDValue.setBeforeUpdate(this, &Spa::setLSPDValue);
+    CurrClr.setBeforeUpdate(this, &Spa::setCurrClr);
+
+
 }
 
 void Spa::sendCommand(String cmd) {
@@ -223,5 +229,35 @@ bool Spa::setL_2SNZ_END(uint16_t time){
         return sendCommandCheckResult("W72:"+smode,smode);
     }
     debugW("setL_1SNZ_END - %i is out of range", time);
+    return false;
+}
+
+bool Spa::setLBRTValue(byte brightness){
+    debugD("setLBRTValue - %i", brightness);
+    if ((brightness >= 1) && (brightness <= 5)) {
+        String smode = String(brightness);
+        return sendCommandCheckResult("S08:"+smode,smode);
+    }
+    debugW("setLBRTValue - %i is out of range", brightness);
+    return false;
+}
+
+bool Spa::setLSPDValue(byte speed){
+    debugD("setLSPDValue - %i", speed);
+    if ((speed >= 1) && (speed <= 5)) {
+        String smode = String(speed);
+        return sendCommandCheckResult("S08:"+smode,smode);
+    }
+    debugW("setLSPDValue - %i is out of range", speed);
+    return false; 
+}
+
+bool Spa::setCurrClr(byte colour){
+    debugD("setCurrClr - %i", colour);
+    if ((colour >= 0) && (colour <= 31)) {
+        String smode = String(colour);
+        return sendCommandCheckResult("S10:"+smode,smode);
+    }
+    debugW("setCurrClr - %i is out of range", colour);
     return false;
 }
