@@ -145,14 +145,14 @@ class SpaInterface : public SpaProperties {
         /// @return Returns True if succesful
         bool setL_2SNZ_BGN(int mode);
         bool setL_2SNZ_END(int mode);
-
+/*
         /// @brief Set Heat pump operating mode (0 --> 3, {auto, heat, cool, off})
         /// @param mode 
         /// @return Returns True if succesful
         bool setHPMP(int mode);
         bool setHPMP(String mode);
 
-/*
+
         /// @brief Set light mode (0 = white, 1 = colour, 2 = step, 3 = fade, 4 = party)
         /// @param mode
         /// @return Returns True if succesful

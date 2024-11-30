@@ -46,15 +46,26 @@ private:
     bool _resultRegistersDirty = true;
 
 
-    bool setSTMP(uint16_t temp);
     bool setColorMode(byte mode);
+
     bool setRB_TP_Pump1(byte mode);
     bool setRB_TP_Pump2(byte mode);
     bool setRB_TP_Pump3(byte mode);
     bool setRB_TP_Pump4(byte mode);
     bool setRB_TP_Pump5(byte mode);
-
     
+    bool setSTMP(uint16_t temp);
+    bool setHPMP(byte mode);
+
+    bool setL_1SNZ_DAY(byte mode);
+    bool setL_1SNZ_BGN(uint16_t time);
+    bool setL_1SNZ_END(uint16_t time);
+
+    bool setL_2SNZ_DAY(byte mode);
+    bool setL_2SNZ_BGN(uint16_t time);
+    bool setL_2SNZ_END(uint16_t time);
+
+
 public:
     /**
      * @brief Initialize spa controller
@@ -89,6 +100,22 @@ public:
      * @note Valid range: 10.0°C to 41.0°C
      */
     Variable<uint16_t> STMP;
+
+    /**
+     * @brief Heapump mode
+     * 
+     * @details Disabling the heatpump does not disable heating.  It just disables the heatpump.
+     * 
+     * @note Valid values: 0 = Auto, 1 = Heat, 2 = Cool, 3 = disabled
+     */
+    Variable<byte> HPMP = Variable<byte>(
+        0, {
+            {"Auto", 0},
+            {"Heat", 1},
+            {"Cool", 2},
+            {"Disabled", 3}
+        }
+    );
 
 
     /**
@@ -191,6 +218,40 @@ public:
         }
     );
 
+    /// @brief Sleep timer 1 active days
+    ///
+    /// 128 = off, 127 = every day, 96 = weekends, 31 = weekdays
+    Variable<byte> L_1SNZ_DAY = Variable<byte>(
+        127, {
+            {"Off", 128},
+            {"Everyday", 127},
+            {"Weekends", 96},
+            {"Weekdays", 31}
+        }
+    );
+    
+    /// @brief Sleep timer 2 active days
+    ///
+    /// 128 = off, 127 = every day, 96 = weekends, 31 = weekdays
+    Variable<byte> L_2SNZ_DAY;
+    /// @brief Sleep time 1 start time
+    ///
+    /// Formula h*256+m (ie: for 20:00, integer will be 20*256+0 = 5120; for 13:47, integer will be 13*256+47 = 3375)
+    Variable<u16_t> L_1SNZ_BGN;
+    /// @brief Sleep time 2 start time
+    ///
+    /// Formula h*256+m (ie: for 20:00, integer will be 20*256+0 = 5120; for 13:47, integer will be 13*256+47 = 3375)
+    Variable<u16_t> L_2SNZ_BGN;
+    /// @brief Sleep time 1 end time
+    ///
+    /// Formula h*256+m (ie: for 20:00, integer will be 20*256+0 = 5120; for 13:47, integer will be 13*256+47 = 3375)
+    Variable<u16_t> L_1SNZ_END;
+    /// @brief Sleep time 2 end time
+    ///
+    /// Formula h*256+m (ie: for 20:00, integer will be 20*256+0 = 5120; for 13:47, integer will be 13*256+47 = 3375)
+    Variable<u16_t> L_2SNZ_END;
+
+
 
 #pragma Properties
 #pragma region R2
@@ -218,8 +279,7 @@ public:
     /// Maintains time during power failure
     ReadOnlyVariable<time_t> SpaTime;
 
-    /// @brief Heater element temperature
-    /// @details Range: 0-70°C
+    /// @brief Heater element temperature sensor
     /// Primary temperature control and safety cutout sensor
     ReadOnlyVariable<int> HeaterTemperature;
 
@@ -513,30 +573,7 @@ public:
     ///
     /// Formula h*256+m (ie: for 20:00, integer will be 20*256+0 = 5120; for 13:47, integer will be 13*256+47 = 3375)
     ReadOnlyVariable<int> PSAV_END;
-    /// @brief Sleep timer 1
-    ///
-    /// 128 = off, 127 = every day, 96 = weekends, 31 = weekdays
-    ReadOnlyVariable<int> L_1SNZ_DAY;
-    /// @brief Sleep timer 2
-    ///
-    /// 128 = off, 127 = every day, 96 = weekends, 31 = weekdays
-    ReadOnlyVariable<int> L_2SNZ_DAY;
-    /// @brief Sleep time 1 start time
-    ///
-    /// Formula h*256+m (ie: for 20:00, integer will be 20*256+0 = 5120; for 13:47, integer will be 13*256+47 = 3375)
-    ReadOnlyVariable<int> L_1SNZ_BGN;
-    /// @brief Sleep time 2 start time
-    ///
-    /// Formula h*256+m (ie: for 20:00, integer will be 20*256+0 = 5120; for 13:47, integer will be 13*256+47 = 3375)
-    ReadOnlyVariable<int> L_2SNZ_BGN;
-    /// @brief Sleep time 1 end time
-    ///
-    /// Formula h*256+m (ie: for 20:00, integer will be 20*256+0 = 5120; for 13:47, integer will be 13*256+47 = 3375)
-    ReadOnlyVariable<int> L_1SNZ_END;
-    /// @brief Sleep time 1 end time
-    ///
-    /// Formula h*256+m (ie: for 20:00, integer will be 20*256+0 = 5120; for 13:47, integer will be 13*256+47 = 3375)
-    ReadOnlyVariable<int> L_2SNZ_END;
+
     /// @brief Default screen for control panels
     ///
     /// 0 = WTPM
@@ -624,10 +661,7 @@ public:
     /// If false then when spa is in use then heat pump will not run to reduce noise levels
     /// See SV-Series-OEM-Install-Manual.pdf page 19.
     ReadOnlyVariable<bool> HELE;
-    /// @brief Heatpump mode
-    ///
-    /// 0 = Auto, 1 = Heat, 2 = Cool, 3 = disabled
-    ReadOnlyVariable<int> HPMP;
+
     /// @brief Varible pump minimum speed setting
     ///
     /// Min 20%, Max 100%

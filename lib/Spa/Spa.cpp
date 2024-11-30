@@ -13,7 +13,13 @@ Spa::Spa() : port(SPA_SERIAL) {
     RB_TP_Pump3.setBeforeUpdate(this, &Spa::setRB_TP_Pump3);
     RB_TP_Pump4.setBeforeUpdate(this, &Spa::setRB_TP_Pump4);
     RB_TP_Pump5.setBeforeUpdate(this, &Spa::setRB_TP_Pump5);
-    
+    HPMP.setBeforeUpdate(this, &Spa::setHPMP);
+    L_1SNZ_DAY.setBeforeUpdate(this, &Spa::setL_1SNZ_DAY);
+    L_2SNZ_DAY.setBeforeUpdate(this, &Spa::setL_2SNZ_DAY);
+    L_1SNZ_BGN.setBeforeUpdate(this, &Spa::setL_1SNZ_BGN);
+    L_1SNZ_END.setBeforeUpdate(this, &Spa::setL_1SNZ_END);
+    L_2SNZ_BGN.setBeforeUpdate(this, &Spa::setL_2SNZ_BGN);
+    L_2SNZ_END.setBeforeUpdate(this, &Spa::setL_2SNZ_END);
 }
 
 void Spa::sendCommand(String cmd) {
@@ -69,6 +75,7 @@ bool Spa::setSTMP(uint16_t temp) {
         String stemp = String(temp);
         return sendCommandCheckResult("W40:" + stemp, stemp);
     }
+    debugW("setSTMP - %i is out of range", temp);
     return false;
 }
 
@@ -78,6 +85,7 @@ bool Spa::setColorMode(byte mode){
         String smode = String(mode);
         return sendCommandCheckResult("S07:"+smode,smode);
     }
+    debugW("setColorMode - %i is out of range", mode);
     return false;
 }
 
@@ -87,6 +95,7 @@ bool Spa::setRB_TP_Pump1(byte mode){
         String smode = String(mode);
         return sendCommandCheckResult("S21:"+smode,smode);
     }
+    debugW("setRB_TP_Pump1 - %i is out of range", mode);
     return false;
 }
 
@@ -96,6 +105,7 @@ bool Spa::setRB_TP_Pump2(byte mode){
         String smode = String(mode);
         return sendCommandCheckResult("S22:"+smode,smode);
     }
+    debugW("setRB_TP_Pump2 - %i is out of range", mode);
     return false;
 }
 
@@ -105,6 +115,7 @@ bool Spa::setRB_TP_Pump3(byte mode){
         String smode = String(mode);
         return sendCommandCheckResult("S23:"+smode,smode);
     }
+    debugW("setRB_TP_Pump3 - %i is out of range", mode);
     return false;
 }
 
@@ -114,6 +125,7 @@ bool Spa::setRB_TP_Pump4(byte mode){
         String smode = String(mode);
         return sendCommandCheckResult("S24:"+smode,smode);
     }
+    debugW("setRB_TP_Pump4 - %i is out of range", mode);
     return false;
 }
 
@@ -123,6 +135,76 @@ bool Spa::setRB_TP_Pump5(byte mode){
         String smode = String(mode);
         return sendCommandCheckResult("S26:"+smode,smode);
     }
+    debugW("setRB_TP_Pump5 - %i is out of range", mode);
     return false;
 }
 
+bool Spa::setHPMP(byte mode){
+    debugD("setHPMP - %i", mode);
+    if ((mode >= 0) && (mode <= 4)) {
+        String smode = String(mode);
+        return sendCommandCheckResult("W99:"+smode,smode);
+    };
+    debugW("setHPMP - %i is out of range", mode);
+    return false;
+}
+
+bool Spa::setL_1SNZ_DAY(byte mode){
+    debugD("setL_1SNZ_DAY - %i",mode);
+    if ((mode >= 0) && (mode <= 128)) {
+        String smode = String(mode);
+        return sendCommandCheckResult("W67:"+smode,smode);
+    }
+    debugW("setL_1SNZ_DAY - %i is out of range", mode);
+    return false;
+}
+
+bool Spa::setL_2SNZ_DAY(byte mode){
+    debugD("setL_2SNZ_DAY - %i",mode);
+    if ((mode >= 0) && (mode <= 128)) {
+        String smode = String(mode);
+        return sendCommandCheckResult("W70:"+smode,smode);
+    }
+    debugW("setL_2SNZ_DAY - %i is out of range", mode);
+    return false;
+}
+
+bool Spa::setL_1SNZ_BGN(uint16_t time){
+    debugD("setL_1SNZ_BGN - %i",time);
+    if ((time >= 0) && (time <= 5947)) {
+        String smode = String(time);
+        return sendCommandCheckResult("W68:"+smode,smode);
+    }
+    debugW("setL_1SNZ_BGN - %i is out of range", time);
+    return false;
+}
+
+bool Spa::setL_1SNZ_END(uint16_t time){
+    debugD("setL_1SNZ_END - %i",time);
+    if ((time >= 0) && (time <= 5947)) {
+        String smode = String(time);
+        return sendCommandCheckResult("W69:"+smode,smode);
+    }
+    debugW("setL_1SNZ_END - %i is out of range", time);
+    return false;
+}
+
+bool Spa::setL_2SNZ_BGN(uint16_t time){
+    debugD("setL_1SNZ_BGN - %i",time);
+    if ((time >= 0) && (time <= 5947)) {
+        String smode = String(time);
+        return sendCommandCheckResult("W71:"+smode,smode);
+    }
+    debugW("setL_1SNZ_BGN - %i is out of range", time);
+    return false;
+}
+
+bool Spa::setL_2SNZ_END(uint16_t time){
+    debugD("setL_1SNZ_END - %i",time);
+    if ((time >= 0) && (time <= 5947)) {
+        String smode = String(time);
+        return sendCommandCheckResult("W72:"+smode,smode);
+    }
+    debugW("setL_1SNZ_END - %i is out of range", time);
+    return false;
+}
