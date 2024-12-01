@@ -4,6 +4,7 @@
 #include <WiFiClient.h>
 #include <RemoteDebug.h>
 #include <WiFiManager.h>
+#include <ESPmDNS.h>
 
 #include "MultiBlinker.h"
 
@@ -554,15 +555,7 @@ void setup() {
   blinker.setState(STATE_NONE); // start with all LEDs off
   blinker.start();
 
-  delay(200);
-  debugA("Starting... %s", WiFi.getHostname());
-
-  WiFi.mode(WIFI_STA); 
-  WiFi.begin();
-
-  Debug.begin(WiFi.getHostname());
-  Debug.setResetCmdEnabled(true);
-  Debug.showProfiler(true);
+  debugA("Starting ESP...");
 
   debugI("Mounting FS");
 
@@ -575,8 +568,32 @@ void setup() {
   if (!config.readConfigFile()) {
     debugW("Failed to open config.json, starting Wi-Fi Manager");
     startWiFiManager();
-    //I'm not sure if we need a reboot here - probably not
   }
+
+  blinker.setState(STATE_WIFI_NOT_CONNECTED);
+  WiFi.setHostname(config.SpaName.getValue().c_str());
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin();
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    debugA(".");
+  }
+  debugA("Connected to Wi-Fi");
+
+  blinker.setState(STATE_NONE); // start with all LEDs off
+
+  Debug.begin(WiFi.getHostname());
+  Debug.setResetCmdEnabled(true);
+  Debug.showProfiler(true);
+
+  int totalTry = 5;
+  while (!MDNS.begin(WiFi.getHostname()) && totalTry > 0) {
+    debugW(".");
+    delay(1000);
+    totalTry--;
+  }
+  debugA("mDNS responder started");
 
   mqttClient.setServer(config.MqttServer.getValue(), config.MqttPort.getValue());
   mqttClient.setCallback(mqttCallback);
