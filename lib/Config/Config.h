@@ -68,7 +68,7 @@ public:
     Setting<int> MqttPort = Setting<int>("MqttPort", 1883, 1, 65535);
     Setting<String> MqttUsername = Setting<String>("MqttUsername");
     Setting<String> MqttPassword = Setting<String>("MqttPassword");
-    Setting<String> SpaName = Setting<String>("SpaName", "MySpa");
+    Setting<String> SpaName = Setting<String>("SpaName", "eSpa");
     Setting<int> UpdateFrequency = Setting<int>("UpdateFrequency", 60, 10, 300);
 };
 
