@@ -18,7 +18,7 @@ class SpaInterface : public SpaProperties {
 
         /// @brief Number of fields that we can expect to read.
 
-        int statusResponseMinFields = 288;
+        int statusResponseMinFields = 283;
 
         static const int statusResponseMaxFields = 295;
         
