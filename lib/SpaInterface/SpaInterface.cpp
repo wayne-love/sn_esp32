@@ -381,6 +381,8 @@ bool SpaInterface::readStatus() {
 
     int field = 0;
     int registerCounter = 0;
+    int currentRegisterSize = 0;
+    int registerError = 0;
     validStatusResponse = false;
     String statusResponseTmp = "";
 
@@ -399,7 +401,15 @@ bool SpaInterface::readStatus() {
             debugE("Throwing exception - field: %i, value: %s", field, statusResponseRaw[field].c_str());
             return false;
         }
-        if (statusResponseRaw[field][0] == ':') registerCounter++;
+        if (statusResponseRaw[field][0] == ':') {
+            debugV("Completed reading register: %s, number: %i, total fields counted: %i, minimum fields: %i", statusResponseRaw[field-currentRegisterSize+1], registerCounter, currentRegisterSize, registerMinSize[registerCounter]);
+            if (registerMinSize[registerCounter] > currentRegisterSize) {
+                debugE("Throwing exception - not enough fields in register: %s number: %i, total fields counted: %i, minimum fields: %i", statusResponseRaw[field-currentRegisterSize+1], registerCounter, currentRegisterSize, registerMinSize[registerCounter]);
+                registerError++; // Instead of returning false, I want to read the complete response so it is available in the webinterface for debugging
+            }
+            registerCounter++;
+            currentRegisterSize = 0;
+        }
         // If we reach the last register we have finished reading...
         if (registerCounter >= 12) break;
 
@@ -420,12 +430,23 @@ bool SpaInterface::readStatus() {
 
 
         field++;
+        currentRegisterSize++;
     }
 
     //Flush the remaining data from the buffer as the last field is meaningless
     flushSerialReadBuffer();
 
     statusResponse.update_Value(statusResponseTmp);
+
+    if (registerCounter < 12) {
+        debugE("Throwing exception - not enough registers, we only read: %i", registerCounter);
+        return false;
+    }
+
+    if (registerError > 0) {
+        debugE("Throwing exception - not enough fields in %i registers", registerError);
+        return false;
+    }
 
     if (field < statusResponseMinFields) {
         debugE("Throwing exception - %i fields read expecting at least %i",field, statusResponseMinFields);

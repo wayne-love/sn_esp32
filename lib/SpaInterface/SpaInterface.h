@@ -17,11 +17,9 @@ class SpaInterface : public SpaProperties {
         int _updateFrequency = 60;
 
         /// @brief Number of fields that we can expect to read.
+        static const int statusResponseMinFields = 275;
+        static const int statusResponseMaxFields = 300;
 
-        int statusResponseMinFields = 283;
-
-        static const int statusResponseMaxFields = 295;
-        
         /// @brief Each field of the RF cmd response as seperate elements.
         String statusResponseRaw[statusResponseMaxFields];
 
@@ -37,6 +35,22 @@ class SpaInterface : public SpaProperties {
         int RC=-1;
         int RE=-1;
         int RG=-1;
+
+        // Register minimum sizes aligned with data read in updateMeasures()
+        const std::array <int, 12> registerMinSize = {
+          29, //R2
+          25, //R3
+          23, //R4
+          22, //R5
+          27, //R6
+          30, //R7
+          12, //R9
+          12, //RA
+          12, //RB
+          10, //RC
+          30, //RE
+          12  //RG
+          };
 
         /// @brief Does the status response array contain valid information?
         bool validStatusResponse = false;
