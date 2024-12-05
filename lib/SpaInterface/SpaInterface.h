@@ -86,7 +86,8 @@ class SpaInterface : public SpaProperties {
         /// @brief Updates the attributes by sending the RF command and parsing the result.
         void updateStatus();
 
-        void flushSerialReadBuffer();
+        void flushSerialReadBuffer() { flushSerialReadBuffer(false); };
+        String flushSerialReadBuffer(bool returnData);
 
 
         /// @brief Stores millis time at which next update should occur

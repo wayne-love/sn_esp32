@@ -16,15 +16,26 @@ void SpaInterface::setUpdateFrequency(int updateFrequency) {
     _updateFrequency = updateFrequency;
 }
 
-void SpaInterface::flushSerialReadBuffer() {
+String SpaInterface::flushSerialReadBuffer(bool returnData) {
     int x = 0;
+    String flushedData;
 
     debugD("Flushing serial stream - %i bytes in the buffer", port.available());
-    while (port.available() > 0 && x++<5120) { 
-        int bytes = port.read();
-        debugV("%i,",bytes);
+    while (port.available() > 0 && x++ < 5120) {
+        int byte = port.read();
+        if (returnData) {
+            flushedData += (char)byte; // Append to buffer
+        }
+        debugV("%02X,", byte); // Log each byte
     }
-    debugD("Flushed serial stream - %i bytes in the buffer", port.available());
+
+    debugD("Flushed serial stream - %i bytes remaining in the buffer", port.available());
+
+    if (returnData && !flushedData.isEmpty()) {
+        debugD("Flushed data (%i bytes): %s", flushedData.length(), flushedData.c_str());
+    }
+
+    return flushedData;
 }
 
 
@@ -437,7 +448,7 @@ bool SpaInterface::readStatus() {
     }
 
     //Flush the remaining data from the buffer as the last field is meaningless
-    flushSerialReadBuffer();
+    statusResponseTmp = statusResponseTmp + flushSerialReadBuffer(true);
 
     statusResponse.update_Value(statusResponseTmp);
 
