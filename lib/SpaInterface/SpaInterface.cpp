@@ -401,7 +401,10 @@ bool SpaInterface::readStatus() {
             debugE("Throwing exception - field: %i, value: %s", field, statusResponseRaw[field].c_str());
             return false;
         }
-        if (statusResponseRaw[field][0] == ':') {
+        // if we have reached a colon we are at the end of the current register
+        // OR
+        // if we are in register 11 (the last register) and have reached the minimum size we should stop
+        if (statusResponseRaw[field][0] == ':' || (registerCounter == 11 && currentRegisterSize >= registerMinSize[registerCounter])) {
             debugV("Completed reading register: %s, number: %i, total fields counted: %i, minimum fields: %i", statusResponseRaw[field-currentRegisterSize+1], registerCounter, currentRegisterSize, registerMinSize[registerCounter]);
             if (registerMinSize[registerCounter] > currentRegisterSize) {
                 debugE("Throwing exception - not enough fields in register: %s number: %i, total fields counted: %i, minimum fields: %i", statusResponseRaw[field-currentRegisterSize+1], registerCounter, currentRegisterSize, registerMinSize[registerCounter]);
