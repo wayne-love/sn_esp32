@@ -74,6 +74,7 @@ private:
     bool setLBRTValue(byte brightness);
     bool setLSPDValue(byte speed);
     bool setCurrClr(byte colour);
+    bool setRB_TP_Light(bool mode);
 
 public:
     /**
@@ -296,7 +297,11 @@ public:
      */
     Variable<byte> CurrClr; 
 
-
+    /**
+     * @brief Light status (on/off)
+     * @details true = on, false = off
+     */
+    Variable<bool> RB_TP_Light;
 
 #pragma Properties
 #pragma region R2
@@ -550,7 +555,7 @@ public:
     //  Unknown encoding - Attribute<int> TouchPad1;
 
     ReadOnlyVariable<int> RB_TP_Blower;
-    ReadOnlyVariable<int> RB_TP_Light;
+
     /// @brief Auto enabled
     ///
     /// True when auto enabled

@@ -10,6 +10,8 @@
  */
 template<typename T>
 class ReadOnlyVariable {
+friend class Spa;
+
 protected:
     T value;
     bool (*beforeUpdate)(T) = nullptr;    // Called before update with newValue, returns true to allow change

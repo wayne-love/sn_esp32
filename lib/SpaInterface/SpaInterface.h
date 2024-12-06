@@ -200,9 +200,10 @@ class SpaInterface : public SpaProperties {
         /// @param mode 0 = off, 1 = on, 4 = auto (if supported)
         /// @return True if successful
         bool setRB_TP_Pump5(int mode);
-*/
+
 
         bool setRB_TP_Light(int mode);
+*/
 
         /// @brief Set aux element operating mode
         /// @param mode 0 = off, 1 = on

@@ -30,6 +30,7 @@ Spa::Spa() : port(SPA_SERIAL) {
     LBRTValue.setBeforeUpdate(this, &Spa::setLBRTValue);
     LSPDValue.setBeforeUpdate(this, &Spa::setLSPDValue);
     CurrClr.setBeforeUpdate(this, &Spa::setCurrClr);
+    RB_TP_Light.setBeforeUpdate(this, &Spa::setRB_TP_Light);
 
 
 }
@@ -260,4 +261,12 @@ bool Spa::setCurrClr(byte colour){
     }
     debugW("setCurrClr - %i is out of range", colour);
     return false;
+}
+
+bool Spa::setRB_TP_Light(bool mode){
+    debugD("setRB_TP_Light - %i",mode);
+    if (mode != RB_TP_Light) {
+        return sendCommandCheckResult("W14", "W14");
+    }
+    return true;
 }
