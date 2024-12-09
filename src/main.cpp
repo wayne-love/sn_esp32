@@ -642,9 +642,7 @@ void loop() {
     if (delayedStart) {
       delayedStart = !(bootTime + 10000 < millis());
     } else {
-
-      // quiet down the log for now
-      // si.loop();
+      si.loop();
 
       if (!si.isInitialised()) {
         // set status lights to indicate we are waiting for spa connection before we proceed
