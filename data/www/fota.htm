@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark light">
+<link rel="stylesheet" href="/styles.css">
+<title>Firmware Update</title>
+</head>
+<body>
+<h1>Firmware Update</h1>
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+<form method='POST' action='' enctype='multipart/form-data' id='upload_form'>
+<input type='file' accept='.bin,.bin.gz' name='update'>
+<input type='submit' value='Update'>
+</form>
+<div id='prg'>progress: 0%</div>
+<div id='msg'></div>
+<script>
+$('form').submit(function(e){
+  e.preventDefault();
+  var form = $('#upload_form')[0];
+  var data = new FormData(form);
+  $.ajax({
+    url: '/fota',
+    type: 'POST',
+    data: data,
+    contentType: false,
+    processData: false,
+    xhr: function() {
+      var xhr = new window.XMLHttpRequest();
+        xhr.upload.addEventListener('progress', function(evt) {
+        if (evt.lengthComputable) {
+            var per = evt.loaded / evt.total;
+            $('#prg').html('progress: ' + Math.round(per*100) + '%');
+          if (per < 1) {
+            $('#msg').html('<p>Uploading...</p>');
+          } else {
+            $('#msg').html('<p style="color:blue;">Flashing...</p>');
+          }
+        }
+      }, false);
+      return xhr;
+    },
+    success: function() {
+      $('#msg').html('<p style="color:green;">Update successful! Rebooting...</p>');
+      setTimeout(function () { window.location.href = '/'; }, 5000);
+    },
+    error: function() {
+      $('#msg').html('<p style="color:red;">Update failed! Please try again.</p>');
+    }
+  });
+});
+</script>
+</body>
+</html>

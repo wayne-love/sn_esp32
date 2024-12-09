@@ -62,9 +62,9 @@ void WMsaveConfigCallback(){
 }
 
 void startWiFiManager(){
-  if (ui.initialised) {
-    ui.server->stop();
-  }
+  // if (ui.initialised) {
+  //   ui.server_old->stop();
+  // }
 
   WiFiManager wm;
   WiFiManagerParameter custom_spa_name("spa_name", "Spa Name", config.SpaName.getValue().c_str(), 40);
@@ -618,9 +618,9 @@ void loop() {
   mqttClient.loop();
   Debug.handle();
 
-  if (ui.initialised) { 
-    ui.server->handleClient(); 
-  }
+  // if (ui.initialised) { 
+  //   ui.server_old->handleClient(); 
+  // }
 
   if (updateMqtt) {
     debugD("Changing MQTT settings...");
@@ -642,10 +642,12 @@ void loop() {
     if (delayedStart) {
       delayedStart = !(bootTime + 10000 < millis());
     } else {
-
       si.loop();
 
-      if (si.isInitialised()) {
+      if (!si.isInitialised()) {
+        // set status lights to indicate we are waiting for spa connection before we proceed
+        blinker.setState(STATE_WAITING_FOR_SPA);
+      } else {
         if ( spaSerialNumber=="" ) {
           debugI("Initialising...");
       
@@ -690,7 +692,6 @@ void loop() {
             mqttPublishStatus();
 
             si.statusResponse.setCallback(mqttPublishStatusString);
-
           }
           
           // all systems are go! Start the knight rider animation loop
