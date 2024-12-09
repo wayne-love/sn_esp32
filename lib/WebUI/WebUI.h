@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 
-// #include <WebServer.h>
 #include "ESPAsyncWebServer.h"
 #include <Update.h>
 
@@ -12,15 +11,10 @@
 #include "Config.h"
 #include "MQTTClientWrapper.h"
 
-// //define stringify function
-// #define xstr(a) str(a)
-// #define str(a) #a
-
 extern RemoteDebug Debug;
 
 class WebUI {
     public:
-        // std::unique_ptr<WebServer> server_old;
         WebUI(SpaInterface *spa, Config *config, MQTTClientWrapper *mqttClient);
 
         /// @brief Set the function to be called when properties have been updated.

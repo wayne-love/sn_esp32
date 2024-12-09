@@ -156,8 +156,7 @@ void WebUI::begin() {
         request->send(response);
     });
 
-    // Returns web site rendering of the current station state,
-    // served from the data/../www directory of this project.
+    // As a fallback we try to load from /www any requested URL
     server.serveStatic("/", LittleFS, "/www/");
 
     server.begin();
