@@ -115,7 +115,7 @@ void startWifiManagerCallback() {
 }
 
 void configChangeCallbackString(const char* name, String value) {
-  debugD("%s: %s", name, value);
+  debugD("%s: %s", name, value.c_str());
   if (strcmp(name, "MqttServer") == 0) updateMqtt = true;
   else if (strcmp(name, "MqttPort") == 0) updateMqtt = true;
   else if (strcmp(name, "MqttUsername") == 0) updateMqtt = true;
