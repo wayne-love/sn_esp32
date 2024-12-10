@@ -18,6 +18,8 @@ extern RemoteDebug Debug;
 #define xstr(a) str(a)
 #define str(a) #a
 
+#define RELEASES_URL "https://api.github.com/repos/wayne-love/ESPySpa/releases/latest"
+
 String convertToTime(int data);
 int convertToInteger(String &timeStr);
 bool getPumpModesJson(SpaInterface &si, int pumpNumber, JsonObject pumps);

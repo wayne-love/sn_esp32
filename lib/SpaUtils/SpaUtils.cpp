@@ -282,7 +282,7 @@ int compareVersions(const int current[3], const int latest[3]) {
 void firmwareCheckUpdates(Config &config) {
   HttpContent httpContent;
   String content;
-  if (httpContent.fetchHttpContent("https://api.github.com/repos/wayne-love/ESPySpa/releases/latest", content)) {
+  if (httpContent.fetchHttpContent(RELEASES_URL, content)) {
     JsonDocument doc;
     deserializeJson(doc, content);
     String latestRelease = doc["tag_name"].as<String>();
