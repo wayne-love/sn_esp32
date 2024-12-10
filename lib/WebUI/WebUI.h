@@ -232,7 +232,7 @@ R"(<!DOCTYPE html>
 <tr><td>MQTT Port:</td><td><input type='number' name='mqttPort' id='mqttPort'></td></tr>
 <tr><td>MQTT Username:</td><td><input type='text' name='mqttUsername' id='mqttUsername'></td></tr>
 <tr><td>MQTT Password:</td><td><input type='text' name='mqttPassword' id='mqttPassword'></td></tr>
-<tr><td>Poll Frequency (seconds):</td><td><input type='number' name='updateFrequency' id='updateFrequency' step="1" min="10" max="300"></td></tr>
+<tr><td>Poll Frequency (seconds):</td><td><input type='number' name='spaPollFrequency' id='spaPollFrequency' step="1" min="10" max="300"></td></tr>
 </table>
 <input type='submit' value='Save'>
 </form>
@@ -248,7 +248,7 @@ function loadConfig() {
       document.getElementById('mqttPort').value = data.mqttPort;
       document.getElementById('mqttUsername').value = data.mqttUsername;
       document.getElementById('mqttPassword').value = data.mqttPassword;
-      document.getElementById('updateFrequency').value = data.updateFrequency;
+      document.getElementById('spaPollFrequency').value = data.spaPollFrequency;
     })
   .catch(error => console.error('Error loading config:', error));
 }

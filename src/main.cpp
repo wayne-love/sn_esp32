@@ -129,7 +129,7 @@ void configChangeCallbackString(const char* name, String value) {
 
 void configChangeCallbackInt(const char* name, int value) {
   debugD("%s: %i", name, value);
-  if (strcmp(name, "UpdateFrequency") == 0) si.setUpdateFrequency(value);
+  if (strcmp(name, "spaPollFrequency") == 0) si.setPollFrequency(value);
 }
 
 void mqttHaAutoDiscovery() {
@@ -603,7 +603,7 @@ void setup() {
 
   ui.begin();
   ui.setWifiManagerCallback(startWifiManagerCallback);
-  si.setUpdateFrequency(config.UpdateFrequency.getValue());
+  si.setPollFrequency(config.spaPollFrequency.getValue());
 
   config.setCallback(configChangeCallbackString);
   config.setCallback(configChangeCallbackInt);
