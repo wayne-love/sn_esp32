@@ -106,7 +106,7 @@ void WebUI::begin() {
         if (server->hasArg("mqttUsername")) _config->MqttUsername.setValue(server->arg("mqttUsername"));
         if (server->hasArg("mqttPassword")) _config->MqttPassword.setValue(server->arg("mqttPassword"));
         if (server->hasArg("updateFrequency")) _config->UpdateFrequency.setValue(server->arg("updateFrequency").toInt());
-        _config->writeConfigFile();
+        _config->writeConfig();
         server->sendHeader("Connection", "close");
         server->send(200, "text/plain", "Updated");
     });
