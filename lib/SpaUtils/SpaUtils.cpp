@@ -146,6 +146,9 @@ bool generateStatusJson(SpaInterface &si, MQTTClientWrapper &mqttClient, Config 
   json["status"]["state"] = si.getStatus();
   json["status"]["spaMode"] = si.getMode();
   json["status"]["controller"] = si.getModel();
+  String firmware = si.getSVER().substring(3);
+  firmware.replace(' ', '.');
+  json["status"]["firmware"] = firmware;
   json["status"]["serial"] = si.getSerialNo1() + "-" + si.getSerialNo2();
   json["status"]["siInitialised"] = si.isInitialised()?"true":"false";
   json["status"]["mqtt"] = mqttClient.connected()?"connected":"disconnected";
