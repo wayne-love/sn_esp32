@@ -76,7 +76,7 @@ void WebUI::begin() {
         if (request->hasParam("mqttUsername", true)) _config->MqttUsername.setValue(request->getParam("mqttUsername", true)->value());
         if (request->hasParam("mqttPassword", true)) _config->MqttPassword.setValue(request->getParam("mqttPassword", true)->value());
         if (request->hasParam("updateFrequency", true)) _config->UpdateFrequency.setValue(request->getParam("updateFrequency", true)->value().toInt());
-        _config->writeConfigFile();
+        _config->writeConfig();
         AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "Updated");
         response->addHeader("Connection", "close");
         request->send(response);

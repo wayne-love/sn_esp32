@@ -89,7 +89,7 @@ void startWiFiManager(){
     config.MqttUsername.setValue(String(custom_mqtt_username.getValue()));
     config.MqttPassword.setValue(String(custom_mqtt_password.getValue()));
 
-    config.writeConfigFile();
+    config.writeConfig();
   }
 }
 
@@ -554,15 +554,7 @@ void setup() {
 
   debugA("Starting ESP...");
 
-  debugI("Mounting FS");
-
-  if (!LittleFS.begin()) {
-    debugW("Failed to mount file system, formatting");
-    LittleFS.format();
-    LittleFS.begin();
-  }
-
-  if (!config.readConfigFile()) {
+  if (!config.readConfig()) {
     debugW("Failed to open config.json, starting Wi-Fi Manager");
     startWiFiManager();
   }

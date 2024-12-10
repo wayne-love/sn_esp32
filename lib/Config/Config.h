@@ -1,6 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <Preferences.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <RemoteDebug.h>
@@ -77,15 +78,18 @@ public:
     // Constructor
     Config();
 
-    // File operations
-    bool readConfigFile();
-    void writeConfigFile();
+    bool readConfig();              // Read configuration from Preferences or file
+    void writeConfig();             // Write configuration to Preferences
 
     // Set callback for all Setting instances
     template <typename T>
     void setCallback(void (*callback)(const char*, T)) {
         Setting<T>::setCallback(callback);
     }
+private:
+    bool readConfigFile();          // Read configuration from file
+    void writeConfigFile();         // Write configuration to file
+
 };
 
 #endif // CONFIG_H
