@@ -10,8 +10,13 @@
 #include "Config.h"
 #include <PubSubClient.h>
 #include "MQTTClientWrapper.h"
+#include "HttpContent.h"
 
 extern RemoteDebug Debug;
+
+//define stringify function
+#define xstr(a) str(a)
+#define str(a) #a
 
 String convertToTime(int data);
 int convertToInteger(String &timeStr);
@@ -23,6 +28,11 @@ String getPumpPossibleStates(String pumpState);
 int getPumpSpeedMax(String pumpState);
 int getPumpSpeedMin(String pumpState);
 
-bool generateStatusJson(SpaInterface &si, MQTTClientWrapper &mqttClient, String &output, bool prettyJson=false);
+bool generateStatusJson(SpaInterface &si, MQTTClientWrapper &mqttClient, Config &config, String &output, bool prettyJson=false);
+
+String fetchLatestVersion(const String& url);
+bool parseVersion(const String version, int parsedVersion[3]);
+int compareVersions(const int current[3], const int latest[3]);
+void firmwareCheckUpdates(Config &config);
 
 #endif // SPAUTILS_H

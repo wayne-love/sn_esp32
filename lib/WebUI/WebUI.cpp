@@ -29,7 +29,7 @@ void WebUI::begin() {
         debugD("uri: %s", server->uri().c_str());
         server->sendHeader("Connection", "close");
         String json;
-        if (generateStatusJson(*_spa, *_mqttClient, json, true)) {
+        if (generateStatusJson(*_spa, *_mqttClient, *_config, json, true)) {
             server->send(200, "text/json", json.c_str());
         } else {
             server->send(200, "text/text", "Error generating json");
@@ -89,6 +89,29 @@ void WebUI::begin() {
             } else {
                 debugD("Update Error: %s",getError());
             }
+        }
+    });
+
+    server->on("/download_update", HTTP_POST, [&](){
+        debugD("uri: %s", server->uri().c_str());
+        if (!server->hasArg("url")) {
+            server->send(400, "text/plain", "Missing 'url' parameter");
+            return;
+        }
+
+        String firmwareUrl = server->arg("url");
+
+        HttpContent httpContent;
+        if (httpContent.updateFirmware(firmwareUrl)) {
+            server->client().setNoDelay(true);
+            server->sendHeader("Connection", "close");
+            server->send(200, "text/plain", "OK");
+            debugD("Update successful! Rebooting...");
+            delay(100);
+            server->client().stop();
+            ESP.restart();
+        } else {
+            server->send(500, "text/plain", "Update Error.");
         }
     });
 

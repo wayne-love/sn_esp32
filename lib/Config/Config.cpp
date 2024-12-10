@@ -31,6 +31,7 @@ bool Config::readConfigFile() {
       if (json["mqtt_password"].is<String>()) MqttPassword.setValue(json["mqtt_password"].as<String>());
       if (json["spa_name"].is<String>()) SpaName.setValue(json["spa_name"].as<String>());
       if (json["update_frequency"].is<int>()) spaPollFrequency.setValue(json["update_frequency"].as<int>());
+      if (json["firmware_update_check_frequency"].is<int>()) firmwareUpdateCheckFrequency.setValue(json["firmware_update_check_frequency"].as<int>());
     } else {
       debugW("Failed to parse config file");
     }
@@ -51,6 +52,7 @@ void Config::writeConfigFile() {
   json["mqtt_password"] = MqttPassword.getValue();
   json["spa_name"] = SpaName.getValue();
   json["update_frequency"] = spaPollFrequency.getValue();
+  json["firmware_update_check_frequency"] = firmwareUpdateCheckFrequency.getValue();
 
   File configFile = LittleFS.open("/config.json", "w");
   if (!configFile) {

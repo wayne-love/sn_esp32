@@ -11,10 +11,6 @@
 #include "Config.h"
 #include "MQTTClientWrapper.h"
 
-//define stringify function
-#define xstr(a) str(a)
-#define str(a) #a
-
 extern RemoteDebug Debug;
 
 class WebUI {
