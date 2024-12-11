@@ -12,7 +12,7 @@ SpaInterface::SpaInterface() : port(SPA_SERIAL) {
 SpaInterface::~SpaInterface() {}
 
 
-void SpaInterface::setUpdateFrequency(int updateFrequency) {
+void SpaInterface::setPollFrequency(int updateFrequency) {
     _updateFrequency = updateFrequency;
 }
 

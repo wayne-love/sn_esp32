@@ -29,7 +29,7 @@ void WebUI::begin() {
         debugD("uri: %s", server->uri().c_str());
         server->sendHeader("Connection", "close");
         String json;
-        if (generateStatusJson(*_spa, *_mqttClient, json, true)) {
+        if (generateStatusJson(*_spa, *_mqttClient, *_config, json, true)) {
             server->send(200, "text/json", json.c_str());
         } else {
             server->send(200, "text/text", "Error generating json");
@@ -92,6 +92,29 @@ void WebUI::begin() {
         }
     });
 
+    server->on("/download_update", HTTP_POST, [&](){
+        debugD("uri: %s", server->uri().c_str());
+        if (!server->hasArg("url")) {
+            server->send(400, "text/plain", "Missing 'url' parameter");
+            return;
+        }
+
+        String firmwareUrl = server->arg("url");
+
+        HttpContent httpContent;
+        if (httpContent.updateFirmware(firmwareUrl)) {
+            server->client().setNoDelay(true);
+            server->sendHeader("Connection", "close");
+            server->send(200, "text/plain", "OK");
+            debugD("Update successful! Rebooting...");
+            delay(100);
+            server->client().stop();
+            ESP.restart();
+        } else {
+            server->send(500, "text/plain", "Update Error.");
+        }
+    });
+
     server->on("/config", HTTP_GET, [&]() {
         debugD("uri: %s", server->uri().c_str());
         server->sendHeader("Connection", "close");
@@ -105,7 +128,7 @@ void WebUI::begin() {
         if (server->hasArg("mqttPort")) _config->MqttPort.setValue(server->arg("mqttPort").toInt());
         if (server->hasArg("mqttUsername")) _config->MqttUsername.setValue(server->arg("mqttUsername"));
         if (server->hasArg("mqttPassword")) _config->MqttPassword.setValue(server->arg("mqttPassword"));
-        if (server->hasArg("updateFrequency")) _config->UpdateFrequency.setValue(server->arg("updateFrequency").toInt());
+        if (server->hasArg("spaPollFrequency")) _config->spaPollFrequency.setValue(server->arg("spaPollFrequency").toInt());
         _config->writeConfigFile();
         server->sendHeader("Connection", "close");
         server->send(200, "text/plain", "Updated");
@@ -119,7 +142,7 @@ void WebUI::begin() {
         configJson += "\"mqttPort\":\"" + String(_config->MqttPort.getValue()) + "\",";
         configJson += "\"mqttUsername\":\"" + _config->MqttUsername.getValue() + "\",";
         configJson += "\"mqttPassword\":\"" + _config->MqttPassword.getValue() + "\",";
-        configJson += "\"updateFrequency\":" + String(_config->UpdateFrequency.getValue());
+        configJson += "\"spaPollFrequency\":" + String(_config->spaPollFrequency.getValue());
         configJson += "}";
         server->send(200, "application/json", configJson);
     });

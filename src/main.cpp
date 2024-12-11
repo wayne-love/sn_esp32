@@ -15,10 +15,6 @@
 #include "HAAutoDiscovery.h"
 #include "MQTTClientWrapper.h"
 
-//define stringify function
-#define xstr(a) str(a)
-#define str(a) #a
-
 unsigned long bootStartMillis;  // To track when the device started
 RemoteDebug Debug;
 
@@ -45,6 +41,7 @@ ulong mqttLastConnect = 0;
 ulong wifiLastConnect = millis();
 ulong bootTime = millis();
 ulong statusLastPublish = millis();
+ulong lastFirmwareCheck = 0;
 bool delayedStart = true; // Delay spa connection for 10sec after boot to allow for external debugging if required.
 bool autoDiscoveryPublished = false;
 
@@ -118,7 +115,7 @@ void startWifiManagerCallback() {
 }
 
 void configChangeCallbackString(const char* name, String value) {
-  debugD("%s: %s", name, value);
+  debugD("%s: %s", name, value.c_str());
   if (strcmp(name, "MqttServer") == 0) updateMqtt = true;
   else if (strcmp(name, "MqttPort") == 0) updateMqtt = true;
   else if (strcmp(name, "MqttUsername") == 0) updateMqtt = true;
@@ -129,7 +126,7 @@ void configChangeCallbackString(const char* name, String value) {
 
 void configChangeCallbackInt(const char* name, int value) {
   debugD("%s: %i", name, value);
-  if (strcmp(name, "UpdateFrequency") == 0) si.setUpdateFrequency(value);
+  if (strcmp(name, "spaPollFrequency") == 0) si.setPollFrequency(value);
 }
 
 void mqttHaAutoDiscovery() {
@@ -409,6 +406,14 @@ void mqttHaAutoDiscovery() {
   generateSelectAdJSON(output, ADConf, spa, discoveryTopic, si.spaModeStrings);
   mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
 
+  ADConf.displayName = "Firmware";
+  ADConf.valueTemplate = "{{ value_json['eSpa']['update'] | to_json }}";
+  ADConf.propertyId = "espa_firmware";
+  ADConf.deviceClass = "firmware";
+  ADConf.entityCategory = "diagnostic";
+  generateUpdateAdJSON(output, ADConf, spa, discoveryTopic);
+  mqttClient.publish(discoveryTopic.c_str(), output.c_str(), true);
+
 }
 
 #pragma region MQTT Publish / Subscribe
@@ -421,7 +426,7 @@ void mqttPublishStatusString(String s){
 
 void mqttPublishStatus() {
   String json;
-  if (generateStatusJson(si, mqttClient, json, false)) {
+  if (generateStatusJson(si, mqttClient, config, json, false)) {
     mqttClient.publish(mqttStatusTopic.c_str(),json.c_str());
   } else {
     debugD("Error generating json");
@@ -520,6 +525,15 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     si.setL_2SNZ_END(convertToInteger(p));
   } else if (property == "status_spaMode") {
     si.setMode(p);
+  } else if (property == "espa_firmware" && p == "update") {
+        HttpContent httpContent;
+        if (httpContent.updateFirmware(config.firmwareUrl.getValue())) {
+            debugD("Update successful! Rebooting...");
+            delay(100);
+            ESP.restart();
+        } else {
+            debugE("Update Error");
+        }
   } else {
     debugE("Unhandled property - %s",property.c_str());
   }
@@ -600,10 +614,11 @@ void setup() {
   mqttClient.setBufferSize(2048);
 
   bootStartMillis = millis();  // Record the current boot time in milliseconds
+  lastFirmwareCheck = millis() - (config.firmwareUpdateCheckFrequency.getValue() * 60 * 60 * 1000) + 30000; // check for update 30 seconds after start up.
 
   ui.begin();
   ui.setWifiManagerCallback(startWifiManagerCallback);
-  si.setUpdateFrequency(config.UpdateFrequency.getValue());
+  si.setPollFrequency(config.spaPollFrequency.getValue());
 
   config.setCallback(configChangeCallbackString);
   config.setCallback(configChangeCallbackInt);
@@ -642,6 +657,11 @@ void loop() {
     if (delayedStart) {
       delayedStart = !(bootTime + 10000 < millis());
     } else {
+
+      if (millis()-lastFirmwareCheck > (config.firmwareUpdateCheckFrequency.getValue() * 60 * 60 * 1000)) {
+        firmwareCheckUpdates(config);
+        lastFirmwareCheck = millis();
+      }
 
       si.loop();
 
