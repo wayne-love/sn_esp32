@@ -33,7 +33,7 @@
             Config
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <a class="dropdown-item" href="config.htm">Change Settings</a>
+            <a class="dropdown-item" href="#" id="configLink">Change Settings</a>
             <a class="dropdown-item" href="#" onclick="confirmAction('/wifi-manager'); return false;">Wi-Fi Manager</a>
             <a class="dropdown-item" href="/fota">Firmware Update</a>
             <a class="dropdown-item" href="#" onclick="sendCurrentTime();">Send Current Time to Spa</a>
@@ -142,25 +142,39 @@
   </div>
 
   <!-- Modal for configuration -->
-  <!-- <div id="configModal" class="modal fade" tabindex="-1" aria-hidden="true">
+  <div id="configModal" class="modal fade" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="infoModalTitle">Modal title</h5>
+          <h5 class="modal-title" id="configModalTitle">Change Settings</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <div class="modal-body" id="infoModalBody">
+        <div class="modal-body" id="configModalBody">
+          <div class="alert alert-danger" role="alert" id="configErrorAlert" style="display: none;">
+            Error loading configuration. Please try again.
+          </div>
+          <form id='config_form' action='#' method='POST'>
+            <table class="table">
+              <tr><td>Spa Name:</td><td><input type='text' class="form-control" name='spaName' id='spaName'></td></tr>
+              <tr><td>MQTT Server:</td><td><input type='text' class="form-control" name='mqttServer' id='mqttServer'></td></tr>
+              <tr><td>MQTT Port:</td><td><input type='number' class="form-control" name='mqttPort' id='mqttPort'></td></tr>
+              <tr><td>MQTT Username:</td><td><input type='text' class="form-control" name='mqttUsername' id='mqttUsername'></td></tr>
+              <tr><td>MQTT Password:</td><td><input type='text' class="form-control" name='mqttPassword' id='mqttPassword'></td></tr>
+              <tr><td>Poll Frequency (seconds):</td><td><input type='number' class="form-control" name='updateFrequency' id='updateFrequency' step="1" min="10" max="300"></td></tr>
+            </table>
+          </form>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="saveConfigButton">Save</button>
         </div>
       </div>
     </div>
-  </div> -->
+  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
   <script src="espa.js"></script>
 </body>

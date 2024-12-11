@@ -48,8 +48,28 @@ window.onload = function() {
     setInterval(fetchStatus, 10000);
 }
 
+// Retrieving and updating the configured settings, so they can be displayed in the modal popup
+function loadConfig() {
+    $('#configErrorAlert').hide();
+    fetch('/json/config')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('spaName').value = data.spaName;
+            document.getElementById('mqttServer').value = data.mqttServer;
+            document.getElementById('mqttPort').value = data.mqttPort;
+            document.getElementById('mqttUsername').value = data.mqttUsername;
+            document.getElementById('mqttPassword').value = data.mqttPassword;
+            document.getElementById('updateFrequency').value = data.updateFrequency;
+        })
+        .catch(error => {
+            console.error('Error loading config:', error);
+            $('#configErrorAlert').show(); // Show the alert if there's an error
+    });
+}
+
 // Modal dialog content population
 $(document).ready(function() {
+    // JSON dump modal
     $('#jsonLink').click(function(event) {
         event.preventDefault();
         fetch('/json').then(response => response.json()).then(data => {
@@ -58,6 +78,8 @@ $(document).ready(function() {
             $('#infoModal').modal('show');
         }).catch(error => console.error('Error fetching JSON:', error));
     });
+
+    // spa status modal
     $('#statusLink').click(function(event) {
         event.preventDefault();
         fetch('/status').then(response => response.json()).then(data => {
@@ -66,12 +88,39 @@ $(document).ready(function() {
             $('#infoModal').modal('show');
         }).catch(error => console.error('Error fetching status:', error));
     });
-    // $('#configLink').click(function(event) {
-    //     event.preventDefault();
-    //     fetch('/status').then(response => response.json()).then(data => {
-    //         $('#infoModalTitle').html("Spa Status");
-    //         $('#infoModalBody').html('<pre>' + data + '</pre>');
-    //         $('#infoModal').modal('show');
-    //     }).catch(error => console.error('Error fetching status:', error));
-    // });
+
+    // configuration settings modal
+    $('#configLink').click(function(event) {
+        event.preventDefault();
+        $('#configModal').modal('show');
+    });
+    // Load configuration when the config modal is shown
+    $('#configModal').on('shown.bs.modal', function() {
+        loadConfig();
+    });
+    // Handle form submission when the save button is clicked
+    $('#saveConfigButton').click(function() {
+        submitConfigForm();
+    });
+    function submitConfigForm() {
+        $.ajax({
+            url: '/config',
+            type: 'POST',
+            data: $('#config_form').serialize(),
+            success: function() {
+                // $('#msg').html('<p style="color:green;">Configuration updated successfully!</p>');
+                loadConfig();
+                setTimeout(function() { $('#msg').html(''); }, 3000);
+                $('#configModal').modal('hide');
+            },
+            error: function() {
+                $('#configErrorAlert').text('Error updating configuration. Please try again.').show();
+            }
+        });
+    }
+
+    $('#config_form').submit(function(e) {
+        e.preventDefault();
+        submitConfigForm();
+    });
 });
