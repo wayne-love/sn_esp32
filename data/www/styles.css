@@ -53,6 +53,10 @@ h1, h2, h3 {
   font-weight: 400;
 }
 
+.modal-header .close {
+  color: white;
+}
+
 input[type="submit"]:disabled, button:disabled {
   background: #cccccc;
   color: #666666;
