@@ -52,3 +52,9 @@ h1, h2, h3 {
 .modal-header .modal-title {
   font-weight: 400;
 }
+
+input[type="submit"]:disabled, button:disabled {
+  background: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}

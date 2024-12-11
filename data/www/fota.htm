@@ -10,14 +10,29 @@
 <h1>Firmware Update</h1>
 <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
 <form method='POST' action='' enctype='multipart/form-data' id='upload_form'>
-<input type='file' accept='.bin,.bin.gz' name='update'>
-<input type='submit' value='Update'>
-</form>
+
+<table>
+    <tr><td>eSpa model:</td><td><span id="espa_model">Loading...</span></td></tr>
+    <tr><td>Build:</td><td><span id="installedVersion">TODO</span></td></tr>
+    <tr><td>Latest version:</td><td><span id="lastestRelease">Loading...</span></td></tr>
+    <tr><td>Install version:</td><td>
+      <select id="firmware-select">
+        <option value="" disabled selected>Select a version</option>
+      </select>
+      <button id="install-btn" disabled>Install</button>
+    </td</tr>
+    <tr><td colspan="2">
+      <input type='file' accept='.bin,.bin.gz' name='update' id='file-input'>
+      <input type='submit' value='Update' id='update-button' disabled>
+    </form>
 <div id='prg'>progress: 0%</div>
 <div id='msg'></div>
+</td></tr>
+</table>
 <script>
 $('form').submit(function(e){
   e.preventDefault();
+  $('input[type="submit"]').prop('disabled', true);
   var form = $('#upload_form')[0];
   var data = new FormData(form);
   $.ajax({
@@ -47,8 +62,106 @@ $('form').submit(function(e){
     },
     error: function() {
       $('#msg').html('<p style="color:red;">Update failed! Please try again.</p>');
+      $('input[type="submit"]').prop('disabled', false);
     }
   });
+});
+const fileInput = document.getElementById('file-input');
+const updateButton = document.getElementById('update-button');
+fileInput.addEventListener('change', function () {
+    if (fileInput.files.length > 0) {
+        updateButton.disabled = false;
+    } else {
+        updateButton.disabled = true;
+    }
+});
+$(document).ready(function () {
+  function parseVersion(version) {
+    const match = version.match(/^v([\d.]+)/);
+    if (!match) return null;
+    return match[1].split('.').map(Number);
+  }
+  function compareVersions(current, latest) {
+    if (!current) return -1;
+    if (!latest) return 1;
+    for (let i = 0; i < Math.max(current.length, latest.length); i++) {
+      const a = current[i] || 0;
+      const b = latest[i] || 0;
+      if (a < b) return -1;
+      if (a > b) return 1;
+     }
+    return 0;
+  }
+  fetch('/json')
+    .then(response => response.json())
+    .then(value_json => {
+      document.getElementById('espa_model').innerText = value_json.eSpa.model;
+      document.getElementById('installedVersion').innerText = value_json.eSpa.update.installed_version;
+  $.ajax({
+    url: 'https://api.github.com/repos/wayne-love/ESPySpa/releases/latest',
+    type: 'GET',
+    success: function (data) {
+      document.getElementById('lastestRelease').innerText = data.tag_name;
+      const latestVersion = parseVersion(data.tag_name);
+      const currentVersion = parseVersion(document.getElementById('installedVersion').innerText);
+      const comparison = compareVersions(currentVersion, latestVersion);
+      if (comparison < 0) {
+        $('#msg').html(`<p style="color:blue;">New version available: ${data.tag_name}</p>`);
+      } else if (comparison === 0) {
+        $('#msg').html('<p style="color:green;">You are using the latest version.</p>');
+      } else {
+        $('#msg').html('<p style="color:green;">You are ahead of the latest release!</p>');
+      }
+    },
+    error: function () {
+      $('#msg').html('<p style="color:red;">Failed to fetch releases.</p>');
+    },
+  });
+  $.ajax({
+    url: 'https://api.github.com/repos/wayne-love/ESPySpa/releases',
+    type: 'GET',
+    success: function (data) {
+      const select = $('#firmware-select');
+      let hasValidAssets = false;
+      data.forEach(release => {
+        const version = parseVersion(release.tag_name);
+        if (release.assets && Array.isArray(release.assets) && release.assets.length > 0) {
+          const spaModel = document.getElementById('espa_model').innerText;
+          const asset = release.assets.find(asset => asset.name.endsWith('firmware_' + spaModel + '_ota.bin'));
+          if (version && asset) {
+            select.append(`<option value="${asset.browser_download_url}">${release.tag_name}</option>`);
+            hasValidAssets = true;
+          }
+        }
+      });
+      if (!hasValidAssets) {
+        $('#msg').html('<p style="color:red;">No firmware updates available for your device.</p>');
+      } else {
+        select.change(function () {
+          const selectedUrl = $(this).val();
+          $('#install-btn').prop('disabled', !selectedUrl);
+        });
+        $('#install-btn').click(function () {
+          const firmwareUrl = $('#firmware-select').val();
+          if (!firmwareUrl) return;
+          $('#install-btn').prop('disabled', true);
+          $('#prg').html('');
+          $('#msg').html('<p">Downloading update...</p>');
+          $.post('/download_update', { url: firmwareUrl }, function (response) {
+            $('#msg').html('<p style="color:green;">Update successful! Rebooting...</p>');
+            setTimeout(function () { window.location.href = '/'; }, 5000);
+          }).fail(function () {
+            $('#msg').html('<p style="color:red;">Failed to initiate update.</p>');
+          });
+        });
+      }
+    },
+    error: function () {
+      $('#msg').html('<p style="color:red;">Failed to fetch releases.</p>');
+    },
+  });
+})
+.catch(error => console.error('Error fetching status:', error));
 });
 </script>
 </body>
