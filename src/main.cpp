@@ -92,7 +92,7 @@ void startWiFiManager(){
     config.MqttUsername.setValue(String(custom_mqtt_username.getValue()));
     config.MqttPassword.setValue(String(custom_mqtt_password.getValue()));
 
-    config.writeConfigFile();
+    config.writeConfig();
   }
 }
 
@@ -565,7 +565,7 @@ void setup() {
     LittleFS.begin();
   }
 
-  if (!config.readConfigFile()) {
+  if (!config.readConfig()) {
     debugW("Failed to open config.json, starting Wi-Fi Manager");
     startWiFiManager();
   }
