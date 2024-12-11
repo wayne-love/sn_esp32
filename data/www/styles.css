@@ -1,4 +1,4 @@
-input[type=file]::file-selector-button, input[type="submit"], a, button {
+/* input[type=file]::file-selector-button, input[type="submit"], a, button {
     padding: 7px 15px;
     border: none;
     background: #007BFF;
@@ -21,4 +21,34 @@ table, td, th {
 }
 table {
   border-collapse: collapse;
+} */
+
+h1, h2, h3 {
+  text-align: left;
+  font-weight: 300;
+  padding-top: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.footer {
+  font-size: 10px;
+  text-align: center;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: white;
+}
+
+.modal-content {
+  border: none;
+}
+
+.modal-header {
+  background-color: #0069d9;
+  color: white;
+}
+
+.modal-header .modal-title {
+  font-weight: 400;
 }
