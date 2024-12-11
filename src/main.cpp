@@ -15,9 +15,6 @@
 #include "HAAutoDiscovery.h"
 #include "MQTTClientWrapper.h"
 
-//define stringify function
-#define xstr(a) str(a)
-#define str(a) #a
 
 unsigned long bootStartMillis;  // To track when the device started
 RemoteDebug Debug;

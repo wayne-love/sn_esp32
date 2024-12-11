@@ -12,9 +12,12 @@ function fetchStatus() {
       document.getElementById('temperatures_setPoint').value = value_json.temperatures.setPoint;
       document.getElementById('status_state').innerText = value_json.status.state;
       document.getElementById('status_controller').innerText = value_json.status.controller;
+      document.getElementById('status_firmware').innerText = value_json.status.firmware;
       document.getElementById('status_serial').innerText = value_json.status.serial;
       document.getElementById('status_siInitialised').innerText = value_json.status.siInitialised;
       document.getElementById('status_mqtt').innerText = value_json.status.mqtt;
+      document.getElementById('espa_model').innerText = value_json.eSpa.model;
+      document.getElementById('espa_build').innerText = value_json.eSpa.update.installed_version;
     })
     .catch(error => console.error('Error fetching status:', error));
 }
