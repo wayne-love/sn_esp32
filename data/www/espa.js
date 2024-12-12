@@ -38,18 +38,44 @@ function fetchStatus() {
     fetch('/json')
         .then(response => response.json())
         .then(value_json => {
-            document.getElementById('temperatures_water').innerText = value_json.temperatures.water + "\u00B0C";
-            document.getElementById('temperatures_setPoint').value = value_json.temperatures.setPoint;
-            document.getElementById('status_state').innerText = value_json.status.state;
-            document.getElementById('status_controller').innerText = value_json.status.controller;
-            document.getElementById('status_firmware').innerText = value_json.status.firmware;
-            document.getElementById('status_serial').innerText = value_json.status.serial;
-            document.getElementById('status_siInitialised').innerText = value_json.status.siInitialised;
-            document.getElementById('status_mqtt').innerText = value_json.status.mqtt;
-            document.getElementById('espa_model').innerText = value_json.eSpa.model;
-            document.getElementById('espa_build').innerText = value_json.eSpa.update.installed_version;
+            updateStatusElement('status_state', value_json.status.state);
+            updateStatusElement('temperatures_water', value_json.temperatures.water + "\u00B0C");
+            updateStatusElement('temperatures_setPoint', value_json.temperatures.setPoint);
+            updateStatusElement('status_controller', value_json.status.controller);
+            updateStatusElement('status_firmware', value_json.status.firmware);
+            updateStatusElement('status_serial', value_json.status.serial);
+            updateStatusElement('status_siInitialised', value_json.status.siInitialised);
+            updateStatusElement('status_mqtt', value_json.status.mqtt);
+            updateStatusElement('espa_model', value_json.eSpa.model);
+            updateStatusElement('espa_build', value_json.eSpa.update.installed_version);
         })
-        .catch(error => console.error('Error fetching status:', error));
+        .catch(error => {
+            console.error('Error fetching status:', error);
+            showAlert('Error connecting to the spa. If this persists, take a look at our <a class="alert-link" href="https://espa.diy/troubleshooting.html">troubleshooting docs</a>.', 'alert-danger', "Error");
+            handleStatusError('status_state');
+            handleStatusError('temperatures_water');
+            handleStatusError('temperatures_setPoint');
+            handleStatusError('status_controller');
+            handleStatusError('status_firmware');
+            handleStatusError('status_serial');
+            handleStatusError('status_siInitialised');
+            handleStatusError('status_mqtt');
+            handleStatusError('espa_model');
+            handleStatusError('espa_build');
+        });
+}
+
+function updateStatusElement(elementId, value) {
+    const element = document.getElementById(elementId);
+    element.classList.remove('badge', 'text-bg-warning');
+    element.textContent = value;
+}
+
+function handleStatusError(elementId) {
+    const element = document.getElementById(elementId);
+    element.classList.remove('text-bg-warning');
+    element.classList.add('text-bg-danger');
+    element.textContent = 'Failed to load';
 }
 
 window.onload = function () {
@@ -313,11 +339,11 @@ function loadFotaData() {
             const currentVersion = parseVersion(document.getElementById('installedVersion').innerText);
             const comparison = compareVersions(currentVersion, latestVersion);
             if (comparison < 0) {
-                showAlert(`There is a new eSpa release available - it's version ${data[0].tag_name}. You can <a href="#" id="fotaLink">update now</a>.`, 'alert-primary', "New eSpa release!");
+                showAlert(`There is a new eSpa release available - it's version ${data[0].tag_name}. You can <a href="#" id="fotaLink" class="alert-link">update now</a>.`, 'alert-primary', "New eSpa release!");
             }
         },
         error: function () {
-            showAlert('Failed to fetch eSpa release information. If this persists, take a look at our <a href="https://espa.diy/troubleshooting.html">troubleshooting docs</a>.', 'alert-danger', "Error");
+            showAlert('Failed to fetch eSpa release information. If this persists, take a look at our <a class="alert-link" href="https://espa.diy/troubleshooting.html">troubleshooting docs</a>.', 'alert-danger', "Error");
         }
     });
 }
@@ -340,7 +366,7 @@ $(document).ready(function () {
         })
         .catch(error => {
             console.error('Error fetching JSON:', error);
-            showAlert('Error connecting to the spa.  If this persists, take a look at our <a href="https://espa.diy/troubleshooting.html">troubleshooting docs</a>.', 'alert-danger', "Error");
+            showAlert('Error connecting to the spa.  If this persists, take a look at our <a class="alert-link" href="https://espa.diy/troubleshooting.html">troubleshooting docs</a>.', 'alert-danger', "Error");
         });
     });
 
@@ -354,7 +380,7 @@ $(document).ready(function () {
         })
         .catch(error => {
             console.error('Error fetching status:', error);
-            showAlert('Error connecting to the spa.  If this persists, take a look at our <a href="https://espa.diy/troubleshooting.html">troubleshooting docs</a>.', 'alert-danger', "Error");
+            showAlert('Error connecting to the spa.  If this persists, take a look at our <a class="alert-link" href="https://espa.diy/troubleshooting.html">troubleshooting docs</a>.', 'alert-danger', "Error");
         });
     });
 });
