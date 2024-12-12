@@ -101,10 +101,18 @@ function loadConfig() {
             document.getElementById('mqttUsername').value = data.mqttUsername;
             document.getElementById('mqttPassword').value = data.mqttPassword;
             document.getElementById('updateFrequency').value = data.updateFrequency;
+
+            // Enable form fields and save button
+            $('#config_form input').prop('disabled', false);
+            $('#saveConfigButton').prop('disabled', false);
         })
         .catch(error => {
             console.error('Error loading config:', error);
             $('#configErrorAlert').text('Error loading configuration. Please try again.').show();
+
+            // Make form fields read-only and disable save button
+            $('#config_form input').prop('disabled', true);
+            $('#saveConfigButton').prop('disabled', true);
         });
 }
 
@@ -132,9 +140,8 @@ $(document).ready(function () {
             type: 'POST',
             data: $('#config_form').serialize(),
             success: function () {
-                $('#msg').html('<p style="color:green;">Configuration updated successfully!</p>');
+                showAlert('Configuration updated successfully!', 'alert-success', 'Success');
                 loadConfig();
-                setTimeout(function () { $('#msg').html(''); }, 3000);
                 $('#configModal').modal('hide');
             },
             error: function () {
@@ -157,11 +164,6 @@ $(document).ready(function () {
  ***********************************************************************************************/
 
 $(document).ready(function () {
-    // // FOTA modal
-    // $('#fotaLink').click(function (event) {
-    //     event.preventDefault();
-    //     $('#fotaModal').modal('show');
-    // });
     // Delegate event listener for dynamically added #fotaLink
     $(document).on('click', '#fotaLink', function (event) {
         event.preventDefault();
@@ -180,7 +182,19 @@ $(document).ready(function () {
 
     // Handle local install button click
     $('#localInstallButton').click(function () {
-        $('#upload_form').submit();
+        // TODO
+        // const firmwareUrl = $('#firmware-select').val();
+        // if (!firmwareUrl) return;
+        // $('#localInstallButton').prop('disabled', true);
+        // $('#progressBar').css('width', '0%').attr('aria-valuenow', 0).text('0%');
+        // $('#progressBar').parent().show(); 
+        // $('#msg').html('<p>Downloading update...</p>');
+        // $.post('/download_update', { url: firmwareUrl }, function (response) {
+        //     $('#msg').html('<p style="color:green;">Update successful! Rebooting...</p>');
+        //     setTimeout(function () { window.location.href = '/'; }, 5000);
+        // }).fail(function () {
+        //     $('#msg').html('<p style="color:red;">Failed to initiate update.</p>');
+        // });
     });
 
     // Handle FOTA form submission for local update
@@ -205,12 +219,11 @@ $(document).ready(function () {
                 return xhr;
             },
             success: function (data) {
-                $('#msg').html('<p style="color:green;">Firmware updated successfully!</p>');
-                setTimeout(function () { $('#msg').html(''); }, 3000);
                 $('#fotaModal').modal('hide');
+                showAlert('The firmware has been updated successfully. The spa will now restart to apply the changes.', 'alert-success', 'Firmware updated');
             },
             error: function () {
-                $('#msg').html('<p style="color:red;">Error updating firmware. Please try again.</p>');
+                showAlert('The firmware update failed. Please try again.', 'alert-danger', 'Error');
             }
         });
     });
@@ -225,12 +238,11 @@ $(document).ready(function () {
                 type: 'POST',
                 data: { version: selectedVersion },
                 success: function (data) {
-                    $('#msg').html('<p style="color:green;">Firmware installed successfully!</p>');
-                    setTimeout(function () { $('#msg').html(''); }, 3000);
+                    showAlert('The firmware has been updated successfully. The spa will now restart to apply the changes.', 'alert-success', 'Firmware updated');
                     $('#fotaModal').modal('hide');
                 },
                 error: function () {
-                    $('#msg').html('<p style="color:red;">Error installing firmware. Please try again.</p>');
+                    showAlert('The firmware update failed. Please try again.', 'alert-danger', 'Error');
                 }
             });
         }
@@ -374,3 +386,30 @@ function showAlert(message, alertClass, title = '') {
     pageAlert.html(alertContent);
     pageAlertParent.show();
 }
+
+
+/************************************************************************************************
+ * 
+ * Light / Dark Mode Switch
+ * 
+ ***********************************************************************************************/
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    const htmlElement = document.documentElement;
+    const switchElement = document.getElementById('darkModeSwitch');
+
+    // Set the default theme to dark if no setting is found in local storage
+    const currentTheme = localStorage.getItem('bsTheme') || 'dark';
+    htmlElement.setAttribute('data-bs-theme', currentTheme);
+    switchElement.checked = currentTheme === 'dark';
+
+    switchElement.addEventListener('change', function () {
+        if (this.checked) {
+            htmlElement.setAttribute('data-bs-theme', 'dark');
+            localStorage.setItem('bsTheme', 'dark');
+        } else {
+            htmlElement.setAttribute('data-bs-theme', 'light');
+            localStorage.setItem('bsTheme', 'light');
+        }
+    });
+});
