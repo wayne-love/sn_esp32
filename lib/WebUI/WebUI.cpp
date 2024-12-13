@@ -15,19 +15,6 @@ const char * WebUI::getError() {
 }
 
 void WebUI::begin() {
-    server.on("/json", HTTP_GET, [&](AsyncWebServerRequest *request) {
-        debugD("uri: %s", request->url().c_str());
-        String json;
-        AsyncWebServerResponse *response;
-        if (generateStatusJson(*_spa, *_mqttClient, json, true)) {
-            response = request->beginResponse(200, "application/json", json);
-        } else {
-            response = request->beginResponse(200, "text/plain", "Error generating json");
-        }
-        response->addHeader("Connection", "close");
-        request->send(response);
-    });
-
     server.on("/reboot", HTTP_GET, [&](AsyncWebServerRequest *request) {
         debugD("uri: %s", request->url().c_str());
         request->send(LittleFS, "/www/reboot.htm");
@@ -106,6 +93,19 @@ void WebUI::begin() {
         configJson += "\"updateFrequency\":" + String(_config->UpdateFrequency.getValue());
         configJson += "}";
         AsyncWebServerResponse *response = request->beginResponse(200, "application/json", configJson);
+        response->addHeader("Connection", "close");
+        request->send(response);
+    });
+
+    server.on("/json", HTTP_GET, [&](AsyncWebServerRequest *request) {
+        debugD("uri: %s", request->url().c_str());
+        String json;
+        AsyncWebServerResponse *response;
+        if (generateStatusJson(*_spa, *_mqttClient, json, true)) {
+            response = request->beginResponse(200, "application/json", json);
+        } else {
+            response = request->beginResponse(200, "text/plain", "Error generating json");
+        }
         response->addHeader("Connection", "close");
         request->send(response);
     });
