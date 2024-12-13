@@ -55,9 +55,14 @@ void Config::writeConfig() {
 // Read config from file and populate settings
 bool Config::readConfigFile() {
   debugI("Reading config file");
+  if (!LittleFS.begin()) {
+    debugW("Failed to mount file system, formatting");
+    return false;
+  }
   File configFile = LittleFS.open("/config.json", "r");
   if (!configFile) {
     debugW("Config file not found");
+    LittleFS.end();
     return false;
   } else {
     size_t size = configFile.size();
@@ -79,11 +84,13 @@ bool Config::readConfigFile() {
       if (json["update_frequency"].is<int>()) UpdateFrequency.setValue(json["update_frequency"].as<int>());
     } else {
       debugW("Failed to parse config file");
+      LittleFS.end();
       return false;
     }
     configFile.close();
   }
 
+  LittleFS.end();
   return true;
 }
 
@@ -91,6 +98,11 @@ bool Config::readConfigFile() {
 void Config::writeConfigFile() {
   debugI("Updating config file");
   JsonDocument json;
+
+ if (!LittleFS.begin()) {
+    debugW("Failed to mount file system, formatting");
+    return;
+  }
 
   json["mqtt_server"] = MqttServer.getValue();
   json["mqtt_port"] = MqttPort.getValue();
@@ -107,4 +119,5 @@ void Config::writeConfigFile() {
     configFile.close();
     debugI("Config file updated");
   }
+  LittleFS.end();
 }

@@ -557,13 +557,6 @@ void setup() {
 
   debugA("Starting ESP...");
 
-  debugI("Mounting FS");
-
-  if (!LittleFS.begin()) {
-    debugW("Failed to mount file system, formatting");
-    LittleFS.format();
-    LittleFS.begin();
-  }
 
   if (!config.readConfig()) {
     debugW("Failed to open config.json, starting Wi-Fi Manager");
