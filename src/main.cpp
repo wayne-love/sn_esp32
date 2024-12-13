@@ -575,9 +575,11 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
   WiFi.begin();
-  while (WiFi.status() != WL_CONNECTED) {
+  int totalTry = 10;
+  while (WiFi.status() != WL_CONNECTED && totalTry > 0) {
     delay(500);
     debugA(".");
+    totalTry--;
   }
   debugA("Connected to Wi-Fi");
 
@@ -587,7 +589,7 @@ void setup() {
   Debug.setResetCmdEnabled(true);
   Debug.showProfiler(true);
 
-  int totalTry = 5;
+  totalTry = 5;
   while (!MDNS.begin(WiFi.getHostname()) && totalTry > 0) {
     debugW(".");
     delay(1000);
