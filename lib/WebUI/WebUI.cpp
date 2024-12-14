@@ -25,7 +25,7 @@ void WebUI::begin() {
 
     server.on("/fota", HTTP_GET, [&](AsyncWebServerRequest *request) {
         debugD("uri: %s", request->url().c_str());
-        request->send(SPIFFS, "/www/fota.htm");
+        request->send(200, "text/html", fotaPage);
     });
 
     server.on("/config", HTTP_GET, [&](AsyncWebServerRequest *request) {
