@@ -17,7 +17,7 @@ const char * WebUI::getError() {
 void WebUI::begin() {
     server.on("/reboot", HTTP_GET, [&](AsyncWebServerRequest *request) {
         debugD("uri: %s", request->url().c_str());
-        request->send(LittleFS, "/www/reboot.htm");
+        request->send(SPIFFS, "/www/reboot.htm");
         debugD("Rebooting...");
         delay(200);
         ESP.restart();
@@ -25,12 +25,12 @@ void WebUI::begin() {
 
     server.on("/fota", HTTP_GET, [&](AsyncWebServerRequest *request) {
         debugD("uri: %s", request->url().c_str());
-        request->send(LittleFS, "/www/fota.htm");
+        request->send(SPIFFS, "/www/fota.htm");
     });
 
     server.on("/config", HTTP_GET, [&](AsyncWebServerRequest *request) {
         debugD("uri: %s", request->url().c_str());
-        request->send(LittleFS, "/www/config.htm");
+        request->send(SPIFFS, "/www/config.htm");
     });
 
     server.on("/fota", HTTP_POST, [this](AsyncWebServerRequest *request) {
@@ -157,7 +157,7 @@ void WebUI::begin() {
     });
 
     // As a fallback we try to load from /www any requested URL
-    server.serveStatic("/", LittleFS, "/www/");
+    server.serveStatic("/", SPIFFS, "/www/");
 
     server.begin();
 

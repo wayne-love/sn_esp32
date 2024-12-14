@@ -5,6 +5,7 @@
 
 #include "ESPAsyncWebServer.h"
 #include <Update.h>
+#include <SPIFFS.h>
 
 #include "SpaInterface.h"
 #include "SpaUtils.h"
