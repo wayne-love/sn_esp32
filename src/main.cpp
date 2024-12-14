@@ -581,7 +581,11 @@ void setup() {
     debugA(".");
     totalTry--;
   }
-  debugA("Connected to Wi-Fi");
+  if (WiFi.status() != WL_CONNECTED) {
+    debugE("Failed to connected to Wi-Fi");
+  } else {
+    debugA("Connected to Wi-Fi");
+  }
 
   blinker.setState(STATE_NONE); // start with all LEDs off
 
