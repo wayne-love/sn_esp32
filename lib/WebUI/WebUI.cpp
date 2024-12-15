@@ -17,7 +17,7 @@ const char * WebUI::getError() {
 void WebUI::begin() {
     server.on("/reboot", HTTP_GET, [&](AsyncWebServerRequest *request) {
         debugD("uri: %s", request->url().c_str());
-        request->send(SPIFFS, "/www/reboot.htm");
+        request->send(200, "text/plain", "Rebooting ESP...");
         debugD("Rebooting...");
         delay(200);
         ESP.restart();
