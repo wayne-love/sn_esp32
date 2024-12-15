@@ -77,6 +77,7 @@ void WebUI::begin() {
                 if (type == "filesystem") {
                     updateType = U_SPIFFS;
                     debugD("Filesystem update selected.");
+                    if (!SPIFFS.begin()) SPIFFS.format();
                 } else if (type == "application") {
                     updateType = U_FLASH;
                     debugD("Application (firmware) update selected.");
