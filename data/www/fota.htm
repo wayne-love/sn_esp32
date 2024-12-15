@@ -9,7 +9,6 @@
 <body>
 <h1>Firmware Update</h1>
 <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-<form method='POST' action='' enctype='multipart/form-data' id='upload_form'>
 
 <table>
     <tr><td>eSpa model:</td><td><span id="espa_model">Loading...</span></td></tr>
@@ -22,19 +21,95 @@
       <button id="install-btn" disabled>Install</button>
     </td</tr>
     <tr><td colspan="2">
-      <input type='file' accept='.bin,.bin.gz' name='update' id='file-input'>
-      <input type='submit' value='Update' id='update-button' disabled>
-    </form>
-<div id='prg'>progress: 0%</div>
-<div id='msg'></div>
-</td></tr>
+      <form method='POST' action='' enctype='multipart/form-data' id='upload_form'>
+        <label for="updateType">Update Type:</label>
+        <select name="updateType" id="updateType">
+        <option value="application">Application (Firmware)</option>
+        <option value="filesystem">Filesystem</option>
+        </select>
+        <br><br>
+        <div id="fileInputs">
+        <label for="appFile">Application Update File:</label>
+        <input type='file' accept='.bin,.bin.gz' name='appFile' id='appFile'>
+        <br><br>
+        <label for="fsFile" id="fsFileLabel" style="display: none;">Filesystem Update File:</label>
+        <input type='file' accept='.bin,.bin.gz' name='fsFile' id='fsFile' style="display: none;">
+        </div>
+        <input type='submit' value='Update'>
+        </form>
+      <div id='prg'>progress: 0%</div>
+      <div id='msg'></div>
+    </td></tr>
 </table>
 <script>
+$(document).ready(function() {
+  $('#updateType').change(function() {
+    if ($(this).val() === 'filesystem') {
+      $('#fsFileLabel').show();
+      $('#fsFile').show();
+    } else {
+      $('#fsFileLabel').hide();
+      $('#fsFile').hide();
+      $('#fsFile').val('');
+    }
+  });
+});
 $('form').submit(function(e){
   e.preventDefault();
-  $('input[type="submit"]').prop('disabled', true);
-  var form = $('#upload_form')[0];
-  var data = new FormData(form);
+
+  const updateType = $('#updateType').val();
+  const appFile = $('#appFile')[0].files[0];
+  const fsFile = $('#fsFile')[0].files[0];
+
+  if (!appFile) {
+    $('#msg').html('<p style="color:red;">Please select an application update file.</p>');
+    return;
+  }
+
+  if (updateType === 'filesystem' && !fsFile) {
+    $('#msg').html('<p style="color:red;">Please select a filesystem update file.</p>');
+    return;
+  }
+
+  var appData = new FormData();
+  appData.append('updateType', 'application');
+  appData.append('update', appFile);
+  uploadFile(appData, '/fota', function() {
+    $('#msg').html('<p style="color:blue;">Application uploaded successfully. Now uploading filesystem...</p>');
+
+    if (updateType === 'filesystem') {
+      // Upload the filesystem file
+      const fsData = new FormData();
+      fsData.append('updateType', 'filesystem');
+      fsData.append('update', fsFile);
+
+      uploadFile(fsData, '/fota', function() {
+        $('#msg').html('<p style="color:green;">Filesystem uploaded successfully! Rebooting...</p>');
+        initiatedReboot();
+        });
+    } else {
+      $('#msg').html('<p style="color:green;">Update successful! Rebooting...</p>');
+      initiatedReboot();
+    }
+  });
+});
+function initiatedReboot() {
+  $.ajax({
+    url: '/reboot',
+    type: 'GET',
+    success: function() {
+        $('#msg').append('<p>Reboot initiated.</p>');
+    },
+    error: function() {
+        $('#msg').append('<p style="color:red;">Failed to initiate reboot.</p>');
+    },
+    complete: function() {
+        // Redirect after a delay, regardless of reboot success
+        setTimeout(function() { window.location.href = '/'; }, 2000);
+    }
+  });
+}
+function uploadFile(data, url, successCallback) {
   $.ajax({
     url: '/fota',
     type: 'POST',
@@ -57,24 +132,14 @@ $('form').submit(function(e){
       return xhr;
     },
     success: function() {
-      $('#msg').html('<p style="color:green;">Update successful! Rebooting...</p>');
-      setTimeout(function () { window.location.href = '/'; }, 5000);
+      $('#msg').html('<p style="color:green;">Update successful!</p>');
+      if (successCallback) successCallback();
     },
     error: function() {
       $('#msg').html('<p style="color:red;">Update failed! Please try again.</p>');
-      $('input[type="submit"]').prop('disabled', false);
     }
   });
-});
-const fileInput = document.getElementById('file-input');
-const updateButton = document.getElementById('update-button');
-fileInput.addEventListener('change', function () {
-    if (fileInput.files.length > 0) {
-        updateButton.disabled = false;
-    } else {
-        updateButton.disabled = true;
-    }
-});
+}
 $(document).ready(function () {
   function parseVersion(version) {
     const match = version.match(/^v([\d.]+)/);

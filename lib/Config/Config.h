@@ -1,10 +1,10 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <Preferences.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <RemoteDebug.h>
-#include <LittleFS.h>
 
 extern RemoteDebug Debug;
 
@@ -77,15 +77,15 @@ public:
     // Constructor
     Config();
 
-    // File operations
-    bool readConfigFile();
-    void writeConfigFile();
+    bool readConfig();              // Read configuration from Preferences or file
+    void writeConfig();             // Write configuration to Preferences
 
     // Set callback for all Setting instances
     template <typename T>
     void setCallback(void (*callback)(const char*, T)) {
         Setting<T>::setCallback(callback);
     }
+
 };
 
 #endif // CONFIG_H

@@ -5,6 +5,7 @@
 #include <RemoteDebug.h>
 #include <WiFiManager.h>
 #include <ESPmDNS.h>
+#include <SPIFFS.h>
 
 #include "MultiBlinker.h"
 
@@ -89,7 +90,7 @@ void startWiFiManager(){
     config.MqttUsername.setValue(String(custom_mqtt_username.getValue()));
     config.MqttPassword.setValue(String(custom_mqtt_password.getValue()));
 
-    config.writeConfigFile();
+    config.writeConfig();
   }
 }
 
@@ -552,17 +553,16 @@ void setup() {
   blinker.setState(STATE_NONE); // start with all LEDs off
   blinker.start();
 
-  debugA("Starting ESP...");
-
-  debugI("Mounting FS");
-
-  if (!LittleFS.begin()) {
-    debugW("Failed to mount file system, formatting");
-    LittleFS.format();
-    LittleFS.begin();
+  if (SPIFFS.begin()) {
+    debugD("Mounted SPIFFS");
+  } else {
+    debugE("Error mounting SPIFFS");
   }
 
-  if (!config.readConfigFile()) {
+  debugA("Starting ESP...");
+
+
+  if (!config.readConfig()) {
     debugW("Failed to open config.json, starting Wi-Fi Manager");
     startWiFiManager();
   }
