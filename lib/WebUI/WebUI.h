@@ -2,7 +2,7 @@
 #define WEBUI_H
 
 #include <Arduino.h>
-
+#include <SPIFFS.h>
 #include <WebServer.h>
 #include <Update.h>
 
@@ -128,16 +128,91 @@ R"(<!DOCTYPE html>
 <h1>Firmware Update</h1>
 <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
 <form method='POST' action='' enctype='multipart/form-data' id='upload_form'>
-<input type='file' accept='.bin,.bin.gz' name='update'>
+<label for="updateType">Update Type:</label>
+<select name="updateType" id="updateType">
+<option value="application">Application (Firmware)</option>
+<option value="filesystem">Filesystem</option>
+</select>
+<br><br>
+<div id="fileInputs">
+<label for="appFile">Application Update File:</label>
+<input type='file' accept='.bin,.bin.gz' name='appFile' id='appFile'>
+<br><br>
+<label for="fsFile" id="fsFileLabel" style="display: none;">Filesystem Update File:</label>
+<input type='file' accept='.bin,.bin.gz' name='fsFile' id='fsFile' style="display: none;">
+</div>
 <input type='submit' value='Update'>
 </form>
 <div id='prg'>progress: 0%</div>
 <div id='msg'></div>
 <script>
+$(document).ready(function() {
+  $('#updateType').change(function() {
+    if ($(this).val() === 'filesystem') {
+      $('#fsFileLabel').show();
+      $('#fsFile').show();
+    } else {
+      $('#fsFileLabel').hide();
+      $('#fsFile').hide();
+      $('#fsFile').val('');
+    }
+  });
+});
 $('form').submit(function(e){
   e.preventDefault();
-  var form = $('#upload_form')[0];
-  var data = new FormData(form);
+
+  const updateType = $('#updateType').val();
+  const appFile = $('#appFile')[0].files[0];
+  const fsFile = $('#fsFile')[0].files[0];
+
+  if (!appFile) {
+    $('#msg').html('<p style="color:red;">Please select an application update file.</p>');
+    return;
+  }
+
+  if (updateType === 'filesystem' && !fsFile) {
+    $('#msg').html('<p style="color:red;">Please select a filesystem update file.</p>');
+    return;
+  }
+
+  var appData = new FormData();
+  appData.append('updateType', 'application');
+  appData.append('update', appFile);
+  uploadFile(appData, '/fota', function() {
+    $('#msg').html('<p style="color:blue;">Application uploaded successfully. Now uploading filesystem...</p>');
+
+    if (updateType === 'filesystem') {
+      // Upload the filesystem file
+      const fsData = new FormData();
+      fsData.append('updateType', 'filesystem');
+      fsData.append('update', fsFile);
+
+      uploadFile(fsData, '/fota', function() {
+        $('#msg').html('<p style="color:green;">Filesystem uploaded successfully! Rebooting...</p>');
+        initiateReboot();
+      });
+    } else {
+      $('#msg').html('<p style="color:green;">Update successful! Rebooting...</p>');
+      initiateReboot();
+    }
+  });
+});
+function initiateReboot() {
+  $.ajax({
+    url: '/reboot',
+    type: 'GET',
+    success: function() {
+      $('#msg').append('<p>Reboot initiated.</p>');
+    },
+    error: function() {
+      $('#msg').append('<p style="color:red;">Failed to initiate reboot.</p>');
+    },
+    complete: function() {
+      setTimeout(function() { window.location.href = '/'; }, 2000);
+    }
+  });
+}
+function uploadFile(data, url, successCallback) {
   $.ajax({
     url: '/fota',
     type: 'POST',
@@ -160,14 +235,14 @@ $('form').submit(function(e){
       return xhr;
     },
     success: function() {
-      $('#msg').html('<p style="color:green;">Update successful! Rebooting...</p>');
-      setTimeout(function () { window.location.href = '/'; }, 5000);
+      $('#msg').html('<p style="color:green;">Update successful!</p>');
+      if (successCallback) successCallback();
     },
     error: function() {
       $('#msg').html('<p style="color:red;">Update failed! Please try again.</p>');
     }
   });
-});
+}
 </script>
 </body>
 </html>)";

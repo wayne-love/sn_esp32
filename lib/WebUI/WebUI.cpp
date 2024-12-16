@@ -65,17 +65,33 @@ void WebUI::begin() {
             server->client().setNoDelay(true);
             server->sendHeader("Connection", "close");
             server->send(200, "text/plain", "OK");
-            debugD("Rebooting...");
-            delay(100);
-            server->client().stop();
-            ESP.restart();
         }
     }, [&]() {
         debugD("uri: %s", server->uri().c_str());
         HTTPUpload& upload = server->upload();
         if (upload.status == UPLOAD_FILE_START) {
+            static int updateType = U_FLASH; // Default to firmware update
+
+            if (server->hasArg("updateType")) {
+                String type = server->arg("updateType");
+                if (type == "filesystem") {
+                    updateType = U_SPIFFS;
+                    debugD("Filesystem update selected.");
+                    if (!SPIFFS.begin()) SPIFFS.format();
+                } else if (type == "application") {
+                    updateType = U_FLASH;
+                    debugD("Application (firmware) update selected.");
+                } else {
+                    debugD("Unknown update type: %s", type.c_str());
+                    //server->send(400, "text/plain", "Invalid update type");
+                    //return;
+                }
+            } else {
+                debugD("No update type specified. Defaulting to application update.");
+            }
+
             debugD("Update: %s", upload.filename.c_str());
-            if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
+            if (!Update.begin(UPDATE_SIZE_UNKNOWN, updateType)) { //start with max available size
                 debugD("Update Error: %s",getError());
             }
         } else if (upload.status == UPLOAD_FILE_WRITE) {
@@ -106,7 +122,7 @@ void WebUI::begin() {
         if (server->hasArg("mqttUsername")) _config->MqttUsername.setValue(server->arg("mqttUsername"));
         if (server->hasArg("mqttPassword")) _config->MqttPassword.setValue(server->arg("mqttPassword"));
         if (server->hasArg("updateFrequency")) _config->UpdateFrequency.setValue(server->arg("updateFrequency").toInt());
-        _config->writeConfigFile();
+        _config->writeConfig();
         server->sendHeader("Connection", "close");
         server->send(200, "text/plain", "Updated");
     });
