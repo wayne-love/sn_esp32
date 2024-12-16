@@ -27,6 +27,20 @@ function compareVersions(current, latest) {
     return 0;
 }
 
+// Copy to clipboard functionality
+$('#copyToClipboardButton').click(function () {
+    copyToClipboard('#infoModelPre');
+});
+
+function copyToClipboard(element) {
+    const text = $(element).text();
+    navigator.clipboard.writeText(text).then(() => {
+        //alert('Copied to clipboard: ' + text);
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
+}
+
 
 /************************************************************************************************
  * 
@@ -369,7 +383,7 @@ $(document).ready(function () {
         event.preventDefault();
         fetch('/json').then(response => response.json()).then(data => {
             $('#infoModalTitle').html("Spa JSON");
-            $('#infoModalBody').html('<pre>' + JSON.stringify(data, null, 2) + '</pre>');
+            $('#infoModalBody').html('<pre id="infoModelPre">' + JSON.stringify(data, null, 2) + '</pre>');
             $('#infoModal').modal('show');
         })
         .catch(error => {
