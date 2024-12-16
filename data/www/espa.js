@@ -48,10 +48,16 @@ function copyToClipboard(element) {
  * 
  ***********************************************************************************************/
 
+let fetchStatusFailed = false;
+
 function fetchStatus() {
     fetch('/json')
         .then(response => response.json())
         .then(value_json => {
+            if (fetchStatusFailed) {
+                clearAlert();
+                fetchStatusFailed = false;
+            }
             updateStatusElement('status_state', value_json.status.state);
             updateStatusElement('temperatures_water', value_json.temperatures.water + "\u00B0C");
             updateStatusElement('temperatures_setPoint', value_json.temperatures.setPoint);
@@ -66,6 +72,7 @@ function fetchStatus() {
         .catch(error => {
             console.error('Error fetching status:', error);
             showAlert('Error connecting to the spa. If this persists, take a look at our <a class="alert-link" href="https://espa.diy/troubleshooting.html">troubleshooting docs</a>.', 'alert-danger', "Error");
+            fetchStatusFailed = true;
             handleStatusError('status_state');
             handleStatusError('temperatures_water');
             handleStatusError('temperatures_setPoint');
@@ -81,7 +88,7 @@ function fetchStatus() {
 
 function updateStatusElement(elementId, value) {
     const element = document.getElementById(elementId);
-    element.classList.remove('badge', 'text-bg-warning');
+    element.classList.remove('badge', 'text-bg-warning', 'text-bg-danger');
     if (element instanceof HTMLInputElement) {
         element.value = value;
     } else {
@@ -98,6 +105,15 @@ function handleStatusError(elementId) {
     } else {
         element.textContent = 'Failed to load';
     }
+}
+
+function clearAlert() {
+    const pageAlert = $('#page-alert');
+    const pageAlertParent = $('.page-alert-parent');
+    pageAlert.removeClass(function (index, className) {
+        return (className.match(/(^|\s)alert-\S+/g) || []).join(' ');
+    }).text('');
+    pageAlertParent.hide();
 }
 
 window.onload = function () {
