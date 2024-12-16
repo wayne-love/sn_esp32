@@ -37,7 +37,7 @@
               <a class="dropdown-item" href="#" id="fotaLink">Firmware Updater</a>
               <a class="dropdown-item" href="#" onclick="sendCurrentTime();">Send Current Time to Spa</a>
               <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="#" onclick="confirmAction('/reboot'); return false;">Reboot eSpa</a>
+              <a class="dropdown-item" href="#" onclick="confirmFunction(reboot('Reboot initiated.')); return false;">Reboot eSpa</a>
             </div>
           </li>
 
@@ -236,16 +236,11 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body" id="fotaModalBody">
-          <div class="mb-0 row">
-            <label for="espa_model" class="col-sm-4 col-form-label">eSpa model:</label>
-            <div class="col-sm-8">
-              <span id="espa_model" class="form-control-plaintext">Loading...</span>
-            </div>
-          </div>
+          <form id="updateForm">
           <div class="mb-0 row">
             <label for="installedVersion" class="col-sm-4 col-form-label">Installed version:</label>
             <div class="col-sm-8">
-              <span id="installedVersion" class="form-control-plaintext">TODO</span>
+              <span id="installedVersion" class="form-control-plaintext">Loading...</span>
             </div>
           </div>
           <div class="mb-0 row">
@@ -254,18 +249,18 @@
               <span id="lastestRelease" class="form-control-plaintext">Loading...</span>
             </div>
           </div>
-          <div class="mb-0 row">
+          <div class="mb-0 row" style="display: none;">
             <label for="updateMethod" class="col-sm-4 col-form-label"><strong>Select Update Method:</strong></label>
             <div class="col-sm-8">
               <select id="updateMethod" class="form-select">
                 <option value="" disabled selected>Select Update Method</option>
-                <option value="remote">Remote Update</option>
-                <option value="local">Local Update</option>
+                <option value="remote">Auto Update</option>
+                <option value="local">Upload Update</option>
               </select>
             </div>
           </div>
           <div id="remoteUpdate" class="update-section" style="display: none;">
-            <strong>Remote Update</strong>
+            <strong>Auto Update</strong>
             <div class="d-flex">
               <select class="form-select w-100" id="firmware-select">
                 <option value="" disabled selected>Select a version</option>
@@ -274,18 +269,28 @@
             </div>
           </div>
           <div id="localUpdate" class="update-section" style="display: none;">
-            <strong>Local Update</strong>
-            <form method='POST' action='' enctype='multipart/form-data' id='upload_form'>
-              <div class="input-group is-invalid">
-                <input type="file" accept='.bin,.bin.gz' class="form-control" id="localUpdateFileChooser" required>
-                <button class="btn btn-primary" type="button" id="localInstallButton" disabled>Install</button>
+            <strong>Upload Update</strong>
+            <div class="mb-0 row">
+              <label class="col-sm-4 col-form-label" for="appFile">Application Update File:</label>
+              <div class="col-sm-8">
+                <input type="file" accept=".bin,.bin.gz" name="appFile" id="appFile">
               </div>
-            </form>
+            </div>
+            <div class="mb-0 row">
+              <label class="col-sm-4 col-form-label" for="fsFile">File System Update File:</label>
+              <div class="col-sm-8">
+                <input type="file" accept=".bin,.bin.gz" name="fsFile" id="fsFile"></td>
+              </div>
+            </div>
+            <div>
+              <button class="btn btn-primary" type="button" id="localInstallButton" disabled>Install</button>
+            </div>
           </div>
-          <div class="progress" style="display: none;">
+          <div class="progress" id="progressDiv" style="margin-top: 10px; display: none;">
             <div class="progress-bar" role="progressbar" id="progressBar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
           </div>
           <div id='msg'></div>
+        </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
