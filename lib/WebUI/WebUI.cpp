@@ -15,22 +15,9 @@ const char * WebUI::getError() {
 }
 
 void WebUI::begin() {
-    server.on("/json", HTTP_GET, [&](AsyncWebServerRequest *request) {
-        debugD("uri: %s", request->url().c_str());
-        String json;
-        AsyncWebServerResponse *response;
-        if (generateStatusJson(*_spa, *_mqttClient, json, true)) {
-            response = request->beginResponse(200, "application/json", json);
-        } else {
-            response = request->beginResponse(200, "text/plain", "Error generating json");
-        }
-        response->addHeader("Connection", "close");
-        request->send(response);
-    });
-
     server.on("/reboot", HTTP_GET, [&](AsyncWebServerRequest *request) {
         debugD("uri: %s", request->url().c_str());
-        request->send(LittleFS, "/www/reboot.htm");
+        request->send(200, "text/plain", "Rebooting ESP...");
         debugD("Rebooting...");
         delay(200);
         ESP.restart();
@@ -38,12 +25,12 @@ void WebUI::begin() {
 
     server.on("/fota", HTTP_GET, [&](AsyncWebServerRequest *request) {
         debugD("uri: %s", request->url().c_str());
-        request->send(LittleFS, "/www/fota.htm");
+        request->send(200, "text/html", fotaPage);
     });
 
     server.on("/config", HTTP_GET, [&](AsyncWebServerRequest *request) {
         debugD("uri: %s", request->url().c_str());
-        request->send(LittleFS, "/www/config.htm");
+        request->send(SPIFFS, "/www/config.htm");
     });
 
     server.on("/fota", HTTP_POST, [this](AsyncWebServerRequest *request) {
@@ -57,15 +44,30 @@ void WebUI::begin() {
             AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "OK");
             response->addHeader("Connection", "close");
             request->send(response);
-            debugD("Rebooting...");
-            delay(100);
-            request->client()->stop();
-            ESP.restart();
         }
     }, [this](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
         if (index == 0) {
+            static int updateType = U_FLASH; // Default to firmware update
+
+            if (request->hasArg("updateType")) {
+                String type = request->arg("updateType");
+                if (type == "filesystem") {
+                    updateType = U_SPIFFS;
+                    debugD("Filesystem update selected.");
+                } else if (type == "application") {
+                    updateType = U_FLASH;
+                    debugD("Application (firmware) update selected.");
+                } else {
+                    debugD("Unknown update type: %s", type.c_str());
+                    //server->send(400, "text/plain", "Invalid update type");
+                    //return;
+                }
+            } else {
+                debugD("No update type specified. Defaulting to application update.");
+            }
+
             debugD("Update: %s", filename.c_str());
-            if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { // start with max available size
+            if (!Update.begin(UPDATE_SIZE_UNKNOWN, updateType)) { // start with max available size
                 debugD("Update Error: %s", this->getError());
             }
         }
@@ -89,7 +91,7 @@ void WebUI::begin() {
         if (request->hasParam("mqttUsername", true)) _config->MqttUsername.setValue(request->getParam("mqttUsername", true)->value());
         if (request->hasParam("mqttPassword", true)) _config->MqttPassword.setValue(request->getParam("mqttPassword", true)->value());
         if (request->hasParam("updateFrequency", true)) _config->UpdateFrequency.setValue(request->getParam("updateFrequency", true)->value().toInt());
-        _config->writeConfigFile();
+        _config->writeConfig();
         AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "Updated");
         response->addHeader("Connection", "close");
         request->send(response);
@@ -106,6 +108,19 @@ void WebUI::begin() {
         configJson += "\"updateFrequency\":" + String(_config->UpdateFrequency.getValue());
         configJson += "}";
         AsyncWebServerResponse *response = request->beginResponse(200, "application/json", configJson);
+        response->addHeader("Connection", "close");
+        request->send(response);
+    });
+
+    server.on("/json", HTTP_GET, [&](AsyncWebServerRequest *request) {
+        debugD("uri: %s", request->url().c_str());
+        String json;
+        AsyncWebServerResponse *response;
+        if (generateStatusJson(*_spa, *_mqttClient, json, true)) {
+            response = request->beginResponse(200, "application/json", json);
+        } else {
+            response = request->beginResponse(200, "text/plain", "Error generating json");
+        }
         response->addHeader("Connection", "close");
         request->send(response);
     });
@@ -157,7 +172,7 @@ void WebUI::begin() {
     });
 
     // As a fallback we try to load from /www any requested URL
-    server.serveStatic("/", LittleFS, "/www/");
+    server.serveStatic("/", SPIFFS, "/www/");
 
     server.begin();
 
