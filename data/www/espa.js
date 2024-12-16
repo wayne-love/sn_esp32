@@ -9,6 +9,12 @@ function confirmAction(url) {
     }
 }
 
+function confirmFunction(func) {
+    if (confirm('Are you sure?')) {
+        func();
+    }
+}
+
 function parseVersion(version) {
     const match = version.match(/^v([\d.]+)/);
     if (!match) return null;
@@ -38,6 +44,16 @@ function copyToClipboard(element) {
         //alert('Copied to clipboard: ' + text);
     }).catch(err => {
         console.error('Failed to copy: ', err);
+    });
+}
+
+function reboot(message) {
+    $.ajax({
+      url: '/reboot',
+      type: 'GET',
+      success: () => showAlert(message, 'alert-success', 'Reboot'),
+      error: () => showAlert('Failed to initiate reboot.', 'alert-danger', 'Error'),
+      complete: () => setTimeout(() => location.href = '/', 2000)
     });
 }
 
@@ -228,6 +244,11 @@ $(document).ready(function () {
  ***********************************************************************************************/
 
 $(document).ready(function () {
+    $('#progressDiv').hide();
+    $('#localInstallButton').prop('disabled', true);
+    $('#localUpdate').show();
+    document.getElementById('updateForm').reset();
+
     // Delegate event listener for dynamically added #fotaLink
     $(document).on('click', '#fotaLink', function (event) {
         event.preventDefault();
@@ -236,63 +257,99 @@ $(document).ready(function () {
     });
 
     // Enable the local install button when a file is selected
-    $('#localUpdateFileChooser').change(function () {
-        if ($(this).val()) {
+    $('#fsFile').change(updateLocalInstallButton);
+    $('#appFile').change(updateLocalInstallButton);
+    function updateLocalInstallButton () {
+        if ($('#fsFile').val() || $('#appFile').val()) {
             $('#localInstallButton').prop('disabled', false);
         } else {
             $('#localInstallButton').prop('disabled', true);
         }
-    });
+    };
 
     // Handle local install button click
-    $('#localInstallButton').click(function () {
-        // TODO
-        // const firmwareUrl = $('#firmware-select').val();
-        // if (!firmwareUrl) return;
-        // $('#localInstallButton').prop('disabled', true);
-        // $('#progressBar').css('width', '0%').attr('aria-valuenow', 0).text('0%');
-        // $('#progressBar').parent().show(); 
-        // $('#msg').html('<p>Downloading update...</p>');
-        // $.post('/download_update', { url: firmwareUrl }, function (response) {
-        //     $('#msg').html('<p style="color:green;">Update successful! Rebooting...</p>');
-        //     setTimeout(function () { window.location.href = '/'; }, 5000);
-        // }).fail(function () {
-        //     $('#msg').html('<p style="color:red;">Failed to initiate update.</p>');
-        // });
-    });
+    $('#localInstallButton').click(async function () {
+        const appFile = $('#appFile')[0].files[0];
+        const fsFile = $('#fsFile')[0].files[0];
+        let appSuccess = false, fsSuccess = false;
 
-    // Handle FOTA form submission for local update
-    $('#upload_form').submit(function (e) {
-        e.preventDefault();
-        var formData = new FormData(this);
-        $.ajax({
-            url: '/fota',
+        if (!appFile && !fsFile) {
+          showAlert('Please select either an application or filesystem update file.', 'alert-danger', 'Error');
+          console.error('No files selected for upload.');
+          return;
+        }
+
+        let totalFiles = 1;
+        if (appFile && fsFile) totalFiles = 2;
+        let fileNum = 0;
+        // Upload application file if provided
+        if (appFile) {
+            const appData = new FormData();
+            appData.append('updateType', 'application');
+            appData.append('update', appFile);
+            fileNum++;
+            $('#msg').html(`<p style="color:blue;">Uploading file ${fileNum} of ${totalFiles} - Application update.</p>`);
+            appSuccess = await uploadFileAsync(appData, '/fota', fileNum, totalFiles);
+        }
+
+        // Upload filesystem file if provided
+        if (fsFile) {
+            const fsData = new FormData();
+            fsData.append('updateType', 'filesystem');
+            fsData.append('update', fsFile);
+            fileNum++;
+            $('#msg').html(`<p style="color:blue;">Uploading file ${fileNum} of ${totalFiles} - File system update.</p>`);
+            fsSuccess = await uploadFileAsync(fsData, '/fota', fileNum, totalFiles);
+        }
+
+        // Trigger reboot only if all provided uploads were successful
+        if ((!appFile || appSuccess) && (!fsFile || fsSuccess)) {
+            $('#fotaModal').modal('hide');
+            setTimeout(() => reboot('The firmware has been updated successfully. The spa will now restart to apply the changes.'), 500);
+        } else {
+            showAlert('One or more uploads failed.', 'alert-danger', 'Error');
+        }
+
+        document.getElementById('updateForm').reset();
+      });
+
+    async function uploadFileAsync(data, url, fileNum, totalFiles) {
+        let percentMultipler = 1 / totalFiles;
+        let startPercent = percentMultipler * 100 * (fileNum - 1);
+        return new Promise((resolve) => {
+            $.ajax({
+            url,
             type: 'POST',
-            data: formData,
+            data,
             contentType: false,
             processData: false,
             xhr: function () {
-                var xhr = new window.XMLHttpRequest();
-                xhr.upload.addEventListener("progress", function (evt) {
+                $('#progressDiv').show();
+                const xhr = new XMLHttpRequest();
+                xhr.upload.addEventListener('progress', function(evt) {
                     if (evt.lengthComputable) {
                         var percentComplete = evt.loaded / evt.total;
-                        percentComplete = parseInt(percentComplete * 100);
+                        percentComplete = parseInt((percentComplete * 100 * percentMultipler) + startPercent);
                         $('#progressBar').css('width', percentComplete + '%').attr('aria-valuenow', percentComplete).text(percentComplete + '%');
                     }
                 }, false);
                 return xhr;
             },
             success: function (data) {
-                $('#fotaModal').modal('hide');
-                showAlert('The firmware has been updated successfully. The spa will now restart to apply the changes.', 'alert-success', 'Firmware updated');
+                showAlert('The firmware has been uploaded.', 'alert-success', 'Firmware uploaded');
+                resolve(true);
             },
             error: function () {
                 showAlert('The firmware update failed. Please try again.', 'alert-danger', 'Error');
+                resolve(false);
             }
+            });
         });
-    });
+    }
+}
 
     // Handle remote update installation
+    /*
     $('#remoteInstallButton').click(function (event) {
         event.preventDefault();
         var selectedVersion = $('#firmware-select').val();
@@ -326,7 +383,8 @@ $(document).ready(function () {
             $('#localUpdate').hide();
         }
     });
-});
+    */
+);
 
 function loadFotaData() {
     fetch('/json')
