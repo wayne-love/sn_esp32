@@ -68,14 +68,22 @@ function fetchStatus() {
 function updateStatusElement(elementId, value) {
     const element = document.getElementById(elementId);
     element.classList.remove('badge', 'text-bg-warning');
-    element.textContent = value;
+    if (element instanceof HTMLInputElement) {
+        element.value = value;
+    } else {
+        element.textContent = value;
+    }
 }
 
 function handleStatusError(elementId) {
     const element = document.getElementById(elementId);
     element.classList.remove('text-bg-warning');
     element.classList.add('text-bg-danger');
-    element.textContent = 'Failed to load';
+    if (element instanceof HTMLInputElement) {
+        element.value = '';
+    } else {
+        element.textContent = 'Failed to load';
+    }
 }
 
 window.onload = function () {
